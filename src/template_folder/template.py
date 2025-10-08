@@ -10,6 +10,7 @@ Part 2:
 
 """
 import logging
+
 import aoc_common.aoc_commons as ac
 
 YEAR = 2017
@@ -24,7 +25,7 @@ try:
 except ValueError as e:
     logger.error(e)
     
-with open(locations.input_file, mode="rt") as f:        
+with open(locations.input_file) as f:        
     input_data = f.read().splitlines()
     logger.debug(input_data)
     
