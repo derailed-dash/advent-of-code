@@ -25,11 +25,12 @@ Solution for Part 2:
   
 This solution works pretty well... About 0.2s for both parts.
 """
-from __future__ import absolute_import
+
 import logging
 import time
-from math import prod
 from itertools import combinations
+from math import prod
+
 import aoc_common.aoc_commons as ac
 
 YEAR = 2015

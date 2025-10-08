@@ -1,0 +1,103 @@
+[project]
+name = "advent-of-code"
+version = "0.1.0"
+description = "Dazbo's Advent of Code solutions."
+authors = [
+    {name = "Darren", email = "derailed.dash@gmail.com"},
+]
+readme = "README.md"
+requires-python = ">=3.13"
+license = { file = "LICENSE" }
+
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "networkx",
+    "matplotlib",
+    "parsimonious",
+    "python-dotenv",
+    "requests",
+    "tqdm",
+    "dazbo-aoc-commons",
+    "pillow",
+    "imageio",
+    "jupyterlab-lsp>=5.2.0",
+    "ipykernel>=6.30.1",
+    "ipywidgets>=8.1.7",
+    "sympy>=1.14.0",
+    "colorama>=0.4.6",
+    "dazbo-commons>=0.1.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/derailed-dash/Advent-of-Code"
+Repository = "https://github.com/derailed-dash/Advent-of-Code"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pylint",
+    "ruff",
+    "codespell[toml]",
+    "isort",
+    "twine",
+    "pip-review",
+    "graphviz",
+]
+jupyter = [
+    "jupyter",
+    "jupyterlab",
+    "ipykernel",
+    "ipython",
+]
+lint = [
+    "ruff",
+    "mypy",
+    "codespell",
+]
+
+
+[tool.ruff]
+line-length = 130
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "C",  # flake8-comprehensions
+    "B",   # flake8-bugbear
+    "UP", # pyupgrade
+    "RUF", # ruff specific rules
+]
+# ignore line too long, too complex, two blank lines, trailing whitespace 
+ignore = [
+    "E302", # expected two blank lines between defs
+    "W291", # trailing whitespace
+    "W293"  # line contains whitespace
+]
+per-file-ignores = { "__init__.py" = ["F401"], "**/__init__.py" = ["F401"], "*.ipynb" = ["F401"] }
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.mypy]
+disallow_untyped_calls = false     # Prohibit calling functions that lack type annotations.
+disallow_untyped_defs = false      # Allow defining functions without type annotations.
+disallow_incomplete_defs = true    # Prohibit defining functions with incomplete type annotations.
+no_implicit_optional = true        # Require `Optional[T]` for variables that can be `None`.
+check_untyped_defs = true          # Type-check the body of functions without annotations. Catch potential mismatches.
+disallow_subclassing_any = true    # Prohibit a class from inheriting from a value of type `Any`.
+warn_incomplete_stub = true        # Warn about incomplete type stubs (`.pyi` files).
+warn_redundant_casts = true        # Warn if a type cast is unnecessary.
+warn_unused_ignores = true         # Warn about `# type: ignore` comments that are no longer needed.
+warn_unreachable = true            # Warn about code that is unreachable.
+follow_imports = "silent"          # Type-check imported modules and suppress errors from them.
+ignore_missing_imports = true      # Suppress errors about unresolved imports.
+explicit_package_bases = true      # Enforce explicit declaration of package bases.
+disable_error_code = ["misc", "no-any-return", "no-untyped-def"]
+
+exclude = [".venv"]
