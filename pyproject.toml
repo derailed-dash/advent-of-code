@@ -29,7 +29,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/derailed-dash/Advent-of-Code"
+Homepage = "https://aoc.just2good.co.uk"
 Repository = "https://github.com/derailed-dash/Advent-of-Code"
 
 [project.optional-dependencies]
