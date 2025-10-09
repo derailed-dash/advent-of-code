@@ -23,9 +23,9 @@ dependencies = [
     "pillow",
     "imageio",
     "graphviz",
-    "sympy>=1.14.0",
-    "colorama>=0.4.6",
-    "dazbo-commons>=0.1.5",
+    "sympy",
+    "colorama",
+    "dazbo-commons",
 ]
 
 [project.urls]
@@ -38,7 +38,6 @@ dev = [
     "isort",
     "twine",
     "pip-review",
-
 ]
 jupyter = [
     "jupyter",
