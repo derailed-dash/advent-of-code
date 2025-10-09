@@ -22,9 +22,7 @@ dependencies = [
     "dazbo-aoc-commons",
     "pillow",
     "imageio",
-    "jupyterlab-lsp>=5.2.0",
-    "ipykernel>=6.30.1",
-    "ipywidgets>=8.1.7",
+    "graphviz",
     "sympy>=1.14.0",
     "colorama>=0.4.6",
     "dazbo-commons>=0.1.5",
@@ -37,26 +35,24 @@ Repository = "https://github.com/derailed-dash/Advent-of-Code"
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "pylint",
-    "ruff",
-    "codespell[toml]",
     "isort",
     "twine",
     "pip-review",
-    "graphviz",
+
 ]
 jupyter = [
     "jupyter",
     "jupyterlab",
     "ipykernel",
     "ipython",
+    "jupyterlab-lsp",
+    "ipywidgets",
 ]
 lint = [
     "ruff",
     "mypy",
     "codespell",
 ]
-
 
 [tool.ruff]
 line-length = 130

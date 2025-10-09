@@ -5,12 +5,8 @@
 ## Overview
 
 - My solutions to Advent of Code problems for multiple years, written in Python.
-- I've taken two main approaches for my solutions:
-  - **Python Scripts:** For some years (e.g., 2015-2022), solutions are plain Python scripts. These are accompanied by detailed walkthroughs written in Markdown.
-  - **Jupyter Notebooks:** For other years (e.g., 2023 onwards), I've used Jupyter Notebooks, which combine the Python code, the solution explanation, and the walkthrough into a single file.
 - All solutions are thoroughly documented.
 - Some days have multiple solutions where I've experimented with different approaches or libraries.
-- The walkthroughs are published on my [AoC website](https://aoc.just2good.co.uk/).
 
 [![Dazbo's AoC Walkthroughs](/docs/assets/images/AoC_site_screenshot.jpg)](https://aoc.just2good.co.uk/)
 
@@ -40,48 +36,84 @@ Each day is split into a Part 1 and a Part 2.  A star is awarded for each comple
 
 **If you get 50 stars, you save Christmas!**
 
-## Structure of this Repo
+## Prerequisites & Setup
 
-This repository is organized as follows:
-- **`src/`**: This directory contains all the source code for the solutions.
-  - Solutions are organized by year in `src/AoC_YYYY/` folders.
-  - Inside each year's folder, you will find either:
-    - Individual Python scripts (`.py`) for each day's solution.
-    - Jupyter Notebooks (`.ipynb`) that contain both the code and the walkthrough.
-- **`docs/`**: This directory contains the source for my [AoC walkthrough website](https://aoc.just2good.co.uk/).
-  - For solutions that use Python scripts, the corresponding Markdown walkthroughs are in `docs/YYYY/`.
-  - The entire folder is a Jekyll project that builds the static site.
-- **Templates**: If you want to follow my structure, I've included templates:
-  - `src/template_folder/`: A template for creating a new day's solution with a Python script.
-  - `docs/2022/day_template.md`: A template for the Markdown walkthrough page.
+To run the solutions in this repository, you'll need the following:
+
+- **Python >=3.13**
+- **`uv`**: My preferred tool for managing Python packages and virtual environments.
+- **Jupyter**: For running the notebook-based solutions (`.ipynb` files).
+
+### Installation
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/derailed-dash/Advent-of-Code.git
+    cd Advent-of-Code
+    ```
+
+2.  **Create a virtual environment and install dependencies:**
+    I recommend using `uv` to create a virtual environment and install the required packages from `pyproject.toml`.
+
+    ```bash
+    # Install dependencies in a venv, including Jupyter
+    uv sync --dev --extra jupyter
+    ```
+
+    Alternatively, you can use `conda` as described in `src/readme.md`.
+
+3.  **Run the solutions:**
+    - For Python scripts, you can run them directly from your terminal.
+    - For Jupyter Notebooks, run them directly in your IDE (e.g. VS Code), start a Jupyter Lab, 
+      or run in a cloud service like [Google Colab](https://colab.research.google.com/).
+      ```bash
+      # Running a Jupyter lab locally
+      jupyter lab
+      ```
+      Then navigate to the notebook file in the `src/AoC_YYYY` directory.
+
+## Structure and Solution Approaches
+
+This repository is organized by year and solution type. I've taken two main approaches for my solutions:
+
+### 1. Python Scripts with Separate Walkthroughs
+
+For some years (e.g., 2015-2022), the solutions are plain Python scripts. These are accompanied by detailed walkthroughs written in Markdown, which are published on the [website](https://aoc.just2good.co.uk/).
+
+- **Code**: The Python solution files (`.py`) are located in the `src/AoC_YYYY/` directories.
+- **Walkthroughs**: The corresponding Markdown files (`.md`) are in the `docs/YYYY/` directories. These are used by Jekyll to build the static website.
+
+### 2. Jupyter Notebooks
+
+For other years (e.g., 2023 onwards), I've used Jupyter Notebooks. This approach combines the Python code, the solution explanation, and the walkthrough into a single, self-contained file (`.ipynb`). These can be viewed directly on GitHub or run locally using Jupyter.
+
+### Directory Structure
+
+Here is a simplified overview of the repository's structure, showing examples of both solution types:
 
 ```
 .
-├───docs/
-│   ├───2015/
-│   │   └───...
+├───docs/                 # Source for the Jekyll-based walkthrough website
 │   ├───2022/
-│   │   └───...
-│   └───python/
-│       └───...
-├───scripts/
-│   ├───build_aoc_commons.ps1
-│   ├───create_year.ps1
-│   └───upload_to_pypi.py
-├───src/
-│   ├───AoC_2015/
-│   │   └───...
+│   │   └───1.md          # Walkthrough for 2022, Day 1 (Python script approach)
+│   └───...
+├───src/                  # All Python source code and notebooks
 │   ├───AoC_2022/
-│   │   └───...
-│   ├───aoc_common/
-│   │   └───...
-│   └───template_folder/
-│       └───...
+│   │   └───day_01.py     # Solution for 2022, Day 1 (Python script approach)
+│   ├───AoC_2023/
+│   │   └───day_01.ipynb  # Solution for 2023, Day 1 (Jupyter Notebook approach)
+│   ├───aoc_common/       # A shared library of common functions used across solutions
+│   └───...
+├───scripts/              # Helper scripts for repository management
 ├───.gitignore
 ├───LICENSE
-├───README.md
-└───requirements.txt
+├───README.md             # This file
+└───pyproject.toml        # Project metadata and dependencies for uv/pip
 ```
+
+- **Templates**: If you want to follow my structure, I've included templates:
+  - `src/template_folder/`: A template for creating a new day's solution with a Python script.
+  - `docs/2022/day_template.md`: A template for the Markdown walkthrough page.
 
 ## Helper Scripts
 
@@ -104,7 +136,7 @@ This repository includes a companion website that contains detailed walkthroughs
 - For solutions written as plain Python scripts, the corresponding walkthroughs are individual Markdown files found in `docs/YYYY/`, where `YYYY` is the year of the challenge.
 - For solutions implemented in Jupyter Notebooks, the code and walkthrough are combined in the `.ipynb` file itself, located in the `src/AoC_YYYY/` directory.
 
-### Running Locally
+### Working with the Documentation Locally
 
 You can build and serve the documentation website on your local machine using Docker.
 
