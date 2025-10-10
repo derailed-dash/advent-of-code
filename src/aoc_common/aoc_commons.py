@@ -83,23 +83,6 @@ def get_locations(script_file) -> Locations:
 ##################################################################
 # Retrieving input data
 ##################################################################
-
-def get_envs_from_file() -> bool:
-    """ Look for .env files, read variables from it, and store as environment variables """
-    potential_path = ".env"
-    for _ in range(3):
-        logger.debug("Trying .env at %s", os.path.realpath(potential_path))
-        if os.path.exists(potential_path):
-            logger.info("Using .env at %s", os.path.realpath(potential_path))
-            load_dotenv(potential_path, override=True, verbose=True)
-            return True
-        
-        potential_path = os.path.join('..', potential_path)
-   
-    logger.warning("No .env file found.")
-    return False
-
-get_envs_from_file() # read env variables from a .env file, if we can find one
     
 def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
     """ Use session key to obtain user's unique data for this year and day.
