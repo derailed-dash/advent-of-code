@@ -129,6 +129,32 @@ Here is a simplified overview of the repository's structure, showing examples of
 └───pyproject.toml        # Project metadata and dependencies for uv/pip
 ```
 
+### Helper Libraries
+
+This repository leverages two primary utility libraries to streamline solution development:
+
+-   **`aoc_common` (local to this repository)**: Located in `src/aoc_common/`, this library provides Advent of Code-specific utilities such as:
+    -   `Point`, `Vectors`, `VectorDicts`, and `Grid` classes for handling 2D grid-based problems.
+    -   `binary_search`, `merge_intervals`, `get_factors`, and `to_base_n` for common algorithmic tasks.
+    -   `timer` context manager for performance measurement.
+    -   `setup_file_logging` for logging output to files.
+
+-   **`dazbo-commons` (external PyPI package)**: This is a more generic utility library that provides foundational functionalities used across my Python projects. It is installed as a dependency and offers:
+    -   **Coloured Logging**: Standardized console logging with color-coded output for different log levels.
+
+By separating these concerns, `aoc_common` remains focused on AoC-specific helpers, while `dazbo-commons` handles more general-purpose tasks, promoting reusability and cleaner code.
+
+### Assertions and Testing
+
+Each solution typically includes assertions to verify correctness, especially against sample inputs provided by Advent of Code. The `aoc_common.validate` function is used for this purpose:
+
+```python
+ac.validate(test_result, expected_answer)
+```
+
+This function raises an `AssertionError` if the `test_result` does not match the `expected_answer`, providing immediate feedback during development and ensuring the solution works for known cases before attempting the full input.
+
+
 
 ## Helper Scripts
 
