@@ -99,28 +99,36 @@ Here is a simplified overview of the repository's structure, showing examples of
 │   python/               # General Python guides
 │   │   ├───assertion.md  # Walkthrough for a specific topic
 |   |   └───...
-|   ├─── _config.yml        # Jekyll configuration
-|   ├─── _config.docker.yml # Jekyll configuration for Docker
-|   ├─── docker-compose.yml # Docker configuration
-|   ├─── index.md           # Index page for the website
+|   ├───_config.yml        # Jekyll configuration for building docs
+|   ├───_config.docker.yml # Jekyll configuration for Docker
+|   ├───docker-compose.yml # Docker configuration
+|   ├───index.md           # Index page for the website
 │   └───...
 ├───src/                  # All Python source code and notebooks
-│   ├───AoC_2022/
-│   │   └───day_01.py     # Solution for 2022, Day 1 (Python script approach)
+│   ├───AoC_2022/         # Solutions for 2022
+│   |   ├───d01/          # Day 1
+|   |   |   ├───input/    # Input data
+|   |   |   └───d01.py    # Solution for 2022, Day 1
+|   |   ├───d02/          # Day 2
+|   |   └───...
 │   ├───AoC_2023/
-│   │   └───day_01.ipynb  # Solution for 2023, Day 1 (Jupyter Notebook approach)
+│   │   ├───Dazbo's_Advent_of_Code_2023.ipynb  # Walkthroughs for 2023 (Jupyter Notebook approach)
+│   |   ├───d01/         # Day 1
+|   |   |   └───input/   # Input data
+│   |   ├───d02/         # Day 2
+|   |   |   └───input/   # Input data
+|   |   └───...
 │   ├───aoc_common/       # A shared library of common functions used across solutions
-│   └───...
+│   ├───template_folder/  # Template content
+│   └───tests/            # Unit tests
 ├───scripts/              # Helper scripts for repository management
+├───.env                  # Env vars, e.g. AoC session cookie
 ├───.gitignore
 ├───LICENSE
 ├───README.md             # This file
 └───pyproject.toml        # Project metadata and dependencies for uv/pip
 ```
 
-- **Templates**: If you want to follow my structure, I've included templates:
-  - `src/template_folder/`: A template for creating a new day's solution with a Python script.
-  - `docs/2022/day_template.md`: A template for the Markdown walkthrough page.
 
 ## Helper Scripts
 

@@ -31,13 +31,15 @@ import time
 from itertools import combinations
 from math import prod
 
+import dazbo_commons as dc
+
 import aoc_common.aoc_commons as ac
 
 YEAR = 2015
 DAY = 24
 
 locations = ac.get_locations(__file__)
-logger = ac.retrieve_console_logger(locations.script_name)
+logger = dc.retrieve_console_logger(locations.script_name)
 logger.setLevel(logging.INFO)
 ac.write_puzzle_input_file(YEAR, DAY, locations)
 

@@ -40,14 +40,17 @@ Part 2:
 
     Once no more updates are possible, perform substition to get back to e.
 """
-import time
-import re
 import logging
+import re
+import time
 from collections import defaultdict
+
+import dazbo_commons as dc
+
 import aoc_common.aoc_commons as ac
 
 locations = ac.get_locations(__file__)
-logger = ac.retrieve_console_logger(locations.script_name)
+logger = dc.retrieve_console_logger(locations.script_name)
 logger.setLevel(logging.INFO)
 
 def main():

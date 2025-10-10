@@ -13,10 +13,10 @@ Part 2:
     Ribbon required is shortest distance around sides, i.e. smallest perimeter of any face
         + bow length b, where b = volume of box.
 """
-from dataclasses import dataclass
 import os
-import time
 import re
+import time
+from dataclasses import dataclass
 
 SCRIPT_DIR = os.path.dirname(__file__) 
 INPUT_FILE = "input/input.txt"

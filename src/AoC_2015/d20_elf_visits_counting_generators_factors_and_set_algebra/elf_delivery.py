@@ -32,13 +32,16 @@ Part 2:
     So, we need to count the occurences of each factor (i.e. each elf visit).
     When each elf reaches its limit of visits, exclude this elf.
 """
+import logging
 import time
 from collections import defaultdict
-import logging
+
+import dazbo_commons as dc
+
 import aoc_common.aoc_commons as ac
 
 locations = ac.get_locations(__file__)
-logger = ac.retrieve_console_logger(locations.script_name)
+logger = dc.retrieve_console_logger(locations.script_name)
 logger.setLevel(logging.INFO)
 
 TARGET = 36000000

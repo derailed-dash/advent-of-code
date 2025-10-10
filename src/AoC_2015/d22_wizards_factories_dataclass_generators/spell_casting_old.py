@@ -24,16 +24,20 @@ Part 2:
     Fortunately, still solved with attack sequences with 14 attacks.
 """
 from __future__ import annotations
-from dataclasses import dataclass
+
 import logging
-from math import ceil
 import time
+from dataclasses import dataclass
+from math import ceil
 from os import path
 from typing import Iterable
+
+import dazbo_commons as dc
+
 import aoc_common.aoc_commons as ac
 
 locations = ac.get_locations(__file__)
-logger = ac.retrieve_console_logger(locations.script_name)
+logger = dc.retrieve_console_logger(locations.script_name)
 logger.setLevel(logging.INFO)
 # td.setup_file_logging(logger, folder=locations.script_dir)
 

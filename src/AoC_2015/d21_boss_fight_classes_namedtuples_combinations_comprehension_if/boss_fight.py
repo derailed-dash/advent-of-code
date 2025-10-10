@@ -23,19 +23,23 @@ Part 2:
 
 """
 from __future__ import annotations
+
 import copy
-from dataclasses import dataclass
-import logging
 import itertools
-import time
+import logging
 import re
-from os import path
+import time
+from dataclasses import dataclass
 from itertools import combinations
+from os import path
+
+import dazbo_commons as dc
 from player import Player
+
 import aoc_common.aoc_commons as ac
 
 locations = ac.get_locations(__file__)
-logger = ac.retrieve_console_logger(locations.script_name)
+logger = dc.retrieve_console_logger(locations.script_name)
 logger.setLevel(logging.DEBUG)
 
 BOSS_FILE = "boss_stats.txt"
