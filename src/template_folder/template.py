@@ -11,14 +11,14 @@ Part 2:
 """
 import logging
 
-import dazbo_commons as dc
+import dazbo_commons as dc  # For logging
 
-import aoc_common.aoc_commons as ac
+import aoc_common.aoc_commons as ac  # General AoC utils
 
 YEAR = 2017
 DAY = 1
 
-locations = ac.get_locations(__file__)
+locations = dc.get_locations(__file__)
 logger = dc.retrieve_console_logger(locations.script_name)
 logger.setLevel(logging.DEBUG)
 # td.setup_file_logging(logger, locations.output_dir)

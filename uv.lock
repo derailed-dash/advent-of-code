@@ -12,7 +12,6 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "colorama" },
-    { name = "dazbo-aoc-commons" },
     { name = "dazbo-commons" },
     { name = "graphviz" },
     { name = "imageio" },
@@ -54,8 +53,7 @@ lint = [
 requires-dist = [
     { name = "codespell", marker = "extra == 'lint'" },
     { name = "colorama" },
-    { name = "dazbo-aoc-commons" },
-    { name = "dazbo-commons" },
+    { name = "dazbo-commons", specifier = ">=0.2.0" },
     { name = "graphviz" },
     { name = "imageio" },
     { name = "ipykernel", marker = "extra == 'jupyter'" },
@@ -449,21 +447,16 @@ wheels = [
 ]
 
 [[package]]
-name = "dazbo-aoc-commons"
-version = "0.1.10"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/9c/66/bac2553e0f1420e7333b27e56ac4efbbf1cf4bc41e1f7bab3d41709d0a86/dazbo-aoc-commons-0.1.10.tar.gz", hash = "sha256:0f0dd33014869280f1830e4ff82722f4d142ca8ac408b009ff98c135177fcbf7", size = 6289 }
-
-[[package]]
 name = "dazbo-commons"
-version = "0.1.5"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama" },
+    { name = "python-dotenv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c6/15/21b01c2ffdb2c7b4ad77f2ee70b10b8b6c413fd3a903e5fc1bc8e27d1464/dazbo_commons-0.1.5.tar.gz", hash = "sha256:f6de0ae593dda67bf7a119135c6a30bb1e010c2370ff0e31115ea4fbb7437a5d", size = 9671 }
+sdist = { url = "https://files.pythonhosted.org/packages/a8/89/1a212d15ce5b7cd9ba2ce6029f8f0498bb131b9b5038739f088baa0a89e8/dazbo_commons-0.2.0.tar.gz", hash = "sha256:6d047de07bc9728a1d06487bf6efcf62b14b999ccd8d41409737e56847ecc3c0", size = 9332 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/06/4d/a50b396d7cfb136c4040e72d29a8ed539f4bf33ca8af72b7c1fa14be2540/dazbo_commons-0.1.5-py3-none-any.whl", hash = "sha256:3fba269b44793851058b04ad8129c03fbd8865cf8b9601f616b6ddd9eebd9e21", size = 8054 },
+    { url = "https://files.pythonhosted.org/packages/61/bf/fc695c1fe28592b3c29893ca8c37de783673f169da685a9cf6786e1be816/dazbo_commons-0.2.0-py3-none-any.whl", hash = "sha256:2b8338ee04b3138a3bc9bf01636bf9b3c787b647cd7856dd6a2e75a4a6e8f3be", size = 7716 },
 ]
 
 [[package]]

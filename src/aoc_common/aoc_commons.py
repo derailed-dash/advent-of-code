@@ -21,6 +21,7 @@ from enum import Enum
 from functools import cache
 from pathlib import Path
 
+import dazbo_commons as dc
 import requests
 from dotenv import load_dotenv  # python-dotenv
 
@@ -35,6 +36,8 @@ from dotenv import load_dotenv  # python-dotenv
 # logger for aoc_commons only
 logger = logging.getLogger(__name__) # aoc_common.aoc_commons
 logger.setLevel(logging.INFO)
+
+load_dotenv() # load environment variables
 
 def setup_file_logging(a_logger: logging.Logger, folder: str|Path=""):
     """ Add a FileHandler to the specified logger. File name is based on the logger name.
@@ -52,39 +55,11 @@ def setup_file_logging(a_logger: logging.Logger, folder: str|Path=""):
     file_handler.setFormatter(file_fmt)
     a_logger.addHandler(file_handler)
     
-#################################################################
-# Paths and Locations
-#################################################################
-
-@dataclass
-class Locations:
-    """ Dataclass for storing various location properties """
-    script_name: str
-    script_dir: Path
-    input_dir: Path
-    output_dir: Path
-    sample_input_file: Path
-    input_file: Path
-    
-def get_locations(script_file) -> Locations:
-    """ Set various paths, based on the location of the calling script. """
-    script_name = Path(script_file).stem   # this script file, without .py
-    script_dir = Path(script_file).parent  # the folder where this script lives
-    input_dir = Path(script_dir, "input")
-    output_dir = Path(script_dir, "output")
-    input_file = Path(input_dir, "input.txt")
-    sample_input_file = Path(script_dir, "input/sample_input.txt")
-    
-    return Locations(script_name, script_dir, 
-                     input_dir, 
-                     output_dir, 
-                     sample_input_file, input_file)
-
 ##################################################################
 # Retrieving input data
 ##################################################################
     
-def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
+def write_puzzle_input_file(year: int, day: int, locations: dc.Locations) -> str:
     """ Use session key to obtain user's unique data for this year and day.
     Retrieves the data and writes it as a local file.
     

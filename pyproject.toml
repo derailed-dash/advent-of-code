@@ -19,13 +19,12 @@ dependencies = [
     "python-dotenv",
     "requests",
     "tqdm",
-    "dazbo-aoc-commons",
     "pillow",
     "imageio",
     "graphviz",
     "sympy",
     "colorama",
-    "dazbo-commons",
+    "dazbo-commons>=0.2.0",
 ]
 
 [project.urls]
