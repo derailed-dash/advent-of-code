@@ -189,6 +189,8 @@ get_envs_from_file() # read env variables from a .env file, if we can find one
     
 def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
     """ Use session key to obtain user's unique data for this year and day.
+    Retrieves the data and writes it as a local file.
+    
     Only retrieve if the input file does not already exist. 
     Raises a ValueError if unable to perform request.
     Requires env: AOC_SESSION_COOKIE, which can be set from the .env.

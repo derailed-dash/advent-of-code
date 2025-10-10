@@ -94,8 +94,15 @@ Here is a simplified overview of the repository's structure, showing examples of
 ```
 .
 ├───docs/                 # Source for the Jekyll-based walkthrough website
-│   ├───2022/
-│   │   └───1.md          # Walkthrough for 2022, Day 1 (Python script approach)
+│   ├───2022/             # Walkthroughs for 2022 (Python script approach)
+│   │   └───1.md          # Walkthrough Day 1
+│   python/               # General Python guides
+│   │   ├───assertion.md  # Walkthrough for a specific topic
+|   |   └───...
+|   ├─── _config.yml        # Jekyll configuration
+|   ├─── _config.docker.yml # Jekyll configuration for Docker
+|   ├─── docker-compose.yml # Docker configuration
+|   ├─── index.md           # Index page for the website
 │   └───...
 ├───src/                  # All Python source code and notebooks
 │   ├───AoC_2022/
