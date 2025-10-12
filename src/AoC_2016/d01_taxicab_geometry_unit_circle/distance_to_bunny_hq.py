@@ -17,9 +17,7 @@ Part 2:
 import logging
 import os
 import time
-from math import sin, cos, radians
-
-# pylint: disable=logging-fstring-interpolation
+from math import cos, radians, sin
 
 SCRIPT_DIR = os.path.dirname(__file__) 
 INPUT_FILE = "input/input.txt"
