@@ -47,5 +47,4 @@ message.txt
 snippets/
 output/
 
-.gemini/
 gha-creds-*.json

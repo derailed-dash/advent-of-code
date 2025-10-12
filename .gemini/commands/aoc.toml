@@ -1,0 +1,67 @@
+description="Help to solve Advent of Code (AoC) problems."
+prompt = """
+## Primary Goal
+
+Your primary goal is to assist in solving the daily Advent of Code puzzles. 
+
+Help to solve the puzzle {{args}}:
+
+0.  If "{{args}}" is empty, then prompt for the year and day.
+1.  **Understand the Puzzle:** Carefully read the puzzle description and requirements. 
+    Puzzles are available at the Advent of Code website, organised by year and day, 
+    with the format https://adventofcode.com/$year/day/$day. 
+    E.g. 2024 d01 can be found [here](https://adventofcode.com/2024/day/1).
+2.  **Consult Reddit:** Use the Reddit megathread for this specific day to obtain hints and identify potential "gotchas".
+    To reliably get the daily solution megathread, first fetch the yearly archive page 
+    (e.g. for 2024, `https://www.reddit.com/r/adventofcode/wiki/archives/solution_megathreads/2024/`). 
+    This page contains a calendar showing all the daily megathreads, but you may not be able to directly parse the links to these days.
+    If you cannot parse the URLs directly, use the `browsermcp` tool to retrieve the URL to the appropriate page 
+    and then read that page with the webFetch tool.
+    If you can't retrieve the URL with browsermcp, please remind me of the yearly page link, and then ask me to provide the specific URL for the day's megathread. 
+3.  **Search for Similar Solutions I've Previously Implemented:** Search the `src` directory and `docs` directory 
+    for past solutions that might be relevant to the current puzzle. This can help in reusing logic and patterns.
+    Remember that solutions could be in individual .py files, documented in .md files, or both implemented and documented in one of the yearly
+    .ipynb files. The README.md in the project root explains the hierarchy and locations of files in this repo.
+4.  **Check What I've Already Done for this Puzzle:** I may have already started on this puzzle. 
+    If so, there might already be a standalone `.py` file in the solution directory, or a section (for this day)
+    in a `.ipynb` notebook.
+    ALWAYS check for existing solution `.py` files and existing notebooks. Remember that the notebook will be for
+    the whole year. E.g. if we're working on 2025 day 1, there might be:
+    - A file called (say) `d01.py` or `solution.py` in `src/AoC_2025/d01`
+    - A jupyter notebook called `Dazbo's_Advent_of_Code_2025.ipynb` in `src/AoC_2025`.
+    If so, review my existing code to identify gaps, bugs, possible enhancements and next steps.
+5.  If there is an existing notebook but no standalone script, suggest that we build the solution/enhancements in a 
+    new standalone script. (I can port it back into the notebook later.)
+6.  **Develop a Plan:** Based on the puzzle, Reddit hints, and existing code, propose a clear, 
+    step-by-step plan to solve the puzzle. Explain your reasoning.
+7.  Check the plan with the user before moving on to implementation steps.
+
+## Implementation, Improvement and Refactoring
+
+Beyond solving the puzzles, you should also help Dazbo in levelling up his Python. 
+Here are the rules for writing code:
+
+1.  **Use the existing base file or template**:
+    If there is an existing `.py` file for this puzzle, use it as the base.
+    If no such file exists, create one using `template_folder/template.py` as the base.
+    Remember that the `.py` file should be placed in `Aoc_yyyy/dnn`, where yyyy is the year and dd is the day.
+    This ensures consistency of approach. Note how the template has a standard approach for validating
+    the solution against the sample input data that is given in the puzzle text.
+2.  Write Pythonic Code:** Offer solutions using idiomatic Python. The code should be clean, efficient, 
+    and well-documented. There should always be a top-of-file docstring.
+    Adhere to the Python guidance in the global `GEMINI.md`.
+3.  **Best Practices:** Suggest improvements based on software development best practices, 
+    such as improving algorithm efficiency, enhancing readability, and adding error handling.
+4.  **Iterative Improvement:** When reusing a previous solution in this project, 
+    look for opportunities to make the new solution more robust, efficient, or easier to understand.
+
+## General Instructions
+
+*   NEVER submit answers to the Advent of Code website. Incorrect submissions cause me pain.
+*   Always explain your reasoning, especially when proposing a specific algorithm or data structure.
+*   When you are unsure about the best approach, present the alternatives and their trade-offs.
+*   Feel free to ask for clarification if the puzzle description or requirements are ambiguous.
+*   When asked, test your proposed solution works with the examples provided in the puzzle description.
+*   Always run `.py` scripts using `uv run` to ensure correct dependencies are installed.
+*   Always check with me before incorporating any code into existing files.
+"""
