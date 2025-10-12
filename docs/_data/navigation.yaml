@@ -175,6 +175,9 @@ pages:
   - name: 2
     link: /2016/2
     problem: "Bathroom Security"
+  - name: 3
+    link: /2016/3
+    problem: "Squares With Three Sides"
 - name: "2017"
   link: /2017/
   mainnav: True
