@@ -4,8 +4,10 @@ Make sure your session cookie value is current
 """
 import logging
 import unittest
-from shutil import rmtree
 from os import path
+from shutil import rmtree
+
+import dazbo_commons as dc
 
 # py -m pip uninstall dazbo-aoc-commons
 import aoc_common.aoc_commons as ac  # for local testing
@@ -22,7 +24,7 @@ class TestTypes(unittest.TestCase):
     
     def setUp(self):
         """ Read locations, clear the input folder, and set up some test data """
-        self.locations = ac.get_locations(__file__)
+        self.locations = dc.get_locations(__file__)
         self.clear_input_folder()
         
         self.points = set()
@@ -50,15 +52,6 @@ class TestTypes(unittest.TestCase):
             print(f"Deleting {self.locations.input_dir}")
             rmtree(self.locations.input_dir)
     
-    def test_locations(self): 
-        """ Test that the locations and script name are set properly """
-        # use normcase to un-escape and ignore case differences in the paths
-        script_directory = path.normcase(path.dirname(path.realpath(__file__)))
-        self.assertEqual(path.normcase(self.locations.script_dir), script_directory)
-        
-        this_script = path.splitext(path.basename(__file__))[0]
-        self.assertEqual(self.locations.script_name, this_script)        
-
     def test_write_puzzle_input_file(self):
         """ Test that we can retrieve AoC input data.
         This depends on having a valid session cookie. 

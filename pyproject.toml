@@ -31,13 +31,20 @@ dependencies = [
 Homepage = "https://aoc.just2good.co.uk"
 Repository = "https://github.com/derailed-dash/Advent-of-Code"
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest",
+    "uv", # Although uv is installed globally, it's good to list it for clarity
+    "codespell",
+    "ruff",
+    "mypy",
     "isort",
-    "twine",
-    "pip-review",
+    "httpx",
+    "pytest-asyncio",
+    "types-requests"
 ]
+
+[project.optional-dependencies]
 jupyter = [
     "jupyter",
     "jupyterlab",
@@ -69,6 +76,7 @@ select = [
 ]
 # ignore line too long, too complex, two blank lines, trailing whitespace 
 ignore = [
+    "B905", # ignore strict zip requirement
     "E302", # expected two blank lines between defs
     "W291", # trailing whitespace
     "W293"  # line contains whitespace
@@ -77,6 +85,10 @@ per-file-ignores = { "__init__.py" = ["F401"], "**/__init__.py" = ["F401"], "*.i
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+asyncio_mode = "auto"
 
 [tool.mypy]
 disallow_untyped_calls = false     # Prohibit calling functions that lack type annotations.
@@ -95,3 +107,6 @@ explicit_package_bases = true      # Enforce explicit declaration of package bas
 disable_error_code = ["misc", "no-any-return", "no-untyped-def"]
 
 exclude = [".venv"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
