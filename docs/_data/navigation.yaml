@@ -178,6 +178,15 @@ pages:
   - name: 3
     link: /2016/3
     problem: "Squares With Three Sides"
+  - name: 4
+    link: /2016/4
+    problem: "Security Through Obscurity"
+  - name: 5
+    link: /2016/5
+    problem: "How About a Nice Game of Chess?"
+  - name: 6
+    link: /2016/6
+    problem: "Signals and Noise"
 - name: "2017"
   link: /2017/
   mainnav: True
