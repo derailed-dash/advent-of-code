@@ -144,6 +144,9 @@ This repository leverages two primary utility libraries to streamline solution d
 
 By separating these concerns, `aoc_common` remains focused on AoC-specific helpers, while `dazbo-commons` handles more general-purpose tasks, promoting reusability and cleaner code.
 
+Note that the `aoc_common` package is imported into standalone scripts, but it's code is replicated in the notebooks. 
+This is so that the notebooks can be entirely portable.
+
 ### Assertions and Testing
 
 Each solution typically includes assertions to verify correctness, especially against sample inputs provided by Advent of Code. The `aoc_common.validate` function is used for this purpose:
@@ -154,15 +157,11 @@ ac.validate(test_result, expected_answer)
 
 This function raises an `AssertionError` if the `test_result` does not match the `expected_answer`, providing immediate feedback during development and ensuring the solution works for known cases before attempting the full input.
 
-
-
 ## Helper Scripts
 
 The `scripts/` directory contains helper scripts for managing this repository:
 
 - **`create_year.ps1`**: A PowerShell script to scaffold the directory structure for a new Advent of Code year.
-- **`build_aoc_commons.ps1`**: A PowerShell script to build the `aoc_common` package.
-- **`upload_to_pypi.py`**: A Python script to upload the `aoc_common` package to PyPI.
 
 ## Documentation Website
 
