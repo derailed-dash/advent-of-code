@@ -220,6 +220,12 @@ pages:
   - name: 17
     link: /2016/17
     problem: "Two Steps Forward"
+  - name: 18
+    link: /2016/18
+    problem: "Like a Rogue"
+  - name: 19
+    link: /2016/19
+    problem: "An Elephant Named Joseph"
 - name: "2017"
   link: /2017/
   mainnav: True
