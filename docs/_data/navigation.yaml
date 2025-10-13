@@ -211,6 +211,15 @@ pages:
   - name: 14
     link: /2016/14
     problem: "One-Time Pad"
+  - name: 15
+    link: /2016/15
+    problem: "Timing is Everything"
+  - name: 16
+    link: /2016/16
+    problem: "Dragon Checksum"
+  - name: 17
+    link: /2016/17
+    problem: "Two Steps Forward"
 - name: "2017"
   link: /2017/
   mainnav: True
