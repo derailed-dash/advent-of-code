@@ -187,6 +187,9 @@ pages:
   - name: 6
     link: /2016/6
     problem: "Signals and Noise"
+  - name: 7
+    link: /2016/7
+    problem: "Internet Protocol Version 7"
 - name: "2017"
   link: /2017/
   mainnav: True
