@@ -205,6 +205,12 @@ pages:
   - name: 12
     link: /2016/12
     problem: "Leonardo's Monorail"
+  - name: 13
+    link: /2016/13
+    problem: "A Maze of Twisty Little Cubicles"
+  - name: 14
+    link: /2016/14
+    problem: "One-Time Pad"
 - name: "2017"
   link: /2017/
   mainnav: True
