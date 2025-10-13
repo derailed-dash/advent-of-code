@@ -6,7 +6,7 @@ title: Advent of Code 2016
 
 Welcome to [AoC 2016](https://adventofcode.com/2016){:target="_blank"}, the second Advent of Code!
 
-Walkthroughs are coming soon!
+My walkthroughs for 2016 are below.
 
 ## Day Index
 

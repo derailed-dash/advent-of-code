@@ -193,6 +193,18 @@ pages:
   - name: 8
     link: /2016/8
     problem: "Two-Factor Authentication"
+  - name: 9
+    link: /2016/9
+    problem: "Explosives in Cyberspace"
+  - name: 10
+    link: /2016/10
+    problem: "Balance Bots"
+  - name: 11
+    link: /2016/11
+    problem: "Radioisotope Thermoelectric Generators"
+  - name: 12
+    link: /2016/12
+    problem: "Leonardo's Monorail"
 - name: "2017"
   link: /2017/
   mainnav: True
