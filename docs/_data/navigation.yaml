@@ -226,6 +226,15 @@ pages:
   - name: 19
     link: /2016/19
     problem: "An Elephant Named Joseph"
+  - name: 20
+    link: /2016/20
+    problem: "Firewall Rules"
+  - name: 21
+    link: /2016/21
+    problem: "Scrambled Letters and Hash"
+  - name: 22
+    link: /2016/22
+    problem: "Grid Computing"
 - name: "2017"
   link: /2017/
   mainnav: True
