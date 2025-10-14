@@ -57,7 +57,7 @@ To run the solutions in this repository, you'll need the following:
 
     ```bash
     # Install dependencies in a venv, including Jupyter
-    uv sync --dev --extra jupyter
+    make install # runs uv sync --dev --extra jupyter
     ```
 
     Alternatively, you can use `conda` as described in `src/readme.md`.
