@@ -235,6 +235,15 @@ pages:
   - name: 22
     link: /2016/22
     problem: "Grid Computing"
+  - name: 23
+    link: /2016/23
+    problem: "Safe Cracking"
+  - name: 24
+    link: /2016/24
+    problem: "Air Duct Cleaning"
+  - name: 25
+    link: /2016/25
+    problem: "Clock Signal"
 - name: "2017"
   link: /2017/
   mainnav: True
