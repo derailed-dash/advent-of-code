@@ -42,6 +42,7 @@ def main():
     }
     
     visited_locations = []
+    # We need to use .copy() because location is a mutable dict.
     visited_locations.append(location.copy())
     
     heading = 0
@@ -76,6 +77,9 @@ def process_direction(location: dict, visited_locations: list, heading: int, ins
         location[Y] += round(cos(radians(heading)))
         
         # store all coords visited whilst following this direction
+        # We need to use .copy() because location is a mutable dict.
+        # If we just appended location, we'd be appending a reference to the same dict each time.
+        # This would mean all entries in visited_locations would be the same as the final location.
         visited_locations.append(location.copy())
     
     return location, heading
