@@ -32,14 +32,12 @@ from pathlib import Path
 
 import dazbo_commons as dc
 
-import aoc_common.aoc_commons as ac
-
 SCRIPT_NAME = Path(__file__).stem
 SCRIPT_DIR = Path(__file__).parent
 # INPUT_FILE = Path(SCRIPT_DIR, "input/sample_input.txt")
 INPUT_FILE = Path(SCRIPT_DIR, "input/input.txt")
 
-locations = ac.get_locations(__file__)
+locations = dc.get_locations(__file__)
 logger = dc.retrieve_console_logger(locations.script_name)
 logger.setLevel(logging.DEBUG)
 

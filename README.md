@@ -64,6 +64,9 @@ To run the solutions in this repository, you'll need the following:
 
 3.  **Run the solutions:**
     - For Python scripts, you can run them directly from your terminal.
+      ```bash
+      uv run src/AoC_2022/d01_calorie_counting/elf_calories.py  
+      ```
     - For Jupyter Notebooks, run them directly in your IDE (e.g. VS Code), start a Jupyter Lab, 
       or run in a cloud service like [Google Colab](https://colab.research.google.com/).
       ```bash
