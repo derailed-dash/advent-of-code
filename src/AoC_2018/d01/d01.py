@@ -2,7 +2,7 @@
 Author: Darren
 Date: 01/12/2023
 
-Solving https://adventofcode.com/2023/day/1
+Solving https://adventofcode.com/2018/day/1
 
 Part 1:
 
@@ -11,12 +11,13 @@ Part 2:
 """
 import logging
 import textwrap
+from itertools import cycle
 
 import dazbo_commons as dc  # For logging
 
 import aoc_common.aoc_commons as ac  # General AoC utils
 
-YEAR = 2017
+YEAR = 2018
 DAY = 1
 
 locations = dc.get_locations(__file__)
@@ -25,10 +26,26 @@ logger.setLevel(logging.DEBUG)
 # td.setup_file_logging(logger, locations.output_dir)
     
 def part1(data):
-    return "uvwxyz"
+    """ Calculate the resulting frequency after applying all the deltas in the input data. """
+    freq = 0
+    for freq_chg in data:
+        freq += int(freq_chg)
+        
+    return freq
 
 def part2(data):
-    return "uvwxyz"
+    """ Apply the deltas in the input data and loop the input indefinitely.
+    Exit when we see a frequency we've seen before and return that frequency. """
+    freq = 0
+    seen = set()
+    for freq_chg in cycle(data):
+        freq += int(freq_chg)
+        if freq in seen:
+            break
+        
+        seen.add(freq)
+    
+    return freq
 
 def main():
     try:
@@ -42,17 +59,17 @@ def main():
 
     sample_inputs = []
     sample_inputs.append(textwrap.dedent("""\
-        abcdef"""))
-    sample_answers = ["uvwxyxz"]
+        +1
+        -2
+        +3
+        +1"""))
+    sample_answers = [3]
     test_solution(part1, sample_inputs, sample_answers)
 
     with ac.timer():
         logger.info(f"Part 1 soln={part1(input_data)}")
         
-    sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        abcdef"""))
-    sample_answers = ["uvwxyz"]
+    sample_answers = [2]
     test_solution(part2, sample_inputs, sample_answers)
      
     with ac.timer():

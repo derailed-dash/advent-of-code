@@ -40,7 +40,11 @@ for i in $(seq 1 25); do
     mkdir -p "${DAY_FOLDER}"
 
     NEW_PYTHON_FILE="${DAY_FOLDER}/${DAY_PREFIX}.py"
-    cp "${TEMPLATE_FILE}" "${NEW_PYTHON_FILE}"
+    # Replace the hardcoded year in the template file with the provided year.
+    # This updates the 'YEAR' variable and the year in the Advent of Code URL.
+    sed -e "s/YEAR = 2017/YEAR = $YEAR/" \
+        -e "s/adventofcode.com\/2023\/day\//adventofcode.com\/$YEAR\/day\//" \
+        "${TEMPLATE_FILE}" > "${NEW_PYTHON_FILE}"
 
     # Also copy the input folder
     cp -r "${TEMPLATE_INPUT_FOLDER}" "${DAY_FOLDER}/"

@@ -2,7 +2,7 @@
 Author: Darren
 Date: 01/12/2023
 
-Solving https://adventofcode.com/2023/day/1
+Solving https://adventofcode.com/2018/day/1
 
 Part 1:
 
@@ -16,7 +16,7 @@ import dazbo_commons as dc  # For logging
 
 import aoc_common.aoc_commons as ac  # General AoC utils
 
-YEAR = 2017
+YEAR = 2018
 DAY = 1
 
 locations = dc.get_locations(__file__)
