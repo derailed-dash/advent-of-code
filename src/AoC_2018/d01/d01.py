@@ -37,7 +37,7 @@ def part2(data):
     """ Apply the deltas in the input data and loop the input indefinitely.
     Exit when we see a frequency we've seen before and return that frequency. """
     freq = 0
-    seen = set()
+    seen = {0}
     for freq_chg in cycle(data):
         freq += int(freq_chg)
         if freq in seen:
