@@ -247,6 +247,13 @@ pages:
 - name: "2017"
   link: /2017/
   mainnav: True
+- name: "2018"
+  link: /2018/
+  mainnav: True
+  members:
+  - name: 1
+    link: /2018/1
+    problem: "Chronal Calibration"
 - name: "2021"
   link: /2021/
   mainnav: True
