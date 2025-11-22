@@ -1,8 +1,8 @@
 """
 Author: Darren
-Date: 01/12/2023
+Date: 22/11/2025
 
-Solving https://adventofcode.com/2018/day/1
+Solving https://adventofcode.com/2018/day/2
 
 Part 1:
 
@@ -17,12 +17,11 @@ import dazbo_commons as dc  # For logging
 import aoc_common.aoc_commons as ac  # General AoC utils
 
 YEAR = 2018
-DAY = 1
+DAY = 2
 
 locations = dc.get_locations(__file__)
 logger = dc.retrieve_console_logger(locations.script_name)
 logger.setLevel(logging.DEBUG)
-# td.setup_file_logging(logger, locations.output_dir)
     
 def part1(data):
     return "uvwxyz"
