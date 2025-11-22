@@ -11,8 +11,10 @@ Part 2:
 """
 import logging
 import textwrap
+import sys
 
-import dazbo_commons as dc  # For logging
+import dazbo_commons as dc  # For locations
+from rich.logging import RichHandler
 
 import aoc_common.aoc_commons as ac  # General AoC utils
 
@@ -20,9 +22,21 @@ YEAR = 2017
 DAY = 1
 
 locations = dc.get_locations(__file__)
-logger = dc.retrieve_console_logger(locations.script_name)
+
+# Configure root logger with Rich logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s.%(msecs)03d %(message)s",
+    datefmt='%H:%M:%S',
+    handlers=[RichHandler(
+        rich_tracebacks=True, 
+        show_path=True,
+        markup=True,
+        show_time=False  # Disable Rich's time since we're using our own
+    )]
+)
+logger = logging.getLogger(locations.script_name)
 logger.setLevel(logging.DEBUG)
-# td.setup_file_logging(logger, locations.output_dir)
     
 def part1(data):
     return "uvwxyz"
@@ -35,7 +49,7 @@ def main():
         ac.write_puzzle_input_file(YEAR, DAY, locations)
         with open(locations.input_file, encoding="utf-8") as f:
             input_data = f.read().splitlines()
-            logger.debug(input_data)
+            logger.debug(dc.top_and_tail(input_data))
     except (ValueError, FileNotFoundError) as e:
         logger.error("Could not read input file: %s", e)
         return 1
@@ -71,7 +85,11 @@ def test_solution(soln_func, sample_inputs: list, sample_answers: list):
         AssertionError: If any of the test cases fail validation.
     """
     for curr_input, curr_ans in zip(sample_inputs, sample_answers):
-        ac.validate(soln_func(curr_input.splitlines()), curr_ans)
+        try:
+            ac.validate(soln_func(curr_input.splitlines()), curr_ans)
+        except AssertionError as e:
+            logger.error(f"{soln_func.__name__} test failed: {e}")
+            sys.exit(1)
     logger.info(f"{soln_func.__name__} tests passed")
     
 if __name__ == "__main__":

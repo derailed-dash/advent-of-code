@@ -25,6 +25,7 @@ dependencies = [
     "sympy",
     "colorama",
     "dazbo-commons>=0.2.0",
+    "rich>=14.2.0",
 ]
 
 [project.urls]
