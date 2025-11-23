@@ -17,8 +17,8 @@ Find the two IDs that differ by exactly one character at the same position in bo
 
 """
 import logging
-import textwrap
 import sys
+import textwrap
 from collections import Counter
 from itertools import combinations
 

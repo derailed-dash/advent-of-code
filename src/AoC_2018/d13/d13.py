@@ -10,8 +10,8 @@ Part 2:
 
 """
 import logging
-import textwrap
 import sys
+import textwrap
 
 import dazbo_commons as dc  # For locations
 from rich.logging import RichHandler
