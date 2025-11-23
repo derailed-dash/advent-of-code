@@ -68,12 +68,19 @@ def part2(data):
     
     # Compare every pair of IDs
     for id1, id2 in combinations(data, 2):
-        if sum(posn1 != posn2 for posn1, posn2 in zip(id1, id2)) == 1:
+        diffs = 0
+        for posn1, posn2 in zip(id1, id2):
+            if posn1 != posn2:
+                diffs += 1
+            if diffs > 1: # No point continuing if we've already exceeded the limit
+                break
+
+        if diffs == 1:
             # We've found two IDs that differ by exactly one character at the same position in both strings.
             # Return the common characters of the two IDs.
             return ''.join(posn1 for posn1, posn2 in zip(id1, id2) if posn1 == posn2)
 
-    return "uvwxyz"
+    return False # No IDs found that differ by exactly one character at the same position in both strings.
 
 def main():
     try:
