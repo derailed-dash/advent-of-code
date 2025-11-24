@@ -1,19 +1,47 @@
 """
 Author: Darren
-Date: 23/11/2025
+Date: 24/11/2025
 
 Solving https://adventofcode.com/2018/day/3
 
-Part 1:
+The Elves have found some prototype fabric for Santa's suit, but they can't agree on how to cut it. 
+The fabric is a large square, at least 1000 inches on each side. Each Elf makes a claim for a rectangular area of the fabric.
 
-Part 2:
+Each claim describes a rectangle with an ID, the offset from the left and top edges, and the dimensions (width and height).
+
+The input looks like this:
+
+```
+#1 @ 1,3: 4x4
+#2 @ 3,1: 4x4
+#3 @ 5,5: 2x2
+```
+
+In this example:
+   - Claim #1 specifies a 4x4 rectangle, starting 1 inch from the left and 3 inches from the top.
+   - Claim #2 specifies a 4x4 rectangle, starting 3 inches from the left and 1 inch from the top.
+   - Claim #3 specifies a 2x2 rectangle, starting 5 inches from the left and 5 inches from the top.
+
+The problem is that these claims can overlap. In the example above, claims #1 and #2 share an overlapping area, 
+while claim #3 is separate.
+
+# Part 1
+
+How many square inches of fabric are within two or more claims?
+
+# Part 2
+
+Which claim does not overlap?
 
 """
 import logging
+import re
 import sys
 import textwrap
+from dataclasses import dataclass
 
 import dazbo_commons as dc  # For locations
+import numpy as np
 from rich.logging import RichHandler
 
 import aoc_common.aoc_commons as ac  # General AoC utils
@@ -37,12 +65,56 @@ logging.basicConfig(
 )
 logger = logging.getLogger(locations.script_name)
 logger.setLevel(logging.DEBUG)
-    
+
+matcher = re.compile(r"#(\d+) @ (\d+),(\d+): (\d+)x(\d+)") # e.g. #1 @ 1,3: 4x4
+
+@dataclass
+class Claim:
+    claim_id: int
+    x: int
+    y: int
+    width: int
+    height: int
+
+def process_data(data):
+    """ 
+    Process the data into a list of claims
+    Input is a list of claim strings. Each string is in the format #1 @ 1,3: 4x4, which represents a rectangle on a fabric.
+    Output is a list of claims.
+    """
+    claims = []
+    for claim in data:
+        claims.append(Claim(*map(int, matcher.match(claim).groups())))
+    return claims
+
 def part1(data):
-    return "uvwxyz"
+    """
+    Return sum of squares where array > 1 (claimed by 2+ Elves)
+    """
+    array = np.zeros((1000, 1000), dtype=int)
+    claims = process_data(data)
+    for claim in claims:
+        array[claim.x:claim.x+claim.width, claim.y:claim.y+claim.height] += 1
+    
+    return (array > 1).sum()  # Count squares where array > 1 (claimed by 2+ Elves)
 
 def part2(data):
-    return "uvwxyz"
+    """
+    Return ID of claim that does not overlap
+    """
+    array = np.zeros((1000, 1000), dtype=int)
+    claims = process_data(data)
+
+    # First increment array for each claim
+    for claim in claims:
+        array[claim.x:claim.x+claim.width, claim.y:claim.y+claim.height] += 1
+    
+    # Then go through the claims again and check if all squares in the claim are claimed by only one Elf
+    for claim in claims:
+        if (array[claim.x:claim.x+claim.width, claim.y:claim.y+claim.height] == 1).all():
+            return claim.claim_id
+
+    raise AssertionError("No non-overlapping claim found")
 
 def main():
     try:
@@ -56,17 +128,16 @@ def main():
 
     sample_inputs = []
     sample_inputs.append(textwrap.dedent("""\
-        abcdef"""))
-    sample_answers = ["uvwxyxz"]
+        #1 @ 1,3: 4x4
+        #2 @ 3,1: 4x4
+        #3 @ 5,5: 2x2"""))
+    sample_answers = [4]
     test_solution(part1, sample_inputs, sample_answers)
 
     with ac.timer():
         logger.info(f"Part 1 soln={part1(input_data)}")
         
-    sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        abcdef"""))
-    sample_answers = ["uvwxyz"]
+    sample_answers = [3]
     test_solution(part2, sample_inputs, sample_answers)
      
     with ac.timer():

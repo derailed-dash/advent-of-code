@@ -257,6 +257,9 @@ pages:
   - name: 2
     link: /2018/2
     problem: "Inventory Management System"
+  - name: 3
+    link: /2018/3
+    problem: "No Matter How You Slice It"
 - name: "2021"
   link: /2021/
   mainnav: True
