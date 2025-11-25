@@ -111,7 +111,8 @@ def part2(data):
     """ Return the product of the ID of the guard who is most frequently asleep at the same minute, 
     and the minute they are most frequently asleep """
     guards = process_data(data)
-    sleepiest_minute = max(guards.values(), key=lambda x: x.get_most_frequent_minute())
+    sleepiest_minute = max(guards.values(), 
+                           key=lambda x: x.get_sleep_freq_for_minute(x.get_most_frequent_minute()))
     logger.debug(f"Sleepiest minute: {sleepiest_minute}")
     return sleepiest_minute.guard_id * sleepiest_minute.get_most_frequent_minute()
 
