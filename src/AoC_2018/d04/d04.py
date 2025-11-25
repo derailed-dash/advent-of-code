@@ -1,6 +1,6 @@
 """
 Author: Darren
-Date: 22/11/2025
+Date: 25/11/2025
 
 Solving https://adventofcode.com/2018/day/4
 
@@ -10,8 +10,10 @@ Part 2:
 
 """
 import logging
+import re
 import sys
 import textwrap
+from collections import defaultdict
 
 import dazbo_commons as dc  # For locations
 from rich.logging import RichHandler
@@ -37,12 +39,81 @@ logging.basicConfig(
 )
 logger = logging.getLogger(locations.script_name)
 logger.setLevel(logging.DEBUG)
+
+matcher = re.compile(r"Guard #(\d+)")
+
+class Guard:
+    def __init__(self, guard_id):
+        self.guard_id = guard_id
+        self.sleep_times = [0]*60
+
+    def add_sleep_time(self, start, end):
+        """ Add sleep time to the guard's sleep times """
+        for i in range(start, end):
+            self.sleep_times[i] += 1
+
+    def get_total_sleep(self) -> int:
+        """ Return total sleep time in minutes """
+        return sum(self.sleep_times)
+
+    def get_sleep_freq_for_minute(self, minute) -> int:
+        """ Return the frequency of sleep for a given minute """
+        return self.sleep_times[minute]
+    
+    def get_most_frequent_minute(self) -> int:
+        """ Return the minute that the guard was most frequently asleep """
+        return self.sleep_times.index(max(self.sleep_times))
+
+    def __str__(self):
+        return f"Guard {self.guard_id}: {self.get_total_sleep()} minutes, " \
+               f"asleep {self.get_sleep_freq_for_minute(self.get_most_frequent_minute())} times at minute " \
+               f"{self.get_most_frequent_minute()}"
+
+def process_data(data):
+    """ Data is a list of strings in the format:
+    [1518-11-01 00:00] Guard #10 begins shift
+    [1518-11-01 00:05] falls asleep
+    [1518-11-01 00:25] wakes up
+
+    The data is unsorted and must be sorted by date and time.
+    """
+    sorted_data = sorted(data)
+    guards = {}
+
+    for line in sorted_data:
+        if "Guard" in line:
+            asleep_start = None
+            guard_id = int(matcher.search(line).group(1))
+            if guard_id not in guards:
+                guards[guard_id] = Guard(guard_id)
+        else:
+            if "asleep" in line:
+                asleep_start = int(line[15:17])
+            else:
+                assert asleep_start is not None
+                asleep_end = int(line[15:17])
+                guards[guard_id].add_sleep_time(asleep_start, asleep_end)
+    
+    return guards
     
 def part1(data):
-    return "uvwxyz"
+    """ Return the product of the ID of the guard who has the most total sleep, 
+    and the minute they are most frequently asleep """
+    guards = process_data(data)
+    for guard in guards.values():
+        logger.debug(guard)
+    
+    sleepiest_guard = max(guards.values(), key=lambda x: x.get_total_sleep())
+    logger.debug(f"Sleepiest guard: {sleepiest_guard}")
+    return sleepiest_guard.guard_id * sleepiest_guard.get_most_frequent_minute()
 
 def part2(data):
-    return "uvwxyz"
+    """ Return the product of the ID of the guard who is most frequently asleep at the same minute, 
+    and the minute they are most frequently asleep """
+    guards = process_data(data)
+    sleepiest_minute = max(guards.values(), key=lambda x: x.get_most_frequent_minute())
+    logger.debug(f"Sleepiest minute: {sleepiest_minute}")
+    return sleepiest_minute.guard_id * sleepiest_minute.get_most_frequent_minute()
 
 def main():
     try:
@@ -56,17 +127,30 @@ def main():
 
     sample_inputs = []
     sample_inputs.append(textwrap.dedent("""\
-        abcdef"""))
-    sample_answers = ["uvwxyxz"]
+        [1518-11-01 00:05] falls asleep
+        [1518-11-01 00:30] falls asleep
+        [1518-11-01 00:25] wakes up
+        [1518-11-03 00:05] Guard #10 begins shift
+        [1518-11-01 00:00] Guard #10 begins shift
+        [1518-11-01 23:58] Guard #99 begins shift
+        [1518-11-01 00:55] wakes up
+        [1518-11-04 00:02] Guard #99 begins shift
+        [1518-11-03 00:29] wakes up
+        [1518-11-02 00:50] wakes up
+        [1518-11-03 00:24] falls asleep
+        [1518-11-05 00:45] falls asleep
+        [1518-11-02 00:40] falls asleep
+        [1518-11-04 00:46] wakes up
+        [1518-11-05 00:03] Guard #99 begins shift
+        [1518-11-04 00:36] falls asleep
+        [1518-11-05 00:55] wakes up"""))
+    sample_answers = [240]
     test_solution(part1, sample_inputs, sample_answers)
 
     with ac.timer():
         logger.info(f"Part 1 soln={part1(input_data)}")
         
-    sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        abcdef"""))
-    sample_answers = ["uvwxyz"]
+    sample_answers = [4455]
     test_solution(part2, sample_inputs, sample_answers)
      
     with ac.timer():
