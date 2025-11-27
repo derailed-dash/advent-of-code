@@ -1,3 +1,4 @@
 input*.txt filter=git-crypt diff=git-crypt
 .env filter=git-crypt diff=git-crypt
 .gemini/commands/aoc/** filter=git-crypt diff=git-crypt
+.agent/workflows/** filter=git-crypt diff=git-crypt

@@ -260,6 +260,9 @@ pages:
   - name: 3
     link: /2018/3
     problem: "No Matter How You Slice It"
+  - name: 4
+    link: /2018/4
+    problem: "Repose Record"
 - name: "2021"
   link: /2021/
   mainnav: True
