@@ -263,6 +263,9 @@ pages:
   - name: 4
     link: /2018/4
     problem: "Repose Record"
+  - name: 5
+    link: /2018/5
+    problem: "Alchemical Reduction"
 - name: "2021"
   link: /2021/
   mainnav: True

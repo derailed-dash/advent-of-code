@@ -16,13 +16,15 @@ How many units remain after fully reacting the polymer you scanned?
 
 Part 2:
 
+One of the unit types is causing problems; 
+it's preventing the polymer from collapsing as much as it should.
 The goal is to remove **all** units of exactly one type (both lowercase and uppercase) 
 from the original polymer, and then fully react the remaining polymer.
 
 How many units remain after fully reacting the polymer you scanned?
-
 """
 import logging
+import string
 import sys
 import textwrap
 
@@ -50,13 +52,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(locations.script_name)
     
-def part1(polymer: str):
+def react_polymer(polymer):
     """
     Fully react the polymer using a stack-based approach.
     Iterates through the polymer, removing adjacent units of the same type but opposite polarity.
-    Returns the length of the remaining polymer.
+    Returns the remaining polymer.
     """
-    logger.debug("Polymer: %s", polymer)
     stack = []
     
     for char in polymer:
@@ -66,14 +67,31 @@ def part1(polymer: str):
         else:
             # No reaction, add to stack
             stack.append(char)
-
+    
         logger.debug("Stack: %s", stack)
-            
+
+    return stack
+
+
+def part1(polymer: str):
+    """
+    Returns the length of the remaining polymer.
+    """
+    logger.debug("Polymer: %s", polymer)
+    stack = react_polymer(polymer)     
     return len(stack)
 
-
 def part2(polymer: str):
-    return "uvwxyz"
+    """
+    Returns the length of the remaining polymer after removing all units of a single type.
+    """
+    polymers = {}
+    for char in string.ascii_lowercase: # iterate over all lowercase letters
+        new_polymer = polymer.replace(char, "").replace(char.upper(), "")
+        stack = react_polymer(new_polymer)
+        polymers[char] = len(stack)
+    
+    return min(polymers.values())
 
 def main():
     try:
@@ -98,11 +116,7 @@ def main():
         logger.info(f"Part 1 soln={part1(input_data)}")
         
     # Part 2 tests
-    logger.setLevel(logging.DEBUG)
-    sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        abcdef"""))
-    sample_answers = ["uvwxyz"]
+    sample_answers = [4]
     test_solution(part2, sample_inputs, sample_answers)
      
     # Part 2 solution
