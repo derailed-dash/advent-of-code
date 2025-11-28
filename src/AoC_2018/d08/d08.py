@@ -1,6 +1,6 @@
 """
 Author: Darren
-Date: 22/11/2025
+Date: 01/12/2023
 
 Solving https://adventofcode.com/2018/day/8
 
@@ -18,12 +18,13 @@ from rich.logging import RichHandler
 
 import aoc_common.aoc_commons as ac  # General AoC utils
 
+# Set these to the current puzzle
 YEAR = 2018
 DAY = 8
 
 locations = dc.get_locations(__file__)
 
-# Configure Rich logging
+# Configure root logger with Rich logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s.%(msecs)03d %(message)s",
@@ -38,37 +39,47 @@ logging.basicConfig(
 logger = logging.getLogger(locations.script_name)
 logger.setLevel(logging.DEBUG)
     
-def part1(data):
+def part1(data: list[str]):
     return "uvwxyz"
 
-def part2(data):
+def part2(data: list[str]):
     return "uvwxyz"
 
 def main():
     try:
         ac.write_puzzle_input_file(YEAR, DAY, locations)
         with open(locations.input_file, encoding="utf-8") as f:
-            input_data = f.read().splitlines()
+            input_data = f.read().splitlines() # Most puzzles are multiline strings
+            # input_data = f.read().strip() # Raw string
+            
             logger.debug(dc.top_and_tail(input_data))
     except (ValueError, FileNotFoundError) as e:
         logger.error("Could not read input file: %s", e)
         return 1
 
+    # Part 1 tests
+    logger.setLevel(logging.DEBUG)
     sample_inputs = []
     sample_inputs.append(textwrap.dedent("""\
         abcdef"""))
-    sample_answers = ["uvwxyxz"]
+    sample_answers = ["uvwxyz"]
     test_solution(part1, sample_inputs, sample_answers)
 
+    # Part 1 solution
+    logger.setLevel(logging.INFO)
     with ac.timer():
         logger.info(f"Part 1 soln={part1(input_data)}")
-        
+    
+    # Part 2 tests
+    logger.setLevel(logging.DEBUG)
     sample_inputs = []
     sample_inputs.append(textwrap.dedent("""\
         abcdef"""))
     sample_answers = ["uvwxyz"]
     test_solution(part2, sample_inputs, sample_answers)
      
+    # Part 2 solution
+    logger.setLevel(logging.INFO)
     with ac.timer():
         logger.info(f"Part 2 soln={part2(input_data)}")
 
