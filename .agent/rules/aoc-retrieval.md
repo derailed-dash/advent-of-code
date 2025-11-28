@@ -6,6 +6,9 @@ trigger: always_on
 
 When asked to retrieve any information from the Advent of Code (AoC) website, use the following configuration for API calls to `https://adventofcode.com`.
 
+## Obtain AOC_SESSION_COOKIE
+- This environment variable may already be set. If not, find it in .env.
+
 ## HTTP Headers
 - **Cookie**: `session=<AOC_SESSION_COOKIE>`
 - **User-Agent**: `github.com/derailed-dash/Advent-of-Code by derailed.dash@gmail.com` (Recommended by AoC)
