@@ -48,6 +48,7 @@ import logging
 import sys
 import textwrap
 from collections import defaultdict
+from typing import NamedTuple
 
 import dazbo_commons as dc  # For locations
 from rich.logging import RichHandler
@@ -75,27 +76,31 @@ logging.basicConfig(
 logger = logging.getLogger(locations.script_name)
 logger.setLevel(logging.DEBUG)
 
-def manhattan_distance(p1: tuple[int, int], p2: tuple[int, int]) -> int:
-    """Calculate Manhattan distance between two points represented as tuples."""
-    return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
+class Point(NamedTuple):
+    x: int
+    y: int
 
-def parse_input(data: list[str]) -> list[tuple[int, int]]:
-    """Converts a list of coordinate strings into a list of (x, y) tuples."""
-    return [tuple(map(int, line.split(","))) for line in data]
+def manhattan_distance(p1: Point, p2: Point) -> int:
+    """Calculate Manhattan distance between two points."""
+    return abs(p1.x - p2.x) + abs(p1.y - p2.y)
 
-def bounding_box(points: list[tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
+def parse_input(data: list[str]) -> list[Point]:
+    """Converts a list of coordinate strings into a list of Point objects."""
+    return [Point(*map(int, line.split(","))) for line in data]
+
+def bounding_box(points: list[Point]) -> tuple[Point, Point]:
     """Returns the bounding box defined by the min/max x and y values of all points."""
-    min_x = min(point[0] for point in points)
-    max_x = max(point[0] for point in points)
-    min_y = min(point[1] for point in points)
-    max_y = max(point[1] for point in points)
+    min_x = min(point.x for point in points)
+    max_x = max(point.x for point in points)
+    min_y = min(point.y for point in points)
+    max_y = max(point.y for point in points)
     logger.debug(f"min_x={min_x}, max_x={max_x}, min_y={min_y}, max_y={max_y}")
 
-    return (min_x, min_y), (max_x, max_y)
+    return Point(min_x, min_y), Point(max_x, max_y)
 
-def on_bounding_box_edge(point: tuple[int, int], tl: tuple[int, int], br: tuple[int, int]) -> bool:
+def on_bounding_box_edge(point: Point, tl: Point, br: Point) -> bool:
     """Returns True if the point is on the bounding box edge."""
-    return point[0] in [tl[0], br[0]] or point[1] in [tl[1], br[1]]
+    return point.x in [tl.x, br.x] or point.y in [tl.y, br.y]
     
 def part1(data: list[str]):
     """Find the size of the largest finite area."""
@@ -106,12 +111,12 @@ def part1(data: list[str]):
     logger.debug(f"tl={tl}, br={br}")
     
     # Store the closest danger point and its distance for each point in the bounding box
-    distances: dict[tuple[int, int], tuple[tuple[int, int] | None, int]] = {}
+    distances: dict[Point, tuple[Point | None, int]] = {}
 
     # Iterate over all points in the bounding box
-    for y in range(tl[1], br[1] + 1):
-        for x in range(tl[0], br[0] + 1):
-            curr_point = (x, y)
+    for y in range(tl.y, br.y + 1):
+        for x in range(tl.x, br.x + 1):
+            curr_point = Point(x, y)
             
             # Determine the closest danger coordinate for this point
             for danger_point in danger_points:
@@ -133,7 +138,7 @@ def part1(data: list[str]):
     logger.debug(distances)
     
     # Build areas: group all points by their closest danger point
-    points_in_dp_area: defaultdict[tuple[int, int], set[tuple[int, int]]] = defaultdict(set)
+    points_in_dp_area: defaultdict[Point, set[Point]] = defaultdict(set)
     for point, (danger_point, _) in distances.items():
         points_in_dp_area[danger_point].add(point)
     logger.debug(points_in_dp_area)
@@ -167,9 +172,9 @@ def part2(data: list[str], max_distance: int = 10000):
     count = 0
     
     # Iterate over all points in the bounding box
-    for y in range(tl[1], br[1] + 1):
-        for x in range(tl[0], br[0] + 1):
-            curr_point = (x, y)
+    for y in range(tl.y, br.y + 1):
+        for x in range(tl.x, br.x + 1):
+            curr_point = Point(x, y)
             
             # Calculate the total distance to all danger points
             total_distance = sum(manhattan_distance(curr_point, dp) for dp in danger_points)
