@@ -266,6 +266,9 @@ pages:
   - name: 5
     link: /2018/5
     problem: "Alchemical Reduction"
+  - name: 6
+    link: /2018/6
+    problem: "Chronal Coordinates"
 - name: "2021"
   link: /2021/
   mainnav: True

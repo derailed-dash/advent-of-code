@@ -5,10 +5,11 @@ Date: 01/12/2023
 Solving https://adventofcode.com/2018/day/6
 
 Our device has given us a list of coordinates in the format `x, y`. 
-These coordinates might be dangerous! 
 We need to work out which coordinate are closest to specified coordinates. 
 
 Part 1:
+
+These coordinates might be dangerous!
 
 What is the size of the largest area that isn't infinite? 
 An area is defined as the count of all grid locations that are closest to a 
@@ -34,13 +35,19 @@ Strategy thoughts:
 
 Part 2:
 
+These coordinates might be safe!
+
+Find the size of the region containing all locations which have a total distance 
+to all given coordinates of less than 10000.
+
+Instead of finding areas closest to individual coordinates, we need to find 
+all locations where teh sum of distances to aLL coordinates is below the threshold.
+
 """
-from collections import defaultdict
-from collections import Counter
 import logging
 import sys
 import textwrap
-from itertools import combinations
+from collections import defaultdict
 
 import dazbo_commons as dc  # For locations
 from rich.logging import RichHandler
@@ -68,25 +75,30 @@ logging.basicConfig(
 logger = logging.getLogger(locations.script_name)
 logger.setLevel(logging.DEBUG)
 
-def parse_input(data: list[str]):
-    """Converts a list of coordinate strings into a list of Points."""
-    return [ac.Point(*map(int, line.split(","))) for line in data]
+def manhattan_distance(p1: tuple[int, int], p2: tuple[int, int]) -> int:
+    """Calculate Manhattan distance between two points represented as tuples."""
+    return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
-def bounding_box(points: list[ac.Point]):
+def parse_input(data: list[str]) -> list[tuple[int, int]]:
+    """Converts a list of coordinate strings into a list of (x, y) tuples."""
+    return [tuple(map(int, line.split(","))) for line in data]
+
+def bounding_box(points: list[tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
     """Returns the bounding box defined by the min/max x and y values of all points."""
-    min_x = min(point.x for point in points)
-    max_x = max(point.x for point in points)
-    min_y = min(point.y for point in points)
-    max_y = max(point.y for point in points)
+    min_x = min(point[0] for point in points)
+    max_x = max(point[0] for point in points)
+    min_y = min(point[1] for point in points)
+    max_y = max(point[1] for point in points)
     logger.debug(f"min_x={min_x}, max_x={max_x}, min_y={min_y}, max_y={max_y}")
 
-    return ac.Point(min_x, min_y), ac.Point(max_x, max_y)
+    return (min_x, min_y), (max_x, max_y)
 
-def on_bounding_box_edge(point: ac.Point, tl: ac.Point, br: ac.Point):
+def on_bounding_box_edge(point: tuple[int, int], tl: tuple[int, int], br: tuple[int, int]) -> bool:
     """Returns True if the point is on the bounding box edge."""
-    return point.x in [tl.x, br.x] or point.y in [tl.y, br.y]
+    return point[0] in [tl[0], br[0]] or point[1] in [tl[1], br[1]]
     
 def part1(data: list[str]):
+    """Find the size of the largest finite area."""
     danger_points = parse_input(data)
     logger.debug(danger_points)
 
@@ -94,23 +106,23 @@ def part1(data: list[str]):
     logger.debug(f"tl={tl}, br={br}")
     
     # Store the closest danger point and its distance for each point in the bounding box
-    distances: dict[ac.Point, tuple[ac.Point, int]] = {}
+    distances: dict[tuple[int, int], tuple[tuple[int, int] | None, int]] = {}
 
     # Iterate over all points in the bounding box
-    for y in range(tl.y, br.y + 1):
-        for x in range(tl.x, br.x + 1):
-            curr_point = ac.Point(x, y)
-
+    for y in range(tl[1], br[1] + 1):
+        for x in range(tl[0], br[0] + 1):
+            curr_point = (x, y)
+            
             # Determine the closest danger coordinate for this point
             for danger_point in danger_points:
-                manhattan_distance = curr_point.manhattan_distance_from(danger_point)
+                dist = manhattan_distance(curr_point, danger_point)
                 if curr_point not in distances:
-                    distances[curr_point] = (danger_point, manhattan_distance)
+                    distances[curr_point] = (danger_point, dist)
                 else:
-                    if manhattan_distance < distances[curr_point][1]:
-                        distances[curr_point] = (danger_point, manhattan_distance)
-                    elif manhattan_distance == distances[curr_point][1]:
-                        distances[curr_point] = (None, manhattan_distance)
+                    if dist < distances[curr_point][1]:
+                        distances[curr_point] = (danger_point, dist)
+                    elif dist == distances[curr_point][1]:
+                        distances[curr_point] = (None, dist)
     
     logger.debug(distances)
 
@@ -121,8 +133,8 @@ def part1(data: list[str]):
     logger.debug(distances)
     
     # Build areas: group all points by their closest danger point
-    points_in_dp_area: defaultdict[ac.Point, set[ac.Point]] = defaultdict(set)
-    for point, (danger_point, dist) in distances.items():
+    points_in_dp_area: defaultdict[tuple[int, int], set[tuple[int, int]]] = defaultdict(set)
+    for point, (danger_point, _) in distances.items():
         points_in_dp_area[danger_point].add(point)
     logger.debug(points_in_dp_area)
     
@@ -139,15 +151,33 @@ def part1(data: list[str]):
     # Filter to only finite areas
     finite_areas = {dp: points for dp, points in points_in_dp_area.items() 
                     if dp not in infinite_danger_points}
-    logger.debug(f"finite_areas={finite_areas}")
     
     # Return the size of the largest finite area
     biggest_area = max(finite_areas.items(), key=lambda item: len(item[1]))
     logger.debug(f"biggest_area={biggest_area}")
     return len(biggest_area[1])
 
-def part2(data: list[str]):
-    return "uvwxyz"
+def part2(data: list[str], max_distance: int = 10000):
+    """Find the size of the region containing all locations which have a total distance 
+    to all given coordinates of less than the threshold."""
+    danger_points = parse_input(data)
+    tl, br = bounding_box(danger_points)
+    
+    # Count points with total distance less than max_distance
+    count = 0
+    
+    # Iterate over all points in the bounding box
+    for y in range(tl[1], br[1] + 1):
+        for x in range(tl[0], br[0] + 1):
+            curr_point = (x, y)
+            
+            # Calculate the total distance to all danger points
+            total_distance = sum(manhattan_distance(curr_point, dp) for dp in danger_points)
+            
+            if total_distance < max_distance:
+                count += 1
+    
+    return count
 
 def main():
     try:
@@ -181,18 +211,15 @@ def main():
     
     # Part 2 tests
     logger.setLevel(logging.DEBUG)
-    sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        abcdef"""))
-    sample_answers = ["uvwxyz"]
-    test_solution(part2, sample_inputs, sample_answers)
+    sample_answers = [16]
+    test_solution(part2, sample_inputs, sample_answers, max_distance=32)
      
     # Part 2 solution
     logger.setLevel(logging.INFO)
     with ac.timer():
         logger.info(f"Part 2 soln={part2(input_data)}")
 
-def test_solution(soln_func, sample_inputs: list, sample_answers: list):
+def test_solution(soln_func, sample_inputs: list, sample_answers: list, **kwargs):
     """
     Tests a solution function against multiple sample inputs and expected answers.
 
@@ -200,13 +227,14 @@ def test_solution(soln_func, sample_inputs: list, sample_answers: list):
         soln_func: The function to be tested (e.g., part1 or part2).
         sample_inputs: A list of sample input strings.
         sample_answers: A list of expected answers corresponding to the sample inputs.
+        **kwargs: Additional keyword arguments to pass to the solution function.
 
     Raises:
         AssertionError: If any of the test cases fail validation.
     """
     for curr_input, curr_ans in zip(sample_inputs, sample_answers):
         try:
-            ac.validate(soln_func(curr_input.splitlines()), curr_ans)
+            ac.validate(soln_func(curr_input.splitlines(), **kwargs), curr_ans)
         except AssertionError as e:
             logger.error(f"{soln_func.__name__} test failed: {e}")
             sys.exit(1)
