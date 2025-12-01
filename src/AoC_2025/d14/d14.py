@@ -2,7 +2,7 @@
 Author: Darren
 Date: 01/12/2023
 
-Solving https://adventofcode.com/2025/day/1
+Solving https://adventofcode.com/2025/day/14
 
 Part 1:
 
@@ -19,8 +19,8 @@ from rich.logging import RichHandler
 import aoc_common.aoc_commons as ac  # General AoC utils
 
 # Set these to the current puzzle
-YEAR = None
-DAY = None
+YEAR = 2025
+DAY = 14
 
 locations = dc.get_locations(__file__)
 
