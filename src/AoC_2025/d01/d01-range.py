@@ -9,8 +9,8 @@ Secret Entrance - Safe Dial Puzzle
 The dial has positions 0-99 and starts at 50.
 Rotations are specified as L (left/lower) or R (right/higher) followed by steps.
 
-Solution 2 - Efficient for large inputs
-Much faster than solution 1, but harder to follow.
+Solution 1 - Simple Simulation
+This works fine because the input is small and we're only rotating in the order of hundreds.
 
 Part 1:
     Count how many times the dial ends at position 0 after each rotation.
@@ -71,12 +71,12 @@ def part1(data: list[str], start: int = 50, dial_nums: int = 100) -> int:
         clicks = int(instruction[1:])
         
         if direction == "L":
-            clicks = dial_nums - clicks
+            clicks = dial_nums - clicks # equivalent to going right this many steps
         
         curr_pos = (curr_pos + clicks) % dial_nums
         logger.debug(f"curr_pos={curr_pos}")
 
-        if curr_pos == 0:
+        if curr_pos == 0: # if we end on 0, count it
             zero_counter += 1
     
     return zero_counter
@@ -84,7 +84,7 @@ def part1(data: list[str], start: int = 50, dial_nums: int = 100) -> int:
 def part2(data: list[str], start: int = 50, dial_nums: int = 100) -> int:
     """
     Count how many times the dial passes through position 0 during rotations.
-    
+   
     Args:
         data: List of rotation instructions (e.g., ['L68', 'R48', ...])
         start: Starting position of the dial (default: 50)
@@ -101,31 +101,19 @@ def part2(data: list[str], start: int = 50, dial_nums: int = 100) -> int:
         direction = instruction[0]
         clicks = int(instruction[1:])
         
-        if direction == "R":
-            zero_counter += (curr_pos + clicks) // dial_nums
-            curr_pos = (curr_pos + clicks) % dial_nums
-        else:  # direction == "L"
-            new_pos = (curr_pos - clicks) % dial_nums
+        for _ in range(clicks): # simulate EVERY click
+            if direction == "R":
+                curr_pos = (curr_pos + 1) % dial_nums
+            else:  # direction == "L"
+                curr_pos = (curr_pos - 1) % dial_nums
             
             if curr_pos == 0:
-                # Starting at 0: only count complete loops (not the starting position)
-                zero_counter += clicks // dial_nums
-            elif clicks > curr_pos:
-                # We cross 0 at least once during the CCW rotation
-                zero_counter += ((clicks - curr_pos - 1) // dial_nums) + 1
-                # If we also END on 0, count that final landing
-                if new_pos == 0:
-                    zero_counter += 1
-            elif clicks == curr_pos:
-                # We land exactly on 0
                 zero_counter += 1
-            # else: clicks < curr_pos, we don't reach 0
-            
-            curr_pos = new_pos
         
         logger.debug(f"curr_pos={curr_pos}")
 
     return zero_counter
+
 def main():
     try:
         ac.write_puzzle_input_file(YEAR, DAY, locations)
