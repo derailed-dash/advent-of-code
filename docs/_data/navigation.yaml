@@ -433,3 +433,10 @@ pages:
 - name: "2024"
   link: /2024/
   mainnav: True
+- name: "2025"
+  link: /2025/
+  mainnav: True
+  members:
+  - name: 1
+    link: /2025/1
+    problem: "Secret Entrance"

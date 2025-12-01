@@ -1,13 +1,20 @@
 """
 Author: Darren
-Date: 01/12/2023
+Date: 01/12/2025
 
 Solving https://adventofcode.com/2025/day/1
 
+Secret Entrance - Safe Dial Puzzle
+
 Part 1:
+    Count how many times the dial ends at position 0 after each rotation.
+    The dial has positions 0-99 and starts at 50.
+    Rotations are specified as L (left/lower) or R (right/higher) followed by steps.
 
 Part 2:
-
+    Count how many times the dial passes through position 0 during rotations,
+    including both intermediate crossings and final positions.
+    This requires counting every click that lands on 0, not just the final position.
 """
 import logging
 import sys
@@ -19,8 +26,8 @@ from rich.logging import RichHandler
 import aoc_common.aoc_commons as ac  # General AoC utils
 
 # Set these to the current puzzle
-YEAR = None
-DAY = None
+YEAR = 2025
+DAY = 1
 
 locations = dc.get_locations(__file__)
 
@@ -38,13 +45,95 @@ logging.basicConfig(
 )
 logger = logging.getLogger(locations.script_name)
 logger.setLevel(logging.DEBUG)
+
+def part1(data: list[str], start: int = 50, clicks: int = 100):
+    """
+    Count how many times the dial ends at position 0 after each rotation.
     
-def part1(data: list[str]):
-    return "uvwxyz"
+    Args:
+        data: List of rotation instructions (e.g., ['L68', 'R48', ...])
+        start: Starting position of the dial (default: 50)
+        clicks: Number of positions on the dial (default: 100)
+    
+    Returns:
+        Number of times the dial ends at position 0
+    """
+    zero_counter = 0
+    curr_pos = start
 
-def part2(data: list[str]):
-    return "uvwxyz"
+    for instruction in data:
+        logger.debug(f"instruction={instruction}")
+        direction = instruction[0]
+        steps = int(instruction[1:])
+        
+        if direction == "L":
+            steps = clicks - steps
+        
+        curr_pos += steps
+        curr_pos = curr_pos % clicks
+        logger.debug(f"curr_pos={curr_pos}")
 
+        if curr_pos == 0:
+            zero_counter += 1
+    
+    return zero_counter
+
+def part2(data: list[str], start: int = 50, clicks: int = 100):
+    """
+    Count how many times the dial passes through position 0 during rotations.
+    
+    This counts EVERY click that lands on 0, including:
+    - Intermediate crossings during a rotation
+    - Final positions that land on 0
+    - Multiple wraps around the dial in a single rotation
+    
+    Args:
+        data: List of rotation instructions (e.g., ['L68', 'R48', ...])
+        start: Starting position of the dial (default: 50)
+        clicks: Number of positions on the dial (default: 100)
+    
+    Returns:
+        Total number of times the dial points at 0 during all rotations
+    """
+    zero_counter = 0
+    curr_pos = start
+
+    for instruction in data:
+        logger.debug(f"instruction={instruction}")
+        direction = instruction[0]
+        steps = int(instruction[1:])
+        
+        if direction == "R":
+            # RIGHT: Count how many times we pass through 0 going clockwise
+            # Formula: (curr_pos + steps) // clicks counts complete wraps
+            zero_counter += (curr_pos + steps) // clicks
+            curr_pos = (curr_pos + steps) % clicks
+        else:  # direction == "L"
+            # LEFT: Count how many times we pass through 0 going counter-clockwise
+            new_pos = (curr_pos - steps) % clicks
+            
+            if curr_pos == 0:
+                # Starting at 0: only count complete loops (not the starting position)
+                # E.g. From 0, rotating L50: 0 → 99 → 98 → ... → 50
+                zero_counter += steps // clicks
+            elif steps > curr_pos:
+                # We cross 0 at least once during the rotation
+                zero_counter += ((steps - curr_pos - 1) // clicks) + 1
+                # If we also END on 0, count that final landing
+                # E.g. From 50, rotating L50: 50 → 49 → ... → 0
+                if new_pos == 0:
+                    zero_counter += 1
+            elif steps == curr_pos:
+                # We land exactly on 0
+                # E.g. From 50, rotating L50: 50 → 49 → ... → 0
+                zero_counter += 1
+            # else: steps < curr_pos, we don't reach 0
+            
+            curr_pos = new_pos
+        
+        logger.debug(f"curr_pos={curr_pos}")
+
+    return zero_counter
 def main():
     try:
         ac.write_puzzle_input_file(YEAR, DAY, locations)
@@ -61,8 +150,17 @@ def main():
     logger.setLevel(logging.DEBUG)
     sample_inputs = []
     sample_inputs.append(textwrap.dedent("""\
-        abcdef"""))
-    sample_answers = ["uvwxyz"]
+        L68
+        L30
+        R48
+        L5
+        R60
+        L55
+        L1
+        L99
+        R14
+        L82"""))
+    sample_answers = [3]
     test_solution(part1, sample_inputs, sample_answers)
 
     # Part 1 solution
@@ -72,10 +170,7 @@ def main():
     
     # Part 2 tests
     logger.setLevel(logging.DEBUG)
-    sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        abcdef"""))
-    sample_answers = ["uvwxyz"]
+    sample_answers = [6]
     test_solution(part2, sample_inputs, sample_answers)
      
     # Part 2 solution
