@@ -10,3 +10,4 @@ Welcome to my Advent of Code 2025 solutions!
 | --- | --- | --- |
 | [1](/2025/1) | [Secret Entrance](/2025/1) | Modular arithmetic, integer division, debugging |
 | [2](/2025/2) | [Gift Shop](/2025/2) | String manipulation, factors, caching |
+| [3](/2025/3) | [Lobby](/2025/3) | Greedy algorithms, slicing |

@@ -443,3 +443,6 @@ pages:
   - name: 2
     link: /2025/2
     problem: "Gift Shop"
+  - name: 3
+    link: /2025/3
+    problem: "Lobby"
