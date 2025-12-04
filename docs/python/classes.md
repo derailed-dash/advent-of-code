@@ -880,26 +880,44 @@ class Robot:
 
 ### Versus NamedTuple
 
-Similar to using `dataclass`, Python also has something called a `NamedTuple`.  This allows us to define a an immutable class with only attributes.  Thus, a `NamedTuple` is very similar to a frozen (immutable) `dataclass`.  The `dataclass` is a lot more powerful and flexible than `NamedTuple`, but it incurs a performance hit. You should probably use `dataclass` in preference to `NamedTuple`, unless performance is paramount.
+Similar to using `dataclass`, Python also has something called a `NamedTuple`. This allows us to define an immutable class with attributes, but it behaves like a tuple.
+
+A `NamedTuple` is very similar to a frozen (immutable) `dataclass`. However, `NamedTuple` is significantly more lightweight in terms of memory usage and creation time. This makes it an excellent choice when you need to create **millions** of small objects (like points in a grid) and performance is paramount.
+
+While you can define a `NamedTuple` using functional syntax, the modern and preferred way is to inherit from `typing.NamedTuple`. This allows you to define it just like a class, complete with type hints, methods, and properties!
 
 ```python
-Point = NamedTuple("Point", [("x", Number), ("y", Number)])
+from typing import NamedTuple
 
-def manhattan_distance(a_point: Point):
-    return abs(a_point.x) + abs(a_point.y)
+class Point(NamedTuple):
+    x: int
+    y: int
 
-def manhattan_distance_from(self, other):
-    diff = self - other
-    return manhattan_distance(diff)
+    def __add__(self, other):
+        return Point(self.x + other.x, self.y + other.y)
+    
+    @property
+    def manhattan_distance(self):
+        return abs(self.x) + abs(self.y)
 
-Point.__add__ = lambda self, other: Point(self.x + other.x, self.y + other.y)
-Point.__sub__ = lambda self, other: Point(self.x - other.x, self.y - other.y)
-Point.__mul__ = lambda self, scalar: Point(self.x * scalar, self.y * scalar)
-Point.__rmul__ = lambda self, scalar: self * scalar # for when int comes first
-Point.manhattan_distance = staticmethod(manhattan_distance)
-Point.manhattan_distance_from = manhattan_distance_from
-Point.__repr__ = lambda self: f"P({self.x},{self.y})"
+# Usage
+p1 = Point(1, 2)
+p2 = Point(3, 4)
+p3 = p1 + p2  # Point(x=4, y=6)
+print(p3.manhattan_distance) # 10
 ```
+
+**Key Differences:**
+
+| Feature | `NamedTuple` | `dataclass(frozen=True)` |
+| :--- | :--- | :--- |
+| **Mutability** | Always Immutable | Configurable (default mutable) |
+| **Memory Overhead** | Very Low (like a tuple) | Higher (unless `slots=True`) |
+| **Access** | By name (`p.x`) OR index (`p[0]`) | By name only (`p.x`) |
+| **Inheritance** | Can inherit from `NamedTuple` | Can inherit from other classes |
+| **Default Values** | Supported | Supported |
+
+**Summary:** Use `dataclass` for most general-purpose classes where you need flexibility, mutability, or complex initialization. Use `NamedTuple` when you need a lightweight, immutable data structure, especially if you are creating vast numbers of them.
 
 ## Examples
 
@@ -908,3 +926,4 @@ Point.__repr__ = lambda self: f"P({self.x},{self.y})"
 - [Inheritence and constructor chaining: 2015 Day 22 - Wizard class](/2015/22)
 - [Cache decorator: 2015 Day 22 - Wizards and Spells](/2015/22)
 - [Cache decorator: type_defs](/python/reusable_code)
+- [NamedTuple for Grid Coordinates: 2025 Day 4 - Printing Department](/2025/4)
