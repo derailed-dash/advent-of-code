@@ -4,11 +4,29 @@ Date: 01/12/2023
 
 Solving https://adventofcode.com/2025/day/4
 
+We have a grid showing where rolls of paper (@) are located.
+
 Part 1:
+
+Which rolls of paper can forklifts access?
+These are locations with fewer than four rolls of paper in the 
+8 adjacent locations.
+
+Solution:
+- Check each location in the grid.
+- If it is a roll of paper (@), check the 8 adjacent locations.
+- If it has fewer than 4 rolls of paper, it is accessible.
 
 Part 2:
 
+How many rolls of paper can be removed by iteratively removing accessible rolls?
+
+Solution:
+- Iteratively repeat Part 1.
+- With each iteration, remove the accessible roll of paper.
+- Count the number of rolls removed in total.
 """
+from typing import NamedTuple
 import logging
 import sys
 import textwrap
@@ -38,12 +56,99 @@ logging.basicConfig(
 )
 logger = logging.getLogger(locations.script_name)
 logger.setLevel(logging.DEBUG)
+
+class Point(NamedTuple):
+    x: int
+    y: int
+
+    def yield_neighbors(self):
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                if dx == 0 and dy == 0:
+                    continue
+                yield Point(self.x + dx, self.y + dy)
+
+class ForkliftGrid():
+    def __init__(self, grid_array: list) -> None:
+        self.array = [list(row) for row in grid_array]
+        self._width = len(self.array[0])
+        self._height = len(self.array)
+        
+    def value_at_point(self, point: Point):
+        """ The value at this point """
+        return self.array[point.y][point.x]
+
+    def set_value_at_point(self, point: Point, value):
+        self.array[point.y][point.x] = value
+        
+    def valid_location(self, point: Point) -> bool:
+        """ Check if a location is within the grid """
+        if (0 <= point.x < self._width and 0 <= point.y < self._height):
+            return True
+        
+        return False
+
+    @property
+    def width(self):
+        """ Array width (cols) """
+        return self._width
     
+    @property
+    def height(self):
+        """ Array height (rows) """
+        return self._height
+    
+    def all_points(self) -> list[Point]:
+        points = [Point(x, y) for x in range(self.width) for y in range(self.height)]
+        return points
+
+    def __repr__(self) -> str:
+        return f"Grid(size={self.width}*{self.height})"
+    
+    def __str__(self) -> str:
+        return "\n".join("".join(map(str, row)) for row in self.array)
+
+def get_accessible_locations(grid: ForkliftGrid):
+    accessible_locations = []
+    for point in grid.all_points():
+        if grid.value_at_point(point) == "@":
+            roll_count = 0
+            for neighbor in point.yield_neighbors():
+                if grid.valid_location(neighbor):
+                    if grid.value_at_point(neighbor) == "@":
+                        roll_count += 1
+            if roll_count < 4:
+                accessible_locations.append(point)
+    
+    return accessible_locations
+
 def part1(data: list[str]):
-    return "uvwxyz"
+    """ 
+    Count accessible locations: 
+    locations with fewer than 4 rolls of paper in the 8 adjacent locations 
+    """
+    grid = ForkliftGrid(data)
+    logger.debug(grid)
+
+    accessible_locations = get_accessible_locations(grid)
+    logger.debug(f"Accessible locations: {accessible_locations}")
+    return len(accessible_locations)
 
 def part2(data: list[str]):
-    return "uvwxyz"
+    """ Count how many rolls can be removed by iteratively removing accessible rolls """
+    grid = ForkliftGrid(data)
+    logger.debug(grid)
+
+    rolls_removed = 0
+    while True:
+        accessible_locations = get_accessible_locations(grid)
+        if not accessible_locations:
+            break
+        for loc in accessible_locations:
+            grid.set_value_at_point(loc, "X")
+            rolls_removed += 1
+
+    return rolls_removed
 
 def main():
     try:
@@ -61,8 +166,17 @@ def main():
     logger.setLevel(logging.DEBUG)
     sample_inputs = []
     sample_inputs.append(textwrap.dedent("""\
-        abcdef"""))
-    sample_answers = ["uvwxyz"]
+        ..@@.@@@@.
+        @@@.@.@.@@
+        @@@@@.@.@@
+        @.@@@@..@.
+        @@.@@@@.@@
+        .@@@@@@@.@
+        .@.@.@.@@@
+        @.@@@.@@@@
+        .@@@@@@@@.
+        @.@.@@@.@."""))
+    sample_answers = [13]
     test_solution(part1, sample_inputs, sample_answers)
 
     # Part 1 solution
@@ -72,10 +186,7 @@ def main():
     
     # Part 2 tests
     logger.setLevel(logging.DEBUG)
-    sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        abcdef"""))
-    sample_answers = ["uvwxyz"]
+    sample_answers = [43]
     test_solution(part2, sample_inputs, sample_answers)
      
     # Part 2 solution
