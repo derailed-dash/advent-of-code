@@ -30,6 +30,12 @@ from typing import NamedTuple
 import logging
 import sys
 import textwrap
+import os
+
+# For visualisation
+import numpy as np
+import imageio.v3 as iio
+from PIL import Image, ImageDraw
 
 import dazbo_commons as dc  # For locations
 from rich.logging import RichHandler
@@ -69,6 +75,8 @@ class Point(NamedTuple):
                 yield Point(self.x + dx, self.y + dy)
 
 class ForkliftGrid():
+    """ A grid representing a warehouse with rolls of paper """
+
     def __init__(self, grid_array: list) -> None:
         self.array = [list(row) for row in grid_array]
         self._width = len(self.array[0])
@@ -99,11 +107,11 @@ class ForkliftGrid():
         return self._height
     
     def all_points(self) -> list[Point]:
-        points = [Point(x, y) for x in range(self.width) for y in range(self.height)]
+        points = [Point(x, y) for x in range(self._width) for y in range(self._height)]
         return points
 
     def __repr__(self) -> str:
-        return f"Grid(size={self.width}*{self.height})"
+        return f"Grid(size={self._width}*{self._height})"
     
     def __str__(self) -> str:
         return "\n".join("".join(map(str, row)) for row in self.array)
@@ -134,12 +142,58 @@ def part1(data: list[str]):
     logger.debug(f"Accessible locations: {accessible_locations}")
     return len(accessible_locations)
 
-def part2(data: list[str]):
+class Visualiser:
+    def __init__(self, grid: ForkliftGrid, scale=10):
+        self.grid = grid
+        self.scale = scale
+        self.frames = []
+        self.colors = {
+            "@": (200, 200, 200),  # Paper rolls (Light Gray)
+            ".": (50, 50, 50),     # Empty floor (Dark Gray)
+            "X": (255, 0, 0),      # Removed (Red)
+        }
+
+    def render_frame(self):
+        """ Render the current grid state to an image frame """
+        img = Image.new("RGB", (self.grid.width * self.scale, self.grid.height * self.scale), "black")
+        draw = ImageDraw.Draw(img)
+        
+        for y, row in enumerate(self.grid.array):
+            for x, cell in enumerate(row):
+                color = self.colors.get(cell, (0, 0, 0))
+                draw.rectangle(
+                    [x * self.scale, y * self.scale, (x + 1) * self.scale - 1, (y + 1) * self.scale - 1],
+                    fill=color
+                )
+        self.frames.append(img)
+
+    def save_gif(self, filename="vis.gif", fps=10):
+        """ Save collected frames as a GIF """
+        if not self.frames:
+            return
+        # Convert PIL images to numpy arrays for imageio
+        frames_np = [np.array(f) for f in self.frames]
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        iio.imwrite(filename, frames_np, loop=0, duration=1000/fps)
+        logger.info(f"Saved GIF to {filename}")
+
+def part2(data: list[str], vis_filename: str = None):
     """ Count how many rolls can be removed by iteratively removing accessible rolls """
     grid = ForkliftGrid(data)
     logger.debug(grid)
+    
+    vis = None
+    vis_path = None
+
+    # Only run visualisation if the output file doesn't already exist    
+    if vis_filename:
+        vis_path = locations.output_dir / vis_filename
+        if not os.path.exists(vis_path):
+            vis = Visualiser(grid, scale=5)
+            vis.render_frame() # Initial state
 
     rolls_removed = 0
+    
     while True:
         accessible_locations = get_accessible_locations(grid)
         if not accessible_locations:
@@ -147,7 +201,17 @@ def part2(data: list[str]):
         for loc in accessible_locations:
             grid.set_value_at_point(loc, "X")
             rolls_removed += 1
+        
+        if vis:
+            vis.render_frame()
 
+            # Clean up 'X's for next iteration (optional, or keep them to show history)
+            # If we want them to disappear, set them to '.' here.
+            for loc in accessible_locations:
+                grid.set_value_at_point(loc, ".")
+
+    if vis and vis_path:
+        vis.save_gif(vis_path, fps=5)
     return rolls_removed
 
 def main():
@@ -155,8 +219,6 @@ def main():
         ac.write_puzzle_input_file(YEAR, DAY, locations)
         with open(locations.input_file, encoding="utf-8") as f:
             input_data = f.read().splitlines() # Most puzzles are multiline strings
-            # input_data = f.read().strip() # Raw string
-            
             logger.debug(dc.top_and_tail(input_data))
     except (ValueError, FileNotFoundError) as e:
         logger.error("Could not read input file: %s", e)
@@ -187,12 +249,16 @@ def main():
     # Part 2 tests
     logger.setLevel(logging.DEBUG)
     sample_answers = [43]
-    test_solution(part2, sample_inputs, sample_answers)
+    
+    def part2_with_sample_vis(data):
+        return part2(data, vis_filename="2025_d04_sample_vis.gif")
+        
+    test_solution(part2_with_sample_vis, sample_inputs, sample_answers)
      
     # Part 2 solution
     logger.setLevel(logging.INFO)
     with ac.timer():
-        logger.info(f"Part 2 soln={part2(input_data)}")
+        logger.info(f"Part 2 soln={part2(input_data, vis_filename='2025_d04_vis.gif')}")
 
 def test_solution(soln_func, sample_inputs: list, sample_answers: list):
     """
