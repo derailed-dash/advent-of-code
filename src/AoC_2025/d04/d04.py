@@ -36,6 +36,8 @@ import os
 import numpy as np
 import imageio.v3 as iio
 from PIL import Image, ImageDraw
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
 
 import dazbo_commons as dc  # For locations
 from rich.logging import RichHandler
@@ -147,27 +149,62 @@ class Visualiser:
         self.grid = grid
         self.scale = scale
         self.frames = []
+        
+        # Heatmap state: Point -> intensity (0.0 to 1.0)
+        self.heat_map: dict[Point, float] = {}
+        self.decay_rate = 0.15  # How fast the heat fades
+        
+        # Colormap for the heat
+        self.cmap = cm.get_cmap('plasma') 
+
         self.colors = {
-            "@": (200, 200, 200),  # Paper rolls (Light Gray)
-            ".": (50, 50, 50),     # Empty floor (Dark Gray)
-            "X": (255, 0, 0),      # Removed (Red)
+            "@": (100, 149, 237),  # Paper rolls (Cornflower Blue) - Cool color
+            ".": (15, 15, 35),     # Empty floor (Very Dark Blue) - Background
         }
+
+    def update(self, new_points: list[Point]):
+        """ Update the heatmap with newly removed points """
+        # Decay existing heat
+        for p in list(self.heat_map.keys()):
+            self.heat_map[p] -= self.decay_rate
+            if self.heat_map[p] <= 0:
+                del self.heat_map[p]
+        
+        # Add new points with max heat
+        for p in new_points:
+            self.heat_map[p] = 1.0
 
     def render_frame(self):
         """ Render the current grid state to an image frame """
-        img = Image.new("RGB", (self.grid.width * self.scale, self.grid.height * self.scale), "black")
+        # Create base image
+        img = Image.new("RGB", (self.grid.width * self.scale, self.grid.height * self.scale), self.colors["."])
         draw = ImageDraw.Draw(img)
         
+        # Draw static grid elements
         for y, row in enumerate(self.grid.array):
             for x, cell in enumerate(row):
-                color = self.colors.get(cell, (0, 0, 0))
-                draw.rectangle(
-                    [x * self.scale, y * self.scale, (x + 1) * self.scale - 1, (y + 1) * self.scale - 1],
-                    fill=color
-                )
+                if cell == "@":
+                    color = self.colors["@"]
+                    draw.rectangle(
+                        [x * self.scale, y * self.scale, (x + 1) * self.scale - 1, (y + 1) * self.scale - 1],
+                        fill=color
+                    )
+
+        # Draw heatmap overlay
+        for point, intensity in self.heat_map.items():
+            # Get color from colormap (returns RGBA float tuple)
+            rgba = self.cmap(intensity)
+            # Convert to RGB int tuple
+            color = tuple(int(c * 255) for c in rgba[:3])
+            
+            draw.rectangle(
+                [point.x * self.scale, point.y * self.scale, (point.x + 1) * self.scale - 1, (point.y + 1) * self.scale - 1],
+                fill=color
+            )
+            
         self.frames.append(img)
 
-    def save_gif(self, filename="vis.gif", fps=10):
+    def save_gif(self, filename="vis.gif", fps=15):
         """ Save collected frames as a GIF """
         if not self.frames:
             return
@@ -203,6 +240,7 @@ def part2(data: list[str], vis_filename: str = None):
             rolls_removed += 1
         
         if vis:
+            vis.update(accessible_locations)
             vis.render_frame()
 
             # Clean up 'X's for next iteration (optional, or keep them to show history)
@@ -211,7 +249,7 @@ def part2(data: list[str], vis_filename: str = None):
                 grid.set_value_at_point(loc, ".")
 
     if vis and vis_path:
-        vis.save_gif(vis_path, fps=5)
+        vis.save_gif(vis_path, fps=10)
     return rolls_removed
 
 def main():
