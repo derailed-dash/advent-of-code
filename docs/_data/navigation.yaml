@@ -449,3 +449,6 @@ pages:
   - name: 4
     link: /2025/4
     problem: "Printing Department"
+  - name: 5
+    link: /2025/5
+    problem: "Cafeteria"

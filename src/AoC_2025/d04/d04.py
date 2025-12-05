@@ -26,20 +26,19 @@ Solution:
 - With each iteration, remove the accessible roll of paper.
 - Count the number of rolls removed in total.
 """
-from typing import NamedTuple
 import logging
+import os
 import sys
 import textwrap
-import os
+from typing import NamedTuple
+
+import dazbo_commons as dc  # For locations
+import imageio.v3 as iio
+import matplotlib.cm as cm
 
 # For visualisation
 import numpy as np
-import imageio.v3 as iio
 from PIL import Image, ImageDraw
-import matplotlib.cm as cm
-import matplotlib.colors as mcolors
-
-import dazbo_commons as dc  # For locations
 from rich.logging import RichHandler
 
 import aoc_common.aoc_commons as ac  # General AoC utils
@@ -76,7 +75,7 @@ class Point(NamedTuple):
                     continue
                 yield Point(self.x + dx, self.y + dy)
 
-class ForkliftGrid():
+class ForkliftGrid:
     """ A grid representing a warehouse with rolls of paper """
 
     def __init__(self, grid_array: list) -> None:
@@ -214,7 +213,7 @@ class Visualiser:
         iio.imwrite(filename, frames_np, loop=0, duration=1000/fps)
         logger.info(f"Saved GIF to {filename}")
 
-def part2(data: list[str], vis_filename: str = None):
+def part2(data: list[str], vis_filename: str|None = None):
     """ Count how many rolls can be removed by iteratively removing accessible rolls """
     grid = ForkliftGrid(data)
     logger.debug(grid)
