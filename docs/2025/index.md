@@ -13,3 +13,4 @@ Welcome to my Advent of Code 2025 solutions!
 | [3](/2025/3) | [Lobby](/2025/3) | Greedy algorithms, slicing |
 | [4](/2025/4) | [Printing Department](/2025/4) | Grid map, simulation, visualisation |
 | [5](/2025/5) | [Cafeteria](/2025/5) | Interval merging, list comprehensions |
+| [6](/2025/6) | [Trash Compactor](/2025/6) | Parsing, Transposition, OOP |

@@ -452,3 +452,6 @@ pages:
   - name: 5
     link: /2025/5
     problem: "Cafeteria"
+  - name: 6
+    link: /2025/6
+    problem: "Trash Compactor"
