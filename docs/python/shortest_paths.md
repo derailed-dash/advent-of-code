@@ -12,6 +12,8 @@ tags:
     link: https://www.redblobgames.com/pathfinding/a-star/introduction.html
   - name: Heapq
     link: /python/priority_queues
+  - name: Recursion
+    link: /python/recursion
 ---
 
 ## Page Contents
@@ -132,6 +134,7 @@ We can implement the queue in many ways:
 - Better: using a `deque` to implement a FIFO queue; it is much more efficient for appending and popping at each end.
 - If we use a `heapq`, then we end up popping based on a priority rather than FIFO. This is how we implement _Dijkstra's Algorithm_ or _A*_.
 - If we use a `stack`, then we end up with last-in, first-out (LIFO), which actually turns a BFS into a **depth first search (DFS)**!
+  - *(Aside: You can also implement DFS using **recursion**, where the "stack" is just the program's own call stack. This is often cleaner for tree-like problems!)*
 
 ### Implementing the BFS
 
@@ -254,6 +257,7 @@ path.reverse() # optional - depends whether we want start->end or end->start
 - [BFS with class generating next states - 2022 Day 24](/2022/24)
 - [Branching paths through a grid of mirrors - 2023 Day 16](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}
 - [BFS with backtracking, to find number of locations we can reach in n steps - 2023 Day 21](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}
+- [Standard BFS with explored set to handle merging beams - 2025 Day 7](/2025/7)
 
 ## Dijkstra's Algorithm
 

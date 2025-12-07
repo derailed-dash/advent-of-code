@@ -658,6 +658,40 @@ Output:
 6
 ```
 
+## Recursive DFS: A Case Study
+
+Check out **[Advent of Code 2025 Day 7](/2025/7)** for a cracking example of why recursion + memoisation is a superpower.
+
+**The Problem:** We had to simulate a beam splitting in two at every junction.
+**The Trap:** A naive Breadth-First Search (BFS) explodes exponentially. With a grid depth of 150, you're looking at potentially \\(2^{150}\\) paths. My computer would still be running when the sun expands and swallows the earth. <sigh>
+
+**The Solution:** Recursive DFS.
+Instead of simulating billions of particles, we just ask a simple recursive question:
+*"If I am at point P, how many future timelines result from this point?"*
+
+- If P is an exit, the answer is **1**.
+- If P is a splitter, the answer is **count(left) + count(right)**.
+- If P is empty space, the answer is **count(down)**.
+
+And the best bit? Because the beams always go *down*, there are no loops (it's a Directed Acyclic Graph). This means we can slap a `@cache` decorator on it.
+
+```python
+@cache
+def count_timelines(point: Point) -> int:
+    if not grid.valid_location(point):
+        return 1  # Base case: reached the end
+
+    if grid.value_at_point(point) == '^':
+        # Recursive step: sum of two branches
+        return (count_timelines(point + left_vec) + 
+                count_timelines(point + right_vec))
+    else:
+        # Recursive step: continue down
+        return count_timelines(point + down_vec)
+```
+
+This transformed an unsolveable problem into one that ran in **0.008 seconds**. Groovy.
+
 ## AoC Examples
 
 - [Recursively process json - 2015 day 12](/2015/12)
@@ -669,3 +703,4 @@ Output:
 - [Recursive `__lt__` compare - 2022 day 13](/2022/13)
 - [Recursive arithmetic progressions - 2023 day 9](https://colab.research.google.com/github/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}
 - [Creating a pretty print with recursion and max depth - 2024 day 24](https://colab.research.google.com/github/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb){:target="_blank"}
+- [Recursive DFS with memoisation on a DAG - 2025 day 7](/2025/7)
