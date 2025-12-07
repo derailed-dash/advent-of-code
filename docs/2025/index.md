@@ -14,4 +14,4 @@ Welcome to my Advent of Code 2025 solutions!
 | [4](/2025/4) | [Printing Department](/2025/4) | 2D Grid, simulation, Matplotlib visualisations |
 | [5](/2025/5) | [Cafeteria](/2025/5) | Interval merging, list comprehensions, sorting |
 | [6](/2025/6) | [Trash Compactor](/2025/6) | Parsing, Transposition, OOP, Pattern Matching |
-| [7](/2025/7) | [Laboratories](/2025/7) | BFS, DFS, Memoisation (Recursion), NamedTuple |
+| [7](/2025/7) | [Laboratories](/2025/7) | BFS, DFS, Memoisation (Recursion), NamedTuple, Graphs (DAG) |
