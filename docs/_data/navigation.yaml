@@ -455,3 +455,6 @@ pages:
   - name: 6
     link: /2025/6
     problem: "Trash Compactor"
+  - name: 7
+    link: /2025/7
+    problem: "Laboratories"
