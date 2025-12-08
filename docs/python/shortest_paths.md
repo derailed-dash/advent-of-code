@@ -258,6 +258,7 @@ path.reverse() # optional - depends whether we want start->end or end->start
 - [Branching paths through a grid of mirrors - 2023 Day 16](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}
 - [BFS with backtracking, to find number of locations we can reach in n steps - 2023 Day 21](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}
 - [Standard BFS with explored set to handle merging beams - 2025 Day 7](/2025/7)
+- [BFS to find connected components (circuits) - 2025 Day 8](/2025/8)
 
 ## Dijkstra's Algorithm
 
