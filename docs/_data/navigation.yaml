@@ -458,3 +458,6 @@ pages:
   - name: 7
     link: /2025/7
     problem: "Laboratories"
+  - name: 8
+    link: /2025/8
+    problem: "Playground"
