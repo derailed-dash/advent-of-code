@@ -1,11 +1,16 @@
 ---
-title: Visualisations and Plots with Matplotlib
+title: Visualisation in Python
+redirect_from: /python/matplotlib
 main_img:
   name: matplotlib
   link: /assets/images/numpy_logo.png
 tags: 
   - name: Matplotlib
     link: https://matplotlib.org/
+  - name: Rich
+    link: https://github.com/Textualize/rich
+  - name: Pillow
+    link: https://python-pillow.org/
   - name: Official Matplotlib Tutorials
     link: https://matplotlib.org/stable/tutorials/index.html
   - name: Geeks-for-Geeks Matplotlib Tutorial
@@ -50,11 +55,19 @@ tags:
   - [Plotting a Perimeter and Marking Contained Points](#plotting-a-perimeter-and-marking-contained-points)
   - [Creating Squares Around Points](#creating-squares-around-points)
 - [Animating with Matplotlib](#animating-with-matplotlib)
+- [Going Beyond Matplotlib](#going-beyond-matplotlib)
+  - [Console Visualisation with Rich](#console-visualisation-with-rich)
+  - [Generating GIFs with Pillow](#generating-gifs-with-pillow)
+  - [Complex Animations](#complex-animations)
 - [Seaborn](#seaborn)
 
 ## Overview
 
-**Matplotlib is an amazing library for creating static, animated and interactive visualisations in Python, including graphs and 3D plots.**
+Visualisation is a superpower. Whether you're debugging a complex algorithm or just want so show off your solution on Reddit, a good chart (or animation) is worth a thousand `print()` statements.
+
+In this guide, we'll look at the industry standard—**Matplotlib**—for creating static, animated, and interactive visualisations. But we won't stop there. We'll also look at how to create **retro console animations** using `Rich`, and how to stitch images together into GIFs using `Pillow`.
+
+So... grab a piña colada, fire up your IDE, and let's get visual!
 
 ## Installing
 
@@ -971,6 +984,66 @@ Your browser does not support the video tag.
 </video>
 <br>
 
+## Going Beyond Matplotlib
+
+Sometimes, Matplotlib isn't the right tool for the job. Maybe you want that **retro hacker aesthetic**, or maybe you just need a simple GIF to share on Discord.
+
+### Console Visualisation with Rich
+
+For **2025 Day 5: Cafeteria**, the challenge involved managing inventory ranges for fresh ingredients. The "falling interval" mechanic was perfect for a console animation. Enter: **Rich**.
+
+By using `rich.live.Live` and a `Layout`, we can create a smooth terminal animation. The key trick here was implementing a "Zoom Out" camera — as the coordinate ranges grew massive, we dynamically scaled the viewport to keep everything in frame.
+
+(Groovy, right?)
+
+```python
+    def check_zoom(self, next_interval_end: int):
+        """Checks if we need to zoom out to fit the next interval."""
+        screen_end = self.to_screen_x(next_interval_end)
+        
+        # If the new interval would fall off the screen
+        if screen_end >= self.view_width:
+            # ONE STEP ZOOM ONLY - Allows animation of the zoom process
+            self.current_scale *= 5.0
+            return True # Zoom happened
+        return False
+```
+
+![Console Visualisation]({{'/assets/media/2025-d05-vis.gif' | relative_url }})
+
+### Generating GIFs with Pillow
+
+For **2025 Day 4: Printing Department**, we needed to help elves optimize forklift access to paper rolls on a grid. Matplotlib is great for the static frame, but for the animation, we can just save each frame as an image and stitch them together using `Pillow`.
+
+This is often more robust than `FuncAnimation` if you want per-frame control.
+
+```python
+    # Save the plot as a frame; store the frame in-memory, using a BytesIO buffer
+    frame = BytesIO()
+    plt.savefig(frame, format='png') # save to memory
+    self._animator.add_frame(frame)
+```
+
+![Day 4 GIF]({{'/assets/media/2025_d04_vis.gif' | relative_url }})
+
+### Complex Animations
+
+For **2025 Day 8: Playground**, we found ourselves in a massive underground playground connecting lighting circuits between junction boxes in 3D space. We used `FuncAnimation` to visualize the clusters of connected boxes forming circuits.
+
+<video width="640" controls autoplay loop muted>
+  <source src="{{'/assets/media/2025-d08-vis.mp4' | relative_url }}" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+<br>
+
 ## Seaborn
 
 // Coming Soon
+
+## Reflecting on this...
+
+Visualisation isn't just about making things look pretty (though that IS important). It's about **verification**.
+
+When I built the console visualiser for Day 5, it wasn't just for fun — it immediately revealed a bug in my interval merging logic where adjacent intervals weren't coalescing. The "glitch" in the animation made it obvious in a way that staring at log files never could.
+
+So... treat visualisation as a first-class citizen in your debugging toolkit. Plus, it looks cool on GitHub.

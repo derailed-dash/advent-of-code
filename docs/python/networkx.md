@@ -11,7 +11,7 @@ tags:
   - name: Customising NetworkX Graphs
     link: https://towardsdatascience.com/customizing-networkx-graphs-f80b4e69bedf
   - name: Matplotlib
-    link: /python/matplotlib
+    link: /python/visualisation
 ---
 
 ## Page Contents
@@ -55,7 +55,7 @@ Here are a few useful links:
 
 ## Getting Started With NetworkX
 
-We need to import the relevant packages.  You'll probably want to import `matplotlib.pyplot` if you want to render any [graph visualisations](/python/matplotlib){:target="_blank"}.
+We need to import the relevant packages.  You'll probably want to import `matplotlib.pyplot` if you want to render any [graph visualisations](/python/visualisation){:target="_blank"}.
 
 ```python
 import networkx as nx

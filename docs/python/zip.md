@@ -8,7 +8,7 @@ tags:
   - name: zip
     link: https://realpython.com/python-zip-function/
   - name: matplotlib
-    link: /python/matplotlib
+    link: /python/visualisation
 ---
 ## Page Contents
 
