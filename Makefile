@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+.PHONY: install test lint docs
 
 # Install dependencies using uv package manager ; uv pip install -e .
 install:
@@ -16,3 +17,7 @@ lint:
 	uv run codespell -s
 	uv run ruff check . --diff
 	uv run mypy .
+
+# Run documentation server
+docs:
+	cd docs && docker compose up

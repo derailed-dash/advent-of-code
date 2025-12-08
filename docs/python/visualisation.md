@@ -1030,20 +1030,12 @@ This is often more robust than `FuncAnimation` if you want per-frame control.
 
 For **2025 Day 8: Playground**, we found ourselves in a massive underground playground connecting lighting circuits between junction boxes in 3D space. We used `FuncAnimation` to visualize the clusters of connected boxes forming circuits.
 
-<video width="640" controls autoplay loop muted>
-  <source src="{{'/assets/media/2025-d08-vis.mp4' | relative_url }}" type="video/mp4">
-  Your browser does not support the video tag.
+<video width="100%" controls autoplay loop muted>
+  <source src="/assets/media/2025_d08_vis.mp4" type="video/mp4">
+Your browser does not support the video tag.
 </video>
-<br>
+<br/>
 
 ## Seaborn
 
 // Coming Soon
-
-## Reflecting on this...
-
-Visualisation isn't just about making things look pretty (though that IS important). It's about **verification**.
-
-When I built the console visualiser for Day 5, it wasn't just for fun — it immediately revealed a bug in my interval merging logic where adjacent intervals weren't coalescing. The "glitch" in the animation made it obvious in a way that staring at log files never could.
-
-So... treat visualisation as a first-class citizen in your debugging toolkit. Plus, it looks cool on GitHub.
