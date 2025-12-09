@@ -43,12 +43,17 @@ and therefore green or red.
 I've used ray casting before (see 2023 day 10), so I wasn't starting from scratch.
 """
 import logging
+import os
 import sys
 import textwrap
 from itertools import combinations
 from typing import NamedTuple
 
 import dazbo_commons as dc  # For locations
+import matplotlib.animation as animation
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
 from rich.logging import RichHandler
 
 import aoc_common.aoc_commons as ac  # General AoC utils
@@ -165,11 +170,166 @@ class PolygonSolver:
                     
         return False
 
-def part2(data: list[str]):
+def generate_visualization(corners: list[Point], output_file: str):  # noqa: C901
+    """
+    Generates a GIF visualization of the Ray Casting algorithm.
+    Only generates if the file does not already exist.
+    """
+    vis_path = locations.output_dir / output_file
+    if os.path.exists(vis_path):
+        logger.info(f"Visualization already exists at {vis_path}. Skipping.")
+        return
+
+    logger.info(f"Generating visualization: {vis_path}...")
+    
+    # Logic extracted and refined from d09_vis.py
+    points = [(p.x, p.y) for p in corners]
+    edges = []
+    for i in range(len(points)):
+        p1 = points[i]
+        p2 = points[(i + 1) % len(points)]
+        edges.append((p1, p2))
+
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    x_min, x_max = min(xs), max(xs)
+    y_min, y_max = min(ys), max(ys)
+    
+    margin_x = (x_max - x_min) * 0.1
+    margin_y = (y_max - y_min) * 0.1
+    
+    ax.set_xlim(x_min - margin_x, x_max + margin_x)
+    ax.set_ylim(y_min - margin_y, y_max + margin_y)
+    ax.set_title("Ray Casting (Left Ray)")
+    
+    poly_patch = patches.Polygon(points, closed=True, fill=True, facecolor='#e0f7fa', 
+                                 edgecolor='#006064', linewidth=0.5, alpha=0.6, zorder=1)
+    ax.add_patch(poly_patch)
+    
+    ray_line, = ax.plot([], [], 'r--', linewidth=1, label='Ray (Left)', zorder=2)
+    test_point, = ax.plot([], [], 'ko', markersize=6, zorder=5)
+    intersection_points, = ax.plot([], [], 'rx', markersize=8, markeredgewidth=2, label='Intersections', zorder=4)
+    
+    status_text = ax.text(
+        0.02, 0.98, '', 
+        transform=ax.transAxes, 
+        verticalalignment='top', 
+        fontsize=10, 
+        bbox={'boxstyle': 'round', 'facecolor': 'white', 'alpha': 0.9}
+    )
+    
+    scan_y = 49900
+    
+    # Find static intersections on this line to know where to pause
+    line_intersections = []
+    for p1, p2 in edges:
+        x1, y1 = p1
+        x2, y2 = p2
+        if y1 == y2:
+            continue
+        y_min_edge, y_max_edge = min(y1, y2), max(y1, y2)
+        if y_min_edge <= scan_y < y_max_edge:
+             if x1 == x2:
+                ix = x1
+             else:
+                ix = x1 + (scan_y - y1) * (x2 - x1) / (y2 - y1)
+             line_intersections.append(ix)
+    
+    line_intersections.sort()
+    
+    steps = 150
+    base_scan_xs = np.linspace(x_min - margin_x/2, x_max + margin_x/2, steps)
+    
+    final_frames = []
+    fps = 15
+    pause_duration = 1.0 # seconds (User request)
+    pause_frames = int(fps * pause_duration)
+    
+    next_ix_idx = 0
+    
+    for x in base_scan_xs:
+        final_frames.append(x)
+        if next_ix_idx < len(line_intersections):
+            ix = line_intersections[next_ix_idx]
+            if x >= ix:
+                final_frames.extend([x] * pause_frames)
+                next_ix_idx += 1
+                while next_ix_idx < len(line_intersections) and x >= line_intersections[next_ix_idx]:
+                    next_ix_idx += 1
+                    
+    def solve_ray_intersections_left(px, py, edges):
+        intersections = []
+        for p1, p2 in edges:
+            x1, y1 = p1
+            x2, y2 = p2
+            if y1 == y2:
+                continue
+            y_min_edge, y_max_edge = min(y1, y2), max(y1, y2)
+            if y_min_edge <= py < y_max_edge:
+                if x1 == x2:
+                    ix = x1
+                else:
+                    ix = x1 + (py - y1) * (x2 - x1) / (y2 - y1)
+                
+                if ix < px:
+                    intersections.append((ix, py))
+        return sorted(intersections, key=lambda p: p[0])
+
+    def init():
+        ray_line.set_data([], [])
+        test_point.set_data([], [])
+        intersection_points.set_data([], [])
+        status_text.set_text('')
+        return ray_line, test_point, intersection_points, status_text
+        
+    def animate(i):
+        px = final_frames[i]
+        py = scan_y
+        
+        intersections = solve_ray_intersections_left(px, py, edges)
+        count = len(intersections)
+        is_inside = count % 2 == 1
+        
+        test_point.set_data([px], [py])
+        if is_inside:
+            test_point.set_color('#4caf50')
+        else:
+            test_point.set_color('#f44336')
+            
+        ray_start_x = x_min - margin_x
+        ray_line.set_data([ray_start_x, px], [py, py])
+        
+        if count > 0:
+            ixs = [p[0] for p in intersections]
+            iys = [p[1] for p in intersections]
+            intersection_points.set_data(ixs, iys)
+        else:
+            intersection_points.set_data([], [])
+        
+        status_text.set_text(
+            f"Pos: ({int(px)}, {int(py)})\n"
+            f"Intersections (Left): {count}\n"
+            f"Result: {'INSIDE' if is_inside else 'OUTSIDE'}"
+        )
+        return ray_line, test_point, intersection_points, status_text
+
+    ani = animation.FuncAnimation(fig, animate, init_func=init, frames=len(final_frames), interval=1000/fps, blit=True)
+    
+    os.makedirs(os.path.dirname(vis_path), exist_ok=True)
+    ani.save(vis_path, writer='pillow', fps=fps)
+    logger.info(f"Visualisation saved to {vis_path}")
+    plt.close(fig) # Cleanup
+
+def part2(data: list[str], vis_filename: str | None = None):
     red_tiles = [] # Order matters for polygon checks
     for line in data:
         x, y = map(int, line.split(","))
         red_tiles.append(Point(x, y))
+
+    if vis_filename:
+        generate_visualization(red_tiles, vis_filename)
 
     # Initialize Polygon Solver
     solver = PolygonSolver(red_tiles)
@@ -242,7 +402,7 @@ def main():
     # Part 2 solution
     logger.setLevel(logging.INFO)
     with ac.timer():
-        logger.info(f"Part 2 soln={part2(input_data)}")
+        logger.info(f"Part 2 soln={part2(input_data, vis_filename='2025_d09_vis.gif')}")
 
 def test_solution(soln_func, sample_inputs: list, sample_answers: list):
     """
