@@ -182,7 +182,6 @@ def generate_visualization(corners: list[Point], output_file: str):  # noqa: C90
 
     logger.info(f"Generating visualization: {vis_path}...")
     
-    # Logic extracted and refined from d09_vis.py
     points = [(p.x, p.y) for p in corners]
     edges = []
     for i in range(len(points)):
@@ -190,7 +189,23 @@ def generate_visualization(corners: list[Point], output_file: str):  # noqa: C90
         p2 = points[(i + 1) % len(points)]
         edges.append((p1, p2))
 
+    # --- STYLE CONFIGURATION ---
+    plt.style.use('dark_background')
+    
+    # Colors (Neon Cyberpunk Palette)
+    BG_COLOR = '#0e1117' # Very dark blue/black
+    GRID_COLOR = '#4a4d54' # Brightened from #2a2d34
+    POLY_FILL = '#00f0ff' # Cyan
+    POLY_EDGE = '#00f0ff'
+    RAY_COLOR = '#ff00ff' # Magenta/Pink
+    INSIDE_COLOR = '#39ff14' # Neon Green
+    OUTSIDE_COLOR = '#ff073a' # Neon Red
+    INTERSECT_COLOR = '#ffd700' # Gold
+    TEXT_COLOR = '#ff88ff'
+    
     fig, ax = plt.subplots(figsize=(12, 8))
+    fig.patch.set_facecolor(BG_COLOR)
+    ax.set_facecolor(BG_COLOR)
     
     xs = [p[0] for p in points]
     ys = [p[1] for p in points]
@@ -202,25 +217,67 @@ def generate_visualization(corners: list[Point], output_file: str):  # noqa: C90
     
     ax.set_xlim(x_min - margin_x, x_max + margin_x)
     ax.set_ylim(y_min - margin_y, y_max + margin_y)
-    ax.set_title("Ray Casting (Left Ray)")
     
-    poly_patch = patches.Polygon(points, closed=True, fill=True, facecolor='#e0f7fa', 
-                                 edgecolor='#006064', linewidth=0.5, alpha=0.6, zorder=1)
+    # Remove standard axes for a cleaner look
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_color(GRID_COLOR)
+    ax.spines['left'].set_color(GRID_COLOR)
+    ax.tick_params(axis='x', colors=GRID_COLOR)
+    ax.tick_params(axis='y', colors=GRID_COLOR)
+    ax.grid(True, color=GRID_COLOR, linestyle='--', linewidth=0.5, alpha=0.3)
+    
+    ax.set_title("RAY CASTING ALGORITHM // PART 2", color=TEXT_COLOR, fontsize=16, pad=20, fontname='monospace', loc='left')
+    
+    # Polygon with Glow Effect (simulated by multiple lines)
+    poly_patch = patches.Polygon(points, closed=True, fill=True, facecolor=POLY_FILL, 
+                                 edgecolor=None, alpha=0.15, zorder=1)
     ax.add_patch(poly_patch)
     
-    ray_line, = ax.plot([], [], 'r--', linewidth=1, label='Ray (Left)', zorder=2)
-    test_point, = ax.plot([], [], 'ko', markersize=6, zorder=5)
-    intersection_points, = ax.plot([], [], 'rx', markersize=8, markeredgewidth=2, label='Intersections', zorder=4)
+    # Glowing edge
+    glow_patch = patches.Polygon(points, closed=True, fill=False, edgecolor=POLY_EDGE, 
+                                linewidth=2, alpha=0.8, zorder=2)
+    # Simulating outer glow
+    glow_patch_outer = patches.Polygon(points, closed=True, fill=False, edgecolor=POLY_EDGE, 
+                                linewidth=6, alpha=0.2, zorder=1.5)
     
+    ax.add_patch(poly_patch)
+    ax.add_patch(glow_patch)
+    ax.add_patch(glow_patch_outer)
+    
+    # --- LASER BEAM & TRAIL SETUP ---
+    trail_length = 20
+    trail_lines = []
+    for i in range(trail_length):
+        alpha = 0.4 * (1 - i/trail_length) # Fade out
+        # Glow trail
+        t_line, = ax.plot([], [], color=RAY_COLOR, linewidth=1.5, alpha=alpha, zorder=9)
+        trail_lines.append(t_line)
+
+    # Main Laser Beam
+    # 1. Glow (Thick, colored, semi-transparent)
+    ray_glow, = ax.plot([], [], color=RAY_COLOR, linewidth=5, alpha=0.5, label='Scanner Ray', zorder=10)
+    # 2. Core (cihin, white, solid)
+    ray_core, = ax.plot([], [], color='white', linewidth=1.5, alpha=1.0, zorder=11)
+    
+    # Animated Point
+    test_point, = ax.plot([], [], 'o', markersize=8, markeredgecolor='white', markeredgewidth=1.5, zorder=20)
+    
+    # Intersections
+    intersection_points, = ax.plot([], [], 'x', color=INTERSECT_COLOR, markersize=10, markeredgewidth=2, label='Intersections', zorder=15)
+    
+    # HUD Status Text
     status_text = ax.text(
-        0.02, 0.98, '', 
+        0.02, 0.95, '', 
         transform=ax.transAxes, 
         verticalalignment='top', 
-        fontsize=10, 
-        bbox={'boxstyle': 'round', 'facecolor': 'white', 'alpha': 0.9}
+        fontsize=12, 
+        fontname='monospace',
+        color=TEXT_COLOR,
+        bbox={'boxstyle': 'round,pad=0.5', 'facecolor': '#000000', 'edgecolor': GRID_COLOR, 'alpha': 0.8}
     )
     
-    scan_y = 49900
+    scan_y = 49500 # Fixed Y for demo
     
     # Find static intersections on this line to know where to pause
     line_intersections = []
@@ -243,8 +300,8 @@ def generate_visualization(corners: list[Point], output_file: str):  # noqa: C90
     base_scan_xs = np.linspace(x_min - margin_x/2, x_max + margin_x/2, steps)
     
     final_frames = []
-    fps = 15
-    pause_duration = 1.0 # seconds (User request)
+    fps = 20 # Smoother
+    pause_duration = 0.8 
     pause_frames = int(fps * pause_duration)
     
     next_ix_idx = 0
@@ -256,7 +313,9 @@ def generate_visualization(corners: list[Point], output_file: str):  # noqa: C90
             if x >= ix:
                 final_frames.extend([x] * pause_frames)
                 next_ix_idx += 1
-                while next_ix_idx < len(line_intersections) and x >= line_intersections[next_ix_idx]:
+                while next_ix_idx < len(line_intersections) and (
+                    x >= line_intersections[next_ix_idx]
+                ):
                     next_ix_idx += 1
                     
     def solve_ray_intersections_left(px, py, edges):
@@ -278,11 +337,14 @@ def generate_visualization(corners: list[Point], output_file: str):  # noqa: C90
         return sorted(intersections, key=lambda p: p[0])
 
     def init():
-        ray_line.set_data([], [])
+        ray_glow.set_data([], [])
+        ray_core.set_data([], [])
+        for line in trail_lines:
+            line.set_data([], [])
         test_point.set_data([], [])
         intersection_points.set_data([], [])
         status_text.set_text('')
-        return ray_line, test_point, intersection_points, status_text
+        return [ray_glow, ray_core, test_point, intersection_points, status_text, *trail_lines]
         
     def animate(i):
         px = final_frames[i]
@@ -294,13 +356,37 @@ def generate_visualization(corners: list[Point], output_file: str):  # noqa: C90
         
         test_point.set_data([px], [py])
         if is_inside:
-            test_point.set_color('#4caf50')
+            test_point.set_color(INSIDE_COLOR)
+            # Add a "halo" effect for the point if inside
+            test_point.set_markersize(10)
         else:
-            test_point.set_color('#f44336')
+            test_point.set_color(OUTSIDE_COLOR)
+            test_point.set_markersize(8)
             
         ray_start_x = x_min - margin_x
-        ray_line.set_data([ray_start_x, px], [py, py])
         
+        # Update Main Laser
+        # Projectile Effect: Glow travels with the head, trailing behind slightly
+        glow_len = 6000 
+        glow_start_x = max(ray_start_x, px - glow_len)
+        ray_glow.set_data([glow_start_x, px], [py, py])
+        
+        # Core: Short "Pulse" at the tip
+        core_start_x = max(ray_start_x, px - 2000) # Short bright tip
+        ray_core.set_data([core_start_x, px], [py, py])
+        
+        # Update Trail
+        for idx, line in enumerate(trail_lines):
+            prev_frame_idx = i - (idx + 1) * 3 # Skip frames for distinct trail segments
+            if prev_frame_idx >= 0:
+                prev_x = final_frames[prev_frame_idx]
+                # Trail should be a "Ghost Core" -> Short segment at the previous position
+                ghost_len = 3000
+                ghost_start = max(ray_start_x, prev_x - ghost_len)
+                line.set_data([ghost_start, prev_x], [py, py])
+            else:
+                 line.set_data([], [])
+
         if count > 0:
             ixs = [p[0] for p in intersections]
             iys = [p[1] for p in intersections]
@@ -309,13 +395,76 @@ def generate_visualization(corners: list[Point], output_file: str):  # noqa: C90
             intersection_points.set_data([], [])
         
         status_text.set_text(
-            f"Pos: ({int(px)}, {int(py)})\n"
-            f"Intersections (Left): {count}\n"
-            f"Result: {'INSIDE' if is_inside else 'OUTSIDE'}"
+            f"SCAN_POS : [{int(px):>5}, {int(py):>5}]\n"
+            f"INTERSECT: {count:>3}\n"
+            f"STATUS   : {'[ INSIDE ]' if is_inside else '[ OUTSIDE ]'}"
         )
-        return ray_line, test_point, intersection_points, status_text
+        # Dynamic text color (White for Outside, Green for Inside)
+        status_text.set_color(INSIDE_COLOR if is_inside else TEXT_COLOR)
+        
+        # --- DYNAMIC CAMERA ZOOM ---
+        # Strategy:
+        # 0% - 40%: Full View (1.0x)
+        # 40% - 55%: Fast Transition to Close Up (2.5x X, 1.5x Y)
+        # 55% - 100%: Close Up
+        
+        total_frames = len(final_frames)
+        progress = i / total_frames if total_frames > 0 else 0
+        
+        start_zoom_x, end_zoom_x = 1.0, 2.5
+        start_zoom_y, end_zoom_y = 1.0, 1.8
+        
+        t_start = 0.4
+        t_end = 0.6 # Fast transition
+        
+        if progress < t_start:
+            current_zoom_x = start_zoom_x
+            current_zoom_y = start_zoom_y
+        elif progress > t_end:
+            current_zoom_x = end_zoom_x
+            current_zoom_y = end_zoom_y
+        else:
+            # Linear Interpolation
+            t = (progress - t_start) / (t_end - t_start)
+            current_zoom_x = start_zoom_x + (end_zoom_x - start_zoom_x) * t
+            current_zoom_y = start_zoom_y + (end_zoom_y - start_zoom_y) * t
+            
+        # X-Axis Zoom (Follows Ray)
+        world_width = (x_max + margin_x) - (x_min - margin_x)
+        view_width = world_width / current_zoom_x
+        
+        view_min_x = px - (view_width / 2.0)
+        view_max_x = px + (view_width / 2.0)
+        
+        # Clamp X
+        global_min_x = x_min - margin_x
+        global_max_x = x_max + margin_x
+        
+        if view_min_x < global_min_x:
+            view_min_x = global_min_x
+            view_max_x = global_min_x + view_width
+        elif view_max_x > global_max_x:
+            view_max_x = global_max_x
+            view_min_x = global_max_x - view_width
+            
+        ax.set_xlim(view_min_x, view_max_x)
+        
+        # Y-Axis Zoom (Center of World)
+        world_height = (y_max + margin_y) - (y_min - margin_y)
+        view_height = world_height / current_zoom_y
+        world_center_y = (y_min + y_max) / 2.0
+        
+        view_min_y = world_center_y - (view_height / 2.0)
+        view_max_y = world_center_y + (view_height / 2.0)
+        
+        ax.set_ylim(view_min_y, view_max_y)
 
-    ani = animation.FuncAnimation(fig, animate, init_func=init, frames=len(final_frames), interval=1000/fps, blit=True)
+        return [ray_glow, ray_core, test_point, intersection_points, status_text, *trail_lines]
+
+    ani = animation.FuncAnimation(
+        fig, animate, init_func=init, 
+        frames=len(final_frames), interval=1000/fps, blit=False
+    ) # blit=False needed for set_xlim changes
     
     os.makedirs(os.path.dirname(vis_path), exist_ok=True)
     ani.save(vis_path, writer='pillow', fps=fps)
