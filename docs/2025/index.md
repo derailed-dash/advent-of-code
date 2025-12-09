@@ -17,4 +17,3 @@ Welcome to my Advent of Code 2025 solutions!
 | [7](/2025/7) | [Laboratories](/2025/7) | BFS, DFS, Memoisation (Recursion), NamedTuple, Graphs (DAG) |
 | [8](/2025/8) | [Playground](/2025/8) | BFS (Shortest Paths), Union-Find (Kruskal's), Combinations, NamedTuple |
 | [9](/2025/9) | [Movie Theater](/2025/9) | Ray Casting, Geometry |
-```
