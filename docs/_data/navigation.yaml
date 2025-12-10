@@ -461,3 +461,9 @@ pages:
   - name: 8
     link: /2025/8
     problem: "Playground"
+  - name: 9
+    link: /2025/9
+    problem: "Movie Theater"
+  - name: 10
+    link: /2025/10
+    problem: "Factory"

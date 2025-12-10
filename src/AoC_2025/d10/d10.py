@@ -118,7 +118,7 @@ class Machine:
                 # Calculate the result of pressing these k buttons
                 current_state = 0
                 for mask in combo: # Apply each button in the combo
-                    current_state ^= mask
+                    current_state ^= mask # XOR to combine button effects
                 if current_state == self.target_lights:
                     return k  
         raise ValueError("No solution found for machine")
@@ -258,6 +258,7 @@ def part1(data: list[str]):
     return total_presses
 
 def part2(data: list[str]):
+    """ Part 2: Minimum button presses to match target joltages. """
     machines = parse_input(data)
     total_presses = 0
     for _, machine in enumerate(machines):
