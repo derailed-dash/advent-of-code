@@ -5,7 +5,14 @@ Date: 01/12/2023
 Solving https://adventofcode.com/2025/day/9
 
 We're in a movie theater with a big tile floor. 
-Puzzle input is the location of red tiles on the floor.
+Puzzle input is the location of red tiles on the floor. It looks like:
+
+```
+7,1
+11,1
+11,7
+9,7
+```
 
 Part 1:
 
@@ -83,14 +90,17 @@ class Point(NamedTuple):
     x: int
     y: int
 
-def part1(data: list[str]):
+def part1(data: list[str]) -> int:
+    """
+    Using two red tiles as opposite corners, what is the largest area of any rectangle you can make?
+    """
     red_tiles = set()
     for line in data:
-        x, y = map(int, line.split(","))
+        x, y = map(int, line.split(",")) # Input data is location of red tiles
         red_tiles.add(Point(x, y))
 
     biggest_area = 0
-    for point1, point2 in combinations(red_tiles, 2):
+    for point1, point2 in combinations(red_tiles, 2): # Get all pairs of points
         # We need inclusive area
         rectangle_area = (abs(point2.x - point1.x) + 1) * (abs(point2.y - point1.y) + 1)
         biggest_area = max(biggest_area, rectangle_area)
@@ -99,14 +109,18 @@ def part1(data: list[str]):
 
 class PolygonSolver:
     """ Solves the problem using Ray Casting and edge intersection checks. """
+    
     def __init__(self, corners: list[Point]):
+        """ 
+        corners: list of points that represented adjacent red tiles
+        """
         self.corners = corners
         self.num_corners = len(corners)
         
         # Pre-calculate edges for intersection checks
         # Store as (x1, y1, x2, y2) tuples
-        self.vertical_edges = []
-        self.horizontal_edges = []
+        self.vertical_edges = [] # e.g. (x, y1, y2)
+        self.horizontal_edges = [] # e.g. (x1, x2, y)
         
         for i in range(self.num_corners):
             p1 = corners[i]
@@ -133,9 +147,9 @@ class PolygonSolver:
             # Ray is y = py, x > px
             # Edge is x = vx, y in [vy_min, vy_max]
             
-            # 1. Edge must be strictly to the right of the point
+            # Edge must be strictly to the right of the point
             if vx > px:
-                # 2. Ray's Y must be within the edge's Y range
+                # Ray's Y must be within the edge's Y range
                 # We use vy_min <= py < vy_max to avoid double counting vertices
                 if vy_min <= py < vy_max:
                     intersections += 1
@@ -472,6 +486,17 @@ def generate_visualization(corners: list[Point], output_file: str):  # noqa: C90
     plt.close(fig) # Cleanup
 
 def part2(data: list[str], vis_filename: str | None = None):
+    """
+    In our *input list*, every red tile is connected to the red tile before and after it
+    by a straight line of green tiles. And the list wraps so the first and last red tiles are connected.
+    Adjacent red tiles in the list will always be in the same row or same column.
+    Thus, red tiles are corners of the irregular polygon.
+    When we form closed loops, internal tiles are also green.
+
+    Now we must choose rectangles that have red in opposite corners, 
+    but otherwise ONLY contain green or red tiles.
+    What is the largest area of any rectangle you can make?
+    """
     red_tiles = [] # Order matters for polygon checks
     for line in data:
         x, y = map(int, line.split(","))
@@ -485,7 +510,7 @@ def part2(data: list[str], vis_filename: str | None = None):
     
     biggest_area = 0
     
-    for p1, p2 in combinations(red_tiles, 2):
+    for p1, p2 in combinations(red_tiles, 2): # Compare all pairs of points
         # Determine the rectangle area in real coordinates
         width = abs(p1.x - p2.x) + 1
         height = abs(p1.y - p2.y) + 1
@@ -501,7 +526,7 @@ def part2(data: list[str], vis_filename: str | None = None):
         # To check if the rectangle is valid (part of the polygon's interior),
         # we test a point slightly offset from the top-left corner into the rectangle's body.
         # This (min_x + 0.5, min_y + 0.5) approach avoids ambiguity with boundary lines.
-        # If this point is inside the polygon AND no edges intersect the rectangle's interior,
+        # If this point is inside the polygon AND no polygon edges intersect the rectangle's interior,
         # then the entire rectangle is valid.
         
         if solver.is_point_inside(r_min_x + 0.5, r_min_y + 0.5):
