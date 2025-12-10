@@ -25,7 +25,40 @@ the indicator lights on all of the machines?
 
 Here, joltages are irrelevant.
 
+Solution assertions:
+- We can press any combination of buttons.
+- But each button need only be pressed once, because pressing it again simply reverts the state.
+- Input has a max of around 13 buttons, and therefore max of 2**13 (8192) button combinations per machine.
+- This is small so we can brute force all combinations.
+
+Solution:
+
+- Simply test all combinations of of single button presses, starting with one button, 
+  all the way to k buttons, where k is the max number of buttons.
+- For each combination, calculate the result of pressing those buttons, using XOR.
+- If the result matches the target state, return the number of button presses, i.e. k.
+
 Part 2:
+
+Each machine needs to be configured to exactly the specified joltage levels.
+E.g. {3,5,4,7} means we need to configure the joltage levels to 3, 5, 4, and 7.
+
+Joltage levels are initially set to 0 per joltage requirement.
+Buttons now increase joltage levels; indicator lights are irrelevant for this part.
+The button "tuple" now indicates which joltage counters are incremented.
+E.g. button (1,3) increases the joltage counters at index 1 and 3 by 1.
+
+What is the fewest button presses required to correctly configure the joltage level counters
+on all of the machines?
+
+Solution:
+
+I think this might be a linear algebra problem. I've used SymPy for solving linear equations before.
+But simple linear equations don't work here, because we have so many variables.
+We need an optimal solution, and one that is constrained to only integer values.
+(As the problem states: we can't do half a button press!)
+
+We can use Integer Linear Programming (ILP) to solve this.
 
 """
 import itertools
@@ -35,7 +68,9 @@ import textwrap
 from dataclasses import dataclass
 
 import dazbo_commons as dc
+import numpy as np
 from rich.logging import RichHandler
+from scipy.optimize import Bounds, LinearConstraint, milp
 
 import aoc_common.aoc_commons as ac
 
@@ -62,25 +97,18 @@ logger.setLevel(logging.DEBUG)
 
 @dataclass
 class Machine:
-    """ Represents a factory machine based on the schematic input """
-
-    # We need this because the leading zero bits are lost when converting to int
-    # So we need to know how many bits we started with
     num_lights: int 
-    target_state: int # E.g. ".##." -> 0b110 = 6
-    button_masks: list[int] # E.g. [3] [1,3] ... -> [0b1000, 0b1010, ...] = [8, 10, ...]
-    joltages: list[int]
+    target_lights: int 
+    button_indices: list[list[int]] 
+    target_joltages: list[int]
     
-    def get_presses(self) -> int:
-        """
-        Determine fewest button presses to reach target state (all lights matching target).
-        Start with all lights OFF (0). 
-        Target state represents specific configuration of ON lights we need.
-        Buttons toggle lights (XOR).
-        So we need: (Button_A ^ Button_B ^ ...) == target_state.
+    def __post_init__(self):
+        """ Create button masks from button indices """
+        self.button_masks = [sum(1 << i for i in indices) for indices in self.button_indices]
 
-        Return k, the fewest number of button presses required.
-        """
+    def get_presses_for_lights(self) -> int:
+        """ Part 1: Minimum button presses to match target light state, 
+        using brute force of all possible button combinations. """
         num_buttons = len(self.button_masks)
         
         # Try k presses, from 0 to num_buttons
@@ -91,16 +119,85 @@ class Machine:
                 current_state = 0
                 for mask in combo: # Apply each button in the combo
                     current_state ^= mask
-                
-                if current_state == self.target_state:
-                    return k
-                    
+                if current_state == self.target_lights:
+                    return k  
         raise ValueError("No solution found for machine")
 
+    def get_presses_for_joltages(self) -> int:
+        """ 
+        Part 2: Minimum button presses to match target joltages.
+        
+        This problem is an optimization problem where we need to find non-negative integers.
+        We model this as an Integer Linear Programming (ILP) problem:
+        
+        Variables: x[0], x[1], ... x[num_buttons-1] = number of times to press each button.
+        Objective: Minimize sum(x) (total button presses).
+        Constraints: The sum of button effects must exactly equal the target joltage for each light.
+        
+        We use `scipy.optimize.milp` to solve this efficiently.
+        """
+        num_buttons = len(self.button_indices)
+        
+        # Build the Coefficient Matrix 'A' (num_lights rows x num_buttons cols)
+        # Each row 'i' represents a light (equation).
+        # Each col 'j' represents a button (variable).
+        # A[i][j] = 1 means "Button j adds 1 to Light i".
+        A = np.zeros((self.num_lights, num_buttons))
+        for j, indices in enumerate(self.button_indices):
+            for i in indices:
+                A[i, j] = 1
+                
+        # Build the Target Vector 'b'
+        # These are the RHS values for our equations: "Light i needs 5 jolts".
+        # Equation i: Sum(Buttons affecting Light i) = b[i]
+        b = np.array(self.target_joltages)
+        
+        # Define the Cost Vector 'c'
+        # The solver minimizes the dot product of c and x (c · x).
+        # This means it minimizes: (c[0]*x[0] + c[1]*x[1] + ... + c[n]*x[n])
+        # Since we want to minimize the *total count* of presses, every button costs 1.
+        # If we wanted to minimize just Button 0 presses, c would be [1, 0, 0...].
+        c = np.ones(num_buttons)
+        
+        # Define Linear Constraints
+        # A @ x == b  (The button effects sum to exactly the target)
+        constraints = LinearConstraint(A, b, b)
+        
+        # Define Integrality Constraint
+        # We need whole number button presses. 0.5 presses doesn't exist.
+        # 1 = Integer, 0 = Continuous. We set all to 1.
+        integrality = np.ones(num_buttons)
+        
+        # Define Bounds
+        # We can't have negative button presses (lb=0).
+        # upper bound is infinity.
+        bounds = Bounds(lb=0, ub=np.inf)
+        
+        # Run the Mixed-Integer Linear Programming Solver
+        res = milp(c=c, constraints=constraints, integrality=integrality, bounds=bounds)
+        
+        if not res.success:
+            logger.warning(f"MILP failed for joltages {self.target_joltages}: {res.message}")
+            return 0
+            
+        # Result x is returned as floats, even with integer constraints.
+        # Due to floating point precision, 5 might be 4.99999999.
+        # Casting directly to int() would floor it to 4 (wrong).
+        solution = np.round(res.x).astype(int)
+        
+        # Verify we have a solution
+        # (A @ solution) means Matrix A multipled by Vector solution.
+        # This calculates the actual produced joltages for each light.
+        if not np.all(A @ solution == b):
+             logger.error("MILP solution verification failed")
+             return 0
+             
+        return int(np.sum(solution))
+
     def __str__(self):
-        return f"Target: {bin(self.target_state)[2:]}, " \
+        return f"Target: {bin(self.target_lights)[2:]}, " \
              + f"Buttons: [{', '.join([bin(b)[2:] for b in self.button_masks])}], " \
-             + f"Joltages: {self.joltages}"
+             + f"Joltages: {self.target_joltages}"
 
 def parse_input(data: list[str]) -> list[Machine]:
     """
@@ -124,24 +221,27 @@ def parse_input(data: list[str]) -> list[Machine]:
                 target_state |= (1 << i) # E.g. .##. -> 0110 = 6
                 
         # 2. Extract Buttons, e.g. (3) (1,3) (2) ...
+        # The buttons are between ] and {
+        # Note: We need a slight correction here from original logic to use start of {
         buttons_str = line[diagram_end+1:line.find('{')].strip()
-        button_masks = []
-        parts = buttons_str.split(' ') # get individual buttons: ['(1,3)', '(2)', '(2,3)']
-        
+        parts = buttons_str.split(' ')
+        button_indices = []
         for part in parts:
-            nums = [int(x) for x in part[1:-1].split(',')] # Get to "1,3" from "(1,3)"
+            # bit of a hacky parse: remove ( and ) and split by comma
+            nums = [int(x) for x in part[1:-1].split(',')]
             
+            # Create mask
             mask = 0
             for light_idx in nums:
-                # Convert to a mask where button positions are set to 1
-                mask |= (1 << light_idx) # E.g. 1, 3 -> 0b1010
-            button_masks.append(mask)
+                mask |= (1 << light_idx)
+                
+            button_indices.append(nums)
         
         # 3. Extract Joltages, e.g. {3,5,4,7}
         joltages_str = line[line.find('{') + 1:line.find('}')].strip()
         joltages = [int(x) for x in joltages_str.split(',')]
         
-        machines.append(Machine(num_lights, target_state, button_masks, joltages))
+        machines.append(Machine(num_lights, target_state, button_indices, joltages))
 
     return machines
 
@@ -151,14 +251,19 @@ def part1(data: list[str]):
     
     for i, machine in enumerate(machines):
         logger.debug(f"Machine {i}: {machine}")
-        presses = machine.get_presses()
+        presses = machine.get_presses_for_lights()
         logger.debug(f"Presses: {presses}")
         total_presses += presses
         
     return total_presses
 
 def part2(data: list[str]):
-    return "To Be Implemented"
+    machines = parse_input(data)
+    total_presses = 0
+    for _, machine in enumerate(machines):
+        presses = machine.get_presses_for_joltages()
+        total_presses += presses
+    return total_presses
 
 def main():
     try:
@@ -186,7 +291,7 @@ def main():
     
     # Part 2 tests
     logger.setLevel(logging.DEBUG)
-    sample_answers = ["uvwxyz"]
+    sample_answers = [33]
     test_solution(part2, sample_inputs, sample_answers)
      
     # Part 2 solution
