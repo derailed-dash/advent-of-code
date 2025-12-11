@@ -467,3 +467,6 @@ pages:
   - name: 10
     link: /2025/10
     problem: "Factory"
+  - name: 11
+    link: /2025/11
+    problem: "Reactor"
