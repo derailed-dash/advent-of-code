@@ -57,7 +57,7 @@ from functools import cache
 from pathlib import Path
 
 import networkx as nx
-import otlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 import aoc_common.aoc_commons as ac  # General AoC utils
 
@@ -227,17 +227,8 @@ def main():
     # Part 1 tests
     logger.setLevel(logging.DEBUG)
     sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        aaa: you hhh
-        you: bbb ccc
-        bbb: ddd eee
-        ccc: ddd eee fff
-        ddd: ggg
-        eee: out
-        fff: out
-        ggg: out
-        hhh: ccc fff iii
-        iii: out"""))
+    with open(locations.input_dir / "sample_input_part_1.txt", encoding="utf-8") as f:
+        sample_inputs.append(f.read())
     sample_answers = [5]
     test_solution(part1, sample_inputs, sample_answers)
 

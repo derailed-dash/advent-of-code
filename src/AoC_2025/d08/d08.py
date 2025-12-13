@@ -40,7 +40,6 @@ Solution approach:
 """
 import logging
 import sys
-import textwrap
 from collections import deque
 from itertools import combinations
 from pathlib import Path
@@ -427,6 +426,7 @@ class CircuitVisualiser:
             else:
                 logger.info("Encoding GIF... this may take a moment after the bar fills.")
 
+            output_file_path.parent.mkdir(parents=True, exist_ok=True)
             ani.save(output_file_path, **save_kwargs)
             pbar.close()
             
@@ -493,27 +493,8 @@ def main():
     # Part 1 tests
     logger.setLevel(logging.DEBUG)
     sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        162,817,812
-        57,618,57
-        906,360,560
-        592,479,940
-        352,342,300
-        466,668,158
-        542,29,236
-        431,825,988
-        739,650,466
-        52,470,668
-        216,146,977
-        819,987,18
-        117,168,530
-        805,96,715
-        346,949,466
-        970,615,88
-        941,993,340
-        862,61,35
-        984,92,344
-        425,690,689"""))
+    with open(locations.input_dir / "sample_input_part_1.txt", encoding="utf-8") as f:
+        sample_inputs.append(f.read())
     sample_answers = [40]
     test_solution(part1, sample_inputs, sample_answers)
 

@@ -64,7 +64,6 @@ We can use Integer Linear Programming (ILP) to solve this.
 import itertools
 import logging
 import sys
-import textwrap
 from dataclasses import dataclass
 
 import numpy as np
@@ -267,10 +266,8 @@ def main():
     # Part 1 tests
     logger.setLevel(logging.DEBUG)
     sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        [.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
-        [...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
-        [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}"""))
+    with open(locations.input_dir / "sample_input_part_1.txt", encoding="utf-8") as f:
+        sample_inputs.append(f.read())
     sample_answers = [7]
     test_solution(part1, sample_inputs, sample_answers)
 

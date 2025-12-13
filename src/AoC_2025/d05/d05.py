@@ -32,7 +32,6 @@ Solution:
 """
 import logging
 import sys
-import textwrap
 
 import aoc_common.aoc_commons as ac  # General AoC utils
 
@@ -124,18 +123,8 @@ def main():
     # Part 1 tests
     logger.setLevel(logging.DEBUG)
     sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        3-5
-        10-14
-        16-20
-        12-18
-
-        1
-        5
-        8
-        11
-        17
-        32"""))
+    with open(locations.input_dir / "sample_input_part_1.txt", encoding="utf-8") as f:
+        sample_inputs.append(f.read())
     sample_answers = [3]
     test_solution(part1, sample_inputs, sample_answers)
 

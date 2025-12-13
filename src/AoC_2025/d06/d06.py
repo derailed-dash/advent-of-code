@@ -25,7 +25,6 @@ Part 2:
 import logging
 import math
 import sys
-import textwrap
 
 import aoc_common.aoc_commons as ac  # General AoC utils
 
@@ -135,11 +134,8 @@ def main():
     # Part 1 tests
     logger.setLevel(logging.DEBUG)
     sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        123 328  51 64 
-         45 64  387 23 
-          6 98  215 314
-        *   +   *   +  """))
+    with open(locations.input_dir / "sample_input_part_1.txt", encoding="utf-8") as f:
+        sample_inputs.append(f.read())
     sample_answers = [4277556]
     test_solution(part1, sample_inputs, sample_answers)
 

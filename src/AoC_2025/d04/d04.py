@@ -29,7 +29,6 @@ Solution:
 import logging
 import os
 import sys
-import textwrap
 from typing import NamedTuple
 
 import imageio.v3 as iio
@@ -253,17 +252,8 @@ def main():
     # Part 1 tests
     logger.setLevel(logging.DEBUG)
     sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        ..@@.@@@@.
-        @@@.@.@.@@
-        @@@@@.@.@@
-        @.@@@@..@.
-        @@.@@@@.@@
-        .@@@@@@@.@
-        .@.@.@.@@@
-        @.@@@.@@@@
-        .@@@@@@@@.
-        @.@.@@@.@."""))
+    with open(locations.input_dir / "sample_input_part_1.txt", encoding="utf-8") as f:
+        sample_inputs.append(f.read())
     sample_answers = [13]
     test_solution(part1, sample_inputs, sample_answers)
 

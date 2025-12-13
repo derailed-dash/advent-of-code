@@ -21,7 +21,6 @@ Invalid prod IDs are those made up of repeated substrings.
 """
 import logging
 import sys
-import textwrap
 from functools import cache
 
 import aoc_common.aoc_commons as ac  # General AoC utils
@@ -113,10 +112,8 @@ def main():
     # Part 1 tests
     logger.setLevel(logging.DEBUG)
     sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        11-22,95-115,998-1012,1188511880-1188511890,222220-222224,\
-        1698522-1698528,446443-446449,38593856-38593862,565653-565659,\
-        824824821-824824827,2121212118-2121212124"""))
+    with open(locations.input_dir / "sample_input_part_1.txt", encoding="utf-8") as f:
+        sample_inputs.append(f.read())
     sample_answers = [1227775554]
     test_solution(part1, sample_inputs, sample_answers)
 

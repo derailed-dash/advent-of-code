@@ -28,7 +28,6 @@ For this part, no changes are required to the solution!
 """
 import logging
 import sys
-import textwrap
 
 import aoc_common.aoc_commons as ac  # General AoC utils
 
@@ -92,11 +91,8 @@ def main():
     # Part 1 tests
     logger.setLevel(logging.DEBUG)
     sample_inputs = []
-    sample_inputs.append(textwrap.dedent("""\
-        987654321111111
-        811111111111119
-        234234234234278
-        818181911112111"""))
+    with open(locations.input_dir / "sample_input_part_1.txt", encoding="utf-8") as f:
+        sample_inputs.append(f.read())
     sample_answers = [357]
     test_solution(part1, sample_inputs, sample_answers)
 
