@@ -65,9 +65,7 @@ import logging
 import sys
 from dataclasses import dataclass
 
-import dazbo_commons as dc  # For locations
 import numpy as np
-from rich.logging import RichHandler
 from tqdm import tqdm
 
 import aoc_common.aoc_commons as ac  # General AoC utils
@@ -76,20 +74,11 @@ import aoc_common.aoc_commons as ac  # General AoC utils
 YEAR = 2025
 DAY = 12
 
-locations = dc.get_locations(__file__)
+locations = ac.get_locations(__file__)
 
 # Configure root logger with Rich logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s.%(msecs)03d %(message)s",
-    datefmt='%H:%M:%S',
-    handlers=[RichHandler(
-        rich_tracebacks=True, 
-        show_path=False,
-        markup=True,
-        show_time=False  # Disable Rich's time since we're using our own
-    )]
-)
+# Configure root logger with Rich logging
+ac.setup_logging()
 logger = logging.getLogger(locations.script_name)
 logger.setLevel(logging.DEBUG)
 

@@ -24,13 +24,14 @@ from pathlib import Path
 import dazbo_commons as dc
 import requests
 from dotenv import load_dotenv  # python-dotenv
+from rich.logging import RichHandler
 
 ##########################################################################
 # SETUP LOGGING
 #
 # Create a new instance of "logger" in the client application
 # Set to your preferred logging level
-# And add the stream_handler from this module, if you want coloured output
+# And call setup_logging() from this module
 ##########################################################################
 
 # logger for aoc_commons only
@@ -38,6 +39,51 @@ logger = logging.getLogger(__name__) # aoc_common.aoc_commons
 logger.setLevel(logging.INFO)
 
 load_dotenv() # load environment variables
+
+def setup_logging(level=logging.INFO):
+    """ Configures the root logger with Rich logging. 
+    Use this to setup logging in your solution scripts.
+    """
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s.%(msecs)03d %(message)s",
+        datefmt='%H:%M:%S',
+        handlers=[RichHandler(
+            rich_tracebacks=True, 
+            show_path=False,
+            markup=True,
+            show_time=False  # Disable Rich's time since we're using our own
+        )]
+    )
+
+@dataclass
+class Locations:
+    """ Dataclass for storing various location properties """
+    script_name: str # The name of this script
+    script_dir: Path # The path where this script is hosted
+    input_dir: Path  # A directory called "input", under the script_dir
+    output_dir: Path # A directory called "output", under the script_dir
+    input_file: Path # A file called input.txt, under the input_dir
+
+def get_locations(calling_file_path: str, sub_folder="") -> Locations:
+    """ Set various paths, based on the location of the calling script. """
+
+    # Get the directory of the calling script
+    script_dir = Path(calling_file_path).resolve().parent
+
+    # If a sub_folder is provided, append it to the script_dir
+    if sub_folder:
+        script_dir = script_dir / sub_folder
+
+    script_name = Path(calling_file_path).name
+    input_dir = script_dir / "input"
+    output_dir = script_dir / "output"
+    input_file = input_dir / "input.txt"
+
+    return Locations(script_name, script_dir,
+                     input_dir,
+                     output_dir,
+                     input_file)
 
 def setup_file_logging(a_logger: logging.Logger, folder: str|Path=""):
     """ Add a FileHandler to the specified logger. File name is based on the logger name.
@@ -97,7 +143,7 @@ def write_puzzle_input_file(year: int, day: int, locations: dc.Locations) -> str
             file.write(data)
             return data
     else:
-        raise ValueError(f"Unable to retrieve input data.\n" +
+        raise ValueError("Unable to retrieve input data.\n" +
                          f"HTTP response: {response.status_code}\n" +
                          f"{response.reason}: {response.content.decode('utf-8').strip()}")
        
@@ -189,7 +235,7 @@ class Vectors(Enum):
         x, y = self.value
         return (x, -y)
 
-class VectorDicts():
+class VectorDicts:
     """ Contains constants for Vectors """
     ARROWS = {
         '^': Vectors.N.value,
@@ -217,7 +263,7 @@ class VectorDicts():
         'tm': (0, 1)
     }
 
-class Grid():
+class Grid:
     """ 2D grid of point values. """
     def __init__(self, grid_array: list) -> None:
         self.array = grid_array

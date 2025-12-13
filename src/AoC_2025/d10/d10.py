@@ -67,9 +67,7 @@ import sys
 import textwrap
 from dataclasses import dataclass
 
-import dazbo_commons as dc
 import numpy as np
-from rich.logging import RichHandler
 from scipy.optimize import Bounds, LinearConstraint, milp
 
 import aoc_common.aoc_commons as ac
@@ -78,20 +76,11 @@ import aoc_common.aoc_commons as ac
 YEAR = 2025
 DAY = 10
 
-locations = dc.get_locations(__file__)
+locations = ac.get_locations(__file__)
 
 # Configure root logger with Rich logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s.%(msecs)03d %(message)s",
-    datefmt='%H:%M:%S',
-    handlers=[RichHandler(
-        rich_tracebacks=True, 
-        show_path=False,
-        markup=True,
-        show_time=False 
-    )]
-)
+# Configure root logger with Rich logging
+ac.setup_logging()
 logger = logging.getLogger(locations.script_name)
 logger.setLevel(logging.DEBUG)
 

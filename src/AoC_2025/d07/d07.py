@@ -52,29 +52,17 @@ from collections import deque
 from functools import cache
 from typing import NamedTuple
 
-import dazbo_commons as dc  # For locations
-from rich.logging import RichHandler
-
 import aoc_common.aoc_commons as ac  # General AoC utils
 
 # Set these to the current puzzle
 YEAR = 2025
 DAY = 7
 
-locations = dc.get_locations(__file__)
+locations = ac.get_locations(__file__)
 
 # Configure root logger with Rich logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s.%(msecs)03d %(message)s",
-    datefmt='%H:%M:%S',
-    handlers=[RichHandler(
-        rich_tracebacks=True, 
-        show_path=False,
-        markup=True,
-        show_time=False  # Disable Rich's time since we're using our own
-    )]
-)
+# Configure root logger with Rich logging
+ac.setup_logging()
 logger = logging.getLogger(locations.script_name)
 logger.setLevel(logging.DEBUG)
 
@@ -205,7 +193,7 @@ def main():
         ac.write_puzzle_input_file(YEAR, DAY, locations)
         with open(locations.input_file, encoding="utf-8") as f:
             input_data = f.read().splitlines() # Most puzzles are multiline strings
-            logger.debug(dc.top_and_tail(input_data))
+
     except (ValueError, FileNotFoundError) as e:
         logger.error("Could not read input file: %s", e)
         return 1

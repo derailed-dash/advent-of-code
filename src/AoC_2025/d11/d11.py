@@ -56,10 +56,8 @@ from collections.abc import Sequence
 from functools import cache
 from pathlib import Path
 
-import dazbo_commons as dc  # For locations
-import matplotlib.pyplot as plt
 import networkx as nx
-from rich.logging import RichHandler
+import otlib.pyplot as plt
 
 import aoc_common.aoc_commons as ac  # General AoC utils
 
@@ -69,20 +67,11 @@ DAY = 11
 
 VIS_ENABLED = False
 
-locations = dc.get_locations(__file__)
+locations = ac.get_locations(__file__)
 
 # Configure root logger with Rich logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s.%(msecs)03d %(message)s",
-    datefmt='%H:%M:%S',
-    handlers=[RichHandler(
-        rich_tracebacks=True, 
-        show_path=False,
-        markup=True,
-        show_time=False  # Disable Rich's time since we're using our own
-    )]
-)
+# Configure root logger with Rich logging
+ac.setup_logging()
 logger = logging.getLogger(locations.script_name)
 logger.setLevel(logging.DEBUG)
 
@@ -230,7 +219,7 @@ def main():
             input_data = f.read().splitlines() # Most puzzles are multiline strings
             # input_data = f.read().strip() # Raw string
             
-            logger.debug(dc.top_and_tail(input_data))
+
     except (ValueError, FileNotFoundError) as e:
         logger.error("Could not read input file: %s", e)
         return 1
