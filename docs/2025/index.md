@@ -6,6 +6,15 @@ title: 2025
 
 Welcome to my Advent of Code 2025 solutions!
 
+## The Story So Far
+
+The Elves have discovered **Project Management**! This is good news, because they usually have a Christmas emergency. The bad news is that their new software says they have absolutely zero time left to decorate the North Pole.
+
+Our job? **Finish decorating the North Pole by December 25th!**
+
+We start at the secret entrance to the North Pole base...
+
+
 | Day | Name | Topics | 
 | --- | --- | --- |
 | [1](/2025/1) | [Secret Entrance](/2025/1) | Modular arithmetic, integer division, debugging, assertions |
@@ -19,3 +28,4 @@ Welcome to my Advent of Code 2025 solutions!
 | [9](/2025/9) | [Movie Theater](/2025/9) | Ray Casting, Geometry |
 | [10](/2025/10) | [Factory](/2025/10) | Combinations, Bitwise operations, Integer Linear Programming (ILP), SciPy |
 | [11](/2025/11) | [Reactor](/2025/11) | Graph Theory, NetworkX, Recursion, Memoization |
+| [12](/2025/12) | [Packing Presents](/2025/12) | NumPy, Heuristics, Optimization |

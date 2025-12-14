@@ -150,16 +150,20 @@ def part1(data: list[str]):
     for region in regions:
         region_size = region.width * region.height
         total_shapes_required = sum(region.present_counts)
-        total_parts = 0
-        tiled_shape_area = total_shapes_required * 9
-        for shapes_count_req, shape in zip(region.present_counts, shapes):
-            total_parts += shapes_count_req * shape.sum()
 
-        ratio = region_size / total_parts
-        logger.debug(f"Region area: {region_size}, Min: {total_parts}, Sure: {tiled_shape_area}, Ratio: {ratio:.2f}")
-        if total_parts > region_size:
+        # If we just assumed each shape was 3x3, how many units would we need?
+        tiled_shape_area = total_shapes_required * 9
+        
+        # If we add up the units of each shape, how many units would we need?
+        actual_shape_units = 0
+        for shapes_count_req, shape in zip(region.present_counts, shapes):
+            actual_shape_units += shapes_count_req * shape.sum()
+
+        region_over_shape_units = region_size / actual_shape_units
+        logger.debug(f"Region area: {region_size}, Min: {actual_shape_units} ({region_over_shape_units:.3f})")
+        if actual_shape_units > region_size:
             continue
-        elif region_size >= tiled_shape_area:
+        elif region_size >= tiled_shape_area: # Obviously big enough
             regions_satisfied += 1
         else:
             # Here we implement the actual logic for recursively trying all configurations
@@ -180,6 +184,16 @@ def main():
     except (ValueError, FileNotFoundError) as e:
         logger.error("Could not read input file: %s", e)
         return 1
+    
+    # Part 1 tests
+    sample_inputs = []
+    with open(locations.input_dir / "sample_input_part_1.txt", encoding="utf-8") as f:
+        sample_inputs.append(f.read())
+    sample_answers = [2]
+    test_solution(part1, sample_inputs, sample_answers)
+
+    # Part 1 solution
+    logger.setLevel(logging.INFO)
 
     # Part 1 solution
     logger.setLevel(logging.DEBUG)
@@ -203,7 +217,7 @@ def test_solution(soln_func, sample_inputs: list, sample_answers: list):
             ac.validate(soln_func(curr_input), curr_ans)
         except AssertionError as e:
             logger.error(f"{soln_func.__name__} test failed: {e}")
-            sys.exit(1)
+            sys.exit(1) # Ignore failure and continue
     logger.info(f"{soln_func.__name__} tests passed")
     
 if __name__ == "__main__":

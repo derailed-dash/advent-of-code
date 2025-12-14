@@ -56,8 +56,8 @@ from collections.abc import Sequence
 from functools import cache
 from pathlib import Path
 
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
 
 import aoc_common.aoc_commons as ac  # General AoC utils
 

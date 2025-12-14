@@ -470,3 +470,6 @@ pages:
   - name: 11
     link: /2025/11
     problem: "Reactor"
+  - name: 12
+    link: /2025/12
+    problem: "Packing Presents"
