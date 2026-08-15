@@ -48,3 +48,8 @@ snippets/
 output/
 
 gha-creds-*.json
+/.env
+/.agent/workflows/aoc-create-doc.md
+/.agent/workflows/aoc-doc-intro.md
+/.agent/workflows/aoc-help.md
+/.agent/workflows/aoc-megathread-post.md
