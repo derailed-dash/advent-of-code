@@ -53,3 +53,4 @@ gha-creds-*.json
 /.agent/workflows/aoc-doc-intro.md
 /.agent/workflows/aoc-help.md
 /.agent/workflows/aoc-megathread-post.md
+/docs/.env
