@@ -1,27 +1,18 @@
 # Welcome to the source for my Advent of Code Solutions
 
-If you'd like to peruse this code along with my solution walkthroughs, then take a look [here](https://derailed-dash.github.io/Advent-of-Code/).
+If you'd like to peruse this code along with my solution walkthroughs, then take a look at [aoc.just2good.co.uk](https://aoc.just2good.co.uk/).
 
 ## Setting Up Your Environment
 
-With Conda:
+Dependencies and Python (`>=3.13`) are managed with [`uv`](https://docs.astral.sh/uv/) and [`pyproject.toml`](../pyproject.toml):
 
 ```bash
-conda env list # see environments and current active env
+# Install project, dev tooling, and Jupyter dependencies
+uv sync --dev --extra jupyter   # or: make install
 
-export AOC_ENV="aoc-conda-env"
+# Run a puzzle solution
+uv run python src/AoC_2025/d01/d01.py
 
-# Create and activate an environment
-conda create --name $AOC_ENV
-conda activate $AOC_ENV
-
-# Install some core packages
-# Before trying to run any Python code or Jupyter cells in this env
-conda install -y -c conda-forge python jupyter jupyterlab
-
-# Additional packages - or we could install these from (say) a Jupyter notebook
-conda install pandas hvplot mathjax matplotlib networkx numpy plotly scipy
-
-# Export the current environment config - for source control
-conda env export > $AOC_ENV.yml
+# Run offline checks (codespell, ruff, pyright, pytest)
+make check
 ```

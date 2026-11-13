@@ -3,17 +3,25 @@ layout: default
 nav_name: 'Python Journey'
 ---
 <h1>{{ page.topic }} - {{ page.title }}</h1>
-{%- if page.main_img -%}
+{%- if page.main_img and page.main_img.link -%}
 <img src="{{ page.main_img.link | relative_url }}" alt="{{ page.main_img.name }}" style="margin:15px 10px 10px 10px; float: right; width:300px" />
 {%- endif -%}
 
 {% assign pages = site.data.navigation.pages | where: 'name', layout.nav_name %}
 {% assign members = pages[0].members %}
+{% assign current_slug = page.url | replace: '.html', '' | strip %}
+{% if current_slug != '/' %}
+  {% assign last_char = current_slug | slice: -1, 1 %}
+  {% if last_char == '/' %}
+    {% assign new_len = current_slug | size | minus: 1 %}
+    {% assign current_slug = current_slug | slice: 0, new_len %}
+  {% endif %}
+{% endif %}
 {% for member in members %}
-  {% assign member_name = member.name %}
-  {% if member_name == page.title %}
+  {% assign member_slug = member.link | strip | replace: '.html', '' %}
+  {% if member_slug == current_slug or member.name == page.title %}
     {% unless forloop.first %}
-      {% assign prev_index = forloop.index0 | minus: 1 %}      
+      {% assign prev_index = forloop.index0 | minus: 1 %}
       {% assign prev_member = members[prev_index] %}
     {%- endunless -%}
     {% unless forloop.last %}
@@ -23,8 +31,8 @@ nav_name: 'Python Journey'
   {%- endif -%}
 {% endfor %}
 <p>
-  {% if prev_member %}<a class="dazbo-link-button nav-button" href="{{ prev_member.link | relative_url }}">&#8249;</a>{%- endif -%}
-  {%- if next_member -%}<a class="dazbo-link-button nav-button" href="{{ next_member.link | relative_url }}">&#8250;</a>{% endif %}
+  {% if prev_member %}<a class="dazbo-link-button nav-button" href="{{ prev_member.link | strip | relative_url }}">&#8249;</a>{%- endif -%}
+  {%- if next_member -%}<a class="dazbo-link-button nav-button" href="{{ next_member.link | strip | relative_url }}">&#8250;</a>{% endif %}
 </p>
 {%- if page.tags -%}
 <h2>Useful Links</h2>
@@ -39,6 +47,6 @@ nav_name: 'Python Journey'
 {{ content }}
 
 <p>
-  {% if prev_member %}<a class="dazbo-link-button nav-button" href="{{ prev_member.link | relative_url }}">&#8249;</a>{%- endif -%}
-  {%- if next_member -%}<a class="dazbo-link-button nav-button" href="{{ next_member.link | relative_url }}">&#8250;</a>{% endif %}
+  {% if prev_member %}<a class="dazbo-link-button nav-button" href="{{ prev_member.link | strip | relative_url }}">&#8249;</a>{%- endif -%}
+  {%- if next_member -%}<a class="dazbo-link-button nav-button" href="{{ next_member.link | strip | relative_url }}">&#8250;</a>{% endif %}
 </p>

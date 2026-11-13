@@ -1,53 +1,56 @@
 #!/bin/bash
 # Author: Darren
 #
-# Utility script to create an "AoC" folder for the specified year, based on the template folder
-# To use the script from the project root:
-# scripts/create_year.sh <year>
+# Utility script to create an "AoC" folder for the specified year, based on the template folder.
+# Usage from the project root:
+#   scripts/create_year.sh <year> [days]
 #
-# E.g.
-# scripts/create_year.sh 2023
+# Examples:
+#   scripts/create_year.sh 2026       # Creates 12 day folders (AoC 2025+ format)
+#   scripts/create_year.sh 2020 25    # Creates 25 day folders (legacy format)
 
-set -e
+set -euo pipefail
 
-if [ -z "$1" ]; then
-    echo "Usage: $0 <year>"
-    echo "Enter a year to use as a path suffix"
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <year> [days]"
+    echo "Creates src/AoC_<year>/d01..d<days> from src/template_folder/template.py (default: 12 days)."
     exit 1
 fi
 
-YEAR=$1
-# Assuming the script is run from the project root.
-DEST_FOLDER="src/AoC_$YEAR"
+YEAR="$1"
+DAYS="${2:-12}"
+
+if [[ ! "$YEAR" =~ ^[0-9]{4}$ ]]; then
+    echo "Error: Year '$YEAR' must be a 4-digit integer."
+    exit 1
+fi
+
+if [[ ! "$DAYS" =~ ^[0-9]+$ ]] || [ "$DAYS" -lt 1 ] || [ "$DAYS" -gt 25 ]; then
+    echo "Error: Days '$DAYS' must be an integer between 1 and 25."
+    exit 1
+fi
+
+DEST_FOLDER="src/AoC_${YEAR}"
 TEMPLATE_FOLDER="src/template_folder"
 TEMPLATE_FILE="${TEMPLATE_FOLDER}/template.py"
-TEMPLATE_INPUT_FOLDER="${TEMPLATE_FOLDER}/input"
 
 if [ ! -f "$TEMPLATE_FILE" ]; then
-    echo "Error: Template file '$TEMPLATE_FILE' not found."
+    echo "Error: Template file '$TEMPLATE_FILE' not found. Run this script from the repository root."
     exit 1
 fi
 
-if [ ! -d "$TEMPLATE_INPUT_FOLDER" ]; then
-    echo "Error: Template input folder '$TEMPLATE_INPUT_FOLDER' not found."
-    exit 1
-fi
-
-for i in $(seq 1 25); do
+for i in $(seq 1 "$DAYS"); do
     DAY_PREFIX=$(printf "d%02d" "$i")
     DAY_FOLDER="${DEST_FOLDER}/${DAY_PREFIX}"
-    
-    mkdir -p "${DAY_FOLDER}"
+
+    mkdir -p "${DAY_FOLDER}/input"
+    touch "${DAY_FOLDER}/input/sample_input_part_1.txt"
 
     NEW_PYTHON_FILE="${DAY_FOLDER}/${DAY_PREFIX}.py"
-    # Replace the hardcoded year in the template file with the provided year.
-    # This updates the 'YEAR' variable and the year in the Advent of Code URL.
-    sed -e "s/YEAR = 2017/YEAR = $YEAR/" \
-        -e "s/adventofcode.com\/2023\/day\//adventofcode.com\/$YEAR\/day\//" \
+    sed -e "s/^YEAR: int = 2026$/YEAR: int = ${YEAR}/" \
+        -e "s/^DAY: int = 1$/DAY: int = ${i}/" \
+        -e "s|adventofcode.com/2026/day/1|adventofcode.com/${YEAR}/day/${i}|" \
         "${TEMPLATE_FILE}" > "${NEW_PYTHON_FILE}"
-
-    # Also copy the input folder
-    cp -r "${TEMPLATE_INPUT_FOLDER}" "${DAY_FOLDER}/"
 done
 
-echo "Successfully created files for AoC $YEAR."
+echo "Successfully created ${DAYS} day folder(s) in ${DEST_FOLDER}."

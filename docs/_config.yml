@@ -21,45 +21,38 @@
 title: Learning Python with Advent of Code Walkthroughs
 description: Dazbo's Advent of Code solutions, written in Python
 
-# We need the URLs below otherwise overriding CSS wont work
+# We need the URLs below otherwise overriding CSS won't work
 repository: derailed-dash/Advent-of-Code
-# baseurl: /Advent-of-Code  # should not contain host!
-baseurl: /
-# url: https://derailed-dash.github.io
+baseurl: ""
 url: https://aoc.just2good.co.uk
 
 twitter_username: DerailedDash
-github_username:  Derailed-Dash
+github_username:  derailed-dash
 author: Dazbo
 
 # Build settings
 theme: jekyll-theme-modernist
-#theme: minima
 plugins:
-  - jekyll-feed
-  - jekyll-remote-theme
-  - jekyll-seo-tag
+  - jekyll-relative-links
   - jekyll-sitemap
+  - jekyll-seo-tag
+  - jekyll-titles-from-headings
+  - jekyll-redirect-from
 
 # Exclude from processing. (Note that files/dirs starting with _, . or # are automatically excluded.)
-# Any item listed under the `exclude:` key here will be automatically added to
-# the internal "default list".
-#
-# Excluded items can be processed by explicitly listing the directories or
-# their entries' file path in the `include:` list.
-#
 exclude:
+  - Gemfile
+  - Gemfile.lock
+  - Dockerfile
   - docker-compose.yml
-#   - .sass-cache/
-#   - .jekyll-cache/
-#   - gemfiles/
-#   - Gemfile
-#   - Gemfile.lock
-#   - node_modules/
-#   - vendor/bundle/
-#   - vendor/cache/
-#   - vendor/gems/
-#   - vendor/ruby/
+  - _config.docker.yml
+  - readme.md
+  - .env
+  - .env.enc
+  - .env.template
+  - vendor/
+  - 2022/day_template.md
+  - python/parsimonious.md
 
 defaults:
   - scope:
@@ -93,6 +86,10 @@ defaults:
     values:
       year: 2018
   - scope:
+      path: "2020"  # only apply to files in this folder
+    values:
+      year: 2020
+  - scope:
       path: "2021"  # only apply to files in this folder
     values:
       year: 2021
@@ -112,3 +109,7 @@ defaults:
       path: "2025"  # only apply to files in this folder
     values:
       year: 2025
+  - scope:
+      path: "2026"  # only apply to files in this folder
+    values:
+      year: 2026

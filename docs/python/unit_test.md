@@ -3,6 +3,8 @@ title: Unit Testing
 tags: 
   - name: Unit Testing in Python
     link: https://realpython.com/python-testing/
+  - name: pytest Documentation
+    link: https://docs.pytest.org/
   - name: Assertion
     link: /python/assertion
 ---
@@ -14,6 +16,16 @@ The idea is that unit tests are quick to repeat.  So we can use them to:
 
 - Validate that components of our code do what is expected.
 - Check that we haven't broken anything, whenever we change our code.
+
+## Running Tests with `pytest`
+
+In this repository, unit tests live in `src/tests/` and are executed via `pytest` inside the `uv` environment:
+
+```bash
+uv run pytest src/tests
+```
+
+Because `pytest` discovers and runs standard `unittest.TestCase` classes automatically, we get clean assertions, test discovery, and `make check` CI integration without changing existing `unittest` suites.
 
 ## unittest
 
@@ -97,7 +109,7 @@ FF
 FAIL: test_part_1 (__main__.TestRopeBridge)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "f:\Users\Darren\localdev\Python\Advent-of-Code\src\AoC_2022\d09_rope_bridge\test_rope_bridge.py", line 19, in test_part_1  
+  File "src/AoC_2022/d09_rope_bridge/test_rope_bridge.py", line 19, in test_part_1  
     self.assertEqual(len(rope_bridge.pull_rope(self.data, 2)), expected)
 AssertionError: 0 != 88
 
@@ -105,7 +117,7 @@ AssertionError: 0 != 88
 FAIL: test_part_2 (__main__.TestRopeBridge)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "f:\Users\Darren\localdev\Python\Advent-of-Code\src\AoC_2022\d09_rope_bridge\test_rope_bridge.py", line 23, in test_part_2  
+  File "src/AoC_2022/d09_rope_bridge/test_rope_bridge.py", line 23, in test_part_2  
     self.assertEqual(len(rope_bridge.pull_rope(self.data, 10)), expected)
 AssertionError: 0 != 36
 

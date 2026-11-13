@@ -140,7 +140,7 @@ We can also create our edges from various data structures, such as from a `Panda
 
 Having built a graph, we can then render it as a visualisation.
 
-The basic functon is `draw()`.
+The basic function is `draw()`.
 
 E.g.
 

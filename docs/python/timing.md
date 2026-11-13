@@ -97,7 +97,7 @@ steps = 10
 for step in tqdm(range(steps)):
     sleep(0.5)
 ```
-![Progress Bar]({{ '../assets/images/progress_bar.gif' | relative_url }})
+![Progress Bar]({{ '/assets/images/progress_bar.gif' | relative_url }})
 
 ## Examples
 

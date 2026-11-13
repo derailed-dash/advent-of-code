@@ -11,8 +11,8 @@ tags:
     link: https://pypi.org/project/colorama/
   - name: Logging
     link: /python/logging
-  - name: Extending clases
-    link: python/classes#inheritance
+  - name: Extending classes
+    link: /python/classes#inheritance
 ---
 ## Page Contents
 
@@ -82,7 +82,7 @@ The output looks like this:
 
 ## Logging with Colour
 
-Ealier, I showed you how to use the Python [logging](/python/logging) module, in order to customise the look of logging messages, to send messages to different outputs, and to set logging thresholds. We used this construct to set the formatting style for each message:
+Earlier, I showed you how to use the Python [logging](/python/logging) module, in order to customise the look of logging messages, to send messages to different outputs, and to set logging thresholds. We used this construct to set the formatting style for each message:
 
 ```python
 stream_fmt = logging.Formatter(fmt='%(asctime)s.%(msecs)03d:%(name)s - %(levelname)s: %(message)s', 
@@ -100,7 +100,7 @@ from pathlib import Path
 from colorama import Fore
 
 class ColouredFormatter(logging.Formatter):
-    """ Custom Formater which adds colour to output, based on logging level """
+    """ Custom Formatter which adds colour to output, based on logging level """
     
     def __init__(self, *args, apply_colour=True, shorten_lvl=True, **kwargs) -> None:
         """ Args:

@@ -1,38 +1,29 @@
 ---
 name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
+about: Report an issue with an Advent of Code solution, helper library, or documentation page
+title: '[Bug]: '
+labels: bug
 assignees: ''
-
 ---
 
 **Describe the bug**
-A clear and concise description of what the bug is.
+A clear and concise description of what went wrong.
+
+**Puzzle or Page**
+- Year and Day (e.g. `2025 Day 4`), or documentation URL (`https://aoc.just2good.co.uk/...`):
 
 **To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+Steps to reproduce the behaviour:
+1. Run command (e.g. `uv run python src/AoC_2025/d04/d04.py`)
+2. Observe output or error
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+**Expected behaviour**
+What you expected to happen instead.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**Environment**
+- OS: [e.g. Ubuntu 24.04 / Windows 11 / WSL2]
+- Python version: [e.g. 3.13]
+- Package manager (`uv --version`):
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
-
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
-
-**Additional context**
-Add any other context about the problem here.
+**Traceback or Logs**
+Paste any relevant terminal output or stack trace inside a fenced code block (never include your `.env` or `AOC_SESSION_COOKIE`).

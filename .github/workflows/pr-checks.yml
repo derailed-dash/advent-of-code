@@ -1,0 +1,53 @@
+name: "✅ Python Quality & Tests"
+
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+    paths-ignore:
+      - 'src/AoC_201*/**'
+      - 'src/AoC_202[0-5]/**'
+  push:
+    branches:
+      - master
+      - main
+    paths-ignore:
+      - 'src/AoC_201*/**'
+      - 'src/AoC_202[0-5]/**'
+
+concurrency:
+  group: pr-checks-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install uv and Python 3.13
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          python-version: "3.13"
+
+      - name: Install dependencies from lockfile
+        run: uv sync --locked --dev
+
+      - name: Spell check
+        run: uv run codespell -s
+
+      - name: Lint with Ruff
+        run: uv run ruff check
+
+      - name: Type check with Pyright
+        run: uv run pyright
+
+      - name: Run offline unit tests
+        run: uv run pytest src/tests

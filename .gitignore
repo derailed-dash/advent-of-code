@@ -37,8 +37,18 @@ coverage.xml
  
 # secrets
 *.key
-.gitsecret/keys/random_seed
- 
+/.env
+/docs/.env
+/.agents/skills/aoc-help/SKILL.md
+/.agents/skills/aoc-doc-intro/SKILL.md
+/.agents/skills/aoc-megathread-post/SKILL.md
+/.agents/skills/aoc-create-doc/SKILL.md
+
+# Environments & caches
+.venv/
+.ruff_cache/
+.pytest_cache/
+
 # Random
 .vscode
 *.log
@@ -48,9 +58,3 @@ snippets/
 output/
 
 gha-creds-*.json
-/.env
-/.agent/workflows/aoc-create-doc.md
-/.agent/workflows/aoc-doc-intro.md
-/.agent/workflows/aoc-help.md
-/.agent/workflows/aoc-megathread-post.md
-/docs/.env

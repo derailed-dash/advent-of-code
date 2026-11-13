@@ -8,11 +8,8 @@ tags:
     link: https://www.sympy.org/en/index.html
   - name: SymPy Tutorial
     link: https://www.tutorialspoint.com/sympy/index.htm
+mathjax: true
 ---
-<script
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
-  type="text/javascript">
-</script> 
 ## Page Contents
 
 Work in progress...
@@ -23,13 +20,13 @@ Work in progress...
   - [Assigning Variables and Evaluating](#assigning-variables-and-evaluating)
   - [Differentiation and Integration](#differentiation-and-integration)
   - [Solving Quadratics](#solving-quadratics)
-  - [Including Only Real Solutions](#)
+  - [Including Only Real Solutions](#including-only-real-solutions)
   - [Evaluating to Obtain Numeric Values](#evaluating-to-obtain-numeric-values)
 - [AoC Examples](#aoc-examples)
 
 ## What is SymPy?
 
-SymPy is so cool!  I came across when I was trying to solve some equations as part of 2023 AoC puzzles. It is computer alegebra systems (CAS): a library that allows us to perfrom algebra and mathematical computations. 
+SymPy is so cool!  I came across when I was trying to solve some equations as part of 2023 AoC puzzles. It is computer alegebra systems (CAS): a library that allows us to perform algebra and mathematical computations. 
 
 You can use it for things like:
 
@@ -56,10 +53,10 @@ import sympy
 from sympy import latex
 from IPython.display import display, Markdown
 
-sympy.init_session() # set up default behavour and printing - not essential
+sympy.init_session() # set up default behaviour and printing - not essential
 
 a, b, x, y = sympy.symbols("a b x y") # define symbols (variables)
-a = (x + 1)**2 # set a to be an expresssion
+a = (x + 1)**2 # set a to be an expression
 b = x**2 + 2*x + 1 # set b to be an equivalent expression
 display(Markdown(f"$a = {latex(a)}$")) # pretty-print a
 print(f"{latex('a = ')}{latex(a)}") # If we just want the raw latex

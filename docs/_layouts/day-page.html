@@ -1,13 +1,16 @@
 ---
 layout: default
 ---
-{% assign the_year = site.data.navigation.pages | where: 'name', page.year %}
+{% assign year_str = page.year | append: "" %}
+{% assign the_year = site.data.navigation.pages | where: 'name', year_str %}
 {% assign prev = page.day | minus: 1 %}
 {% assign next = page.day | plus: 1 %}
 {% assign current_page = the_year[0].members | where: 'name', page.day %}
 {% assign prev_page = the_year[0].members | where: 'name', prev %}
 {% assign next_page = the_year[0].members | where: 'name', next %}
+{%- if page.main_img and page.main_img.link -%}
 <img src="{{ page.main_img.link | relative_url }}" alt="{{ page.main_img.name }}" style="margin:15px 10px 10px 10px; float: right; width:330px" />
+{%- endif -%}
 
 <h1>{{ page.topic}} {{ page.year }} - {{ page.title }}</h1>
 <p>

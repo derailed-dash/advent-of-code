@@ -137,7 +137,7 @@ Used judiciously, assertions should have no significant impact on your applicati
 
 - It may not be wise to place an assert within a loop that runs many times. (But sometimes it may be worth it!)
 - It is unwise to provide an assert condition that is computationally intensive.
-- You can always tell your program to run without assertions, by passing the `-O` command line paramater at run time.
+- You can always tell your program to run without assertions, by passing the `-O` command line parameter at run time.
 
 ## Examples
 

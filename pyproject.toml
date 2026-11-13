@@ -3,66 +3,61 @@ name = "advent-of-code"
 version = "0.1.0"
 description = "Dazbo's Advent of Code solutions."
 authors = [
-    {name = "Darren", email = "derailed.dash@gmail.com"},
+    { name = "Darren", email = "derailed.dash@gmail.com" },
 ]
 readme = "README.md"
 requires-python = ">=3.13"
 license = { file = "LICENSE" }
 
 dependencies = [
-    "numpy",
-    "pandas",
-    "scipy",
-    "networkx",
-    "matplotlib",
-    "parsimonious",
-    "python-dotenv",
-    "requests",
-    "tqdm",
-    "pillow",
-    "imageio",
-    "graphviz",
-    "sympy",
     "colorama",
     "dazbo-commons>=0.2.0",
+    "graphviz",
+    "imageio",
+    "matplotlib",
+    "networkx",
+    "numpy",
+    "pandas",
+    "parsimonious",
+    "pillow",
+    "python-dotenv",
+    "regex",
+    "requests",
     "rich>=14.2.0",
+    "scipy",
+    "sympy",
+    "tqdm",
 ]
 
 [project.urls]
-Homepage = "https://aoc.just2good.co.uk"
+Homepage = "https://aoc.just2good.co.uk/"
 Repository = "https://github.com/derailed-dash/Advent-of-Code"
+Portfolio = "https://darrenlester.net"
+Blog = "https://medium.com/@dazbo"
 
 [dependency-groups]
 dev = [
-    "pytest",
-    "uv", # Although uv is installed globally, it's good to list it for clarity
     "codespell",
+    "pyright",
+    "pytest",
     "ruff",
-    "mypy",
-    "isort",
-    "httpx",
-    "pytest-asyncio",
-    "types-requests"
+    "types-requests",
 ]
 
 [project.optional-dependencies]
 jupyter = [
-    "jupyter",
-    "jupyterlab",
     "ipykernel",
     "ipython",
-    "jupyterlab-lsp",
     "ipywidgets",
-]
-lint = [
-    "ruff",
-    "mypy",
-    "codespell",
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-lsp",
 ]
 
 [tool.ruff]
 line-length = 130
 target-version = "py313"
+extend-exclude = ["src/AoC_201*", "src/AoC_202[0-5]"]
 
 [tool.ruff.lint]
 select = [
@@ -70,17 +65,17 @@ select = [
     "F",   # pyflakes
     "W",   # pycodestyle warnings
     "I",   # isort
-    "C",  # flake8-comprehensions
+    "C",   # flake8-comprehensions
     "B",   # flake8-bugbear
-    "UP", # pyupgrade
+    "UP",  # pyupgrade
     "RUF", # ruff specific rules
 ]
-# ignore line too long, too complex, two blank lines, trailing whitespace 
+# ignore line too long, too complex, two blank lines, trailing whitespace
 ignore = [
     "B905", # ignore strict zip requirement
     "E302", # expected two blank lines between defs
     "W291", # trailing whitespace
-    "W293"  # line contains whitespace
+    "W293", # line contains whitespace
 ]
 per-file-ignores = { "__init__.py" = ["F401"], "**/__init__.py" = ["F401"], "*.ipynb" = ["F401"] }
 
@@ -88,26 +83,18 @@ per-file-ignores = { "__init__.py" = ["F401"], "**/__init__.py" = ["F401"], "*.i
 known-first-party = ["src"]
 
 [tool.pytest.ini_options]
-pythonpath = "src"
-asyncio_mode = "auto"
+pythonpath = ["src"]
+testpaths = ["src/tests"]
 
-[tool.mypy]
-disallow_untyped_calls = false     # Prohibit calling functions that lack type annotations.
-disallow_untyped_defs = false      # Allow defining functions without type annotations.
-disallow_incomplete_defs = true    # Prohibit defining functions with incomplete type annotations.
-no_implicit_optional = true        # Require `Optional[T]` for variables that can be `None`.
-check_untyped_defs = true          # Type-check the body of functions without annotations. Catch potential mismatches.
-disallow_subclassing_any = true    # Prohibit a class from inheriting from a value of type `Any`.
-warn_incomplete_stub = true        # Warn about incomplete type stubs (`.pyi` files).
-warn_redundant_casts = true        # Warn if a type cast is unnecessary.
-warn_unused_ignores = true         # Warn about `# type: ignore` comments that are no longer needed.
-warn_unreachable = true            # Warn about code that is unreachable.
-follow_imports = "silent"          # Type-check imported modules and suppress errors from them.
-ignore_missing_imports = true      # Suppress errors about unresolved imports.
-explicit_package_bases = true      # Enforce explicit declaration of package bases.
-disable_error_code = ["misc", "no-any-return", "no-untyped-def"]
+[tool.pyright]
+include = ["src/aoc_common", "src/tests", "src/template_folder"]
+extraPaths = ["src"]
+pythonVersion = "3.13"
+typeCheckingMode = "standard"
 
-exclude = [".venv"]
+[tool.codespell]
+skip = "*.lock,uv.lock,*input*.txt,.git,.venv,.pytest_cache,.ruff_cache,./src/AoC_201*,./src/AoC_202[0-5],./docs/_site,./docs/.jekyll-cache,./docs/.sass-cache,./docs/.jekyll-metadata,./docs/201*,./docs/202[0-5],./docs/Gemfile*,*.drawio"
+ignore-words-list = "ore,ans,nd,rouge,parms,deques"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -100,7 +100,7 @@ my_deque.append(10)
 print(my_deque)
 ```
 
-Note how we can use `extend()` (or `extendleft()`) to add multiple items from an interable.
+Note how we can use `extend()` (or `extendleft()`) to add multiple items from an iterable.
 
 Output:
 

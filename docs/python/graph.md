@@ -112,4 +112,4 @@ Note:
 ## Examples
 
 - [Adjacency lists for seating arrangement - 2015 day 13](/2015/13)
-- [Adjacency lists for cave navigatin - 2021 day 12](/2021/12)
+- [Adjacency lists for cave navigating - 2021 day 12](/2021/12)
