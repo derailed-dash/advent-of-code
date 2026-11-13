@@ -55,3 +55,10 @@ Roadmap and backlog for modernising repository tooling, reusable Python utilitie
   - **Grid Geometry (Shoelace Formula & Pick's Theorem)**: computing polygon area and interior lattice points directly from boundary vertices/perimeter steps.
   - **Constraint Solving & Linear Systems**: expanding [`sympy.md`](docs/python/sympy.md) or adding dedicated coverage for simultaneous equations and integer optimisation puzzles.
   - **Modern Python Ergonomics for AoC**: structural pattern matching (`match`/`case`), `itertools` (`pairwise`, `batched`, `product`, `combinations`), and immutable `dataclass(frozen=True)` / `NamedTuple` state modelling.
+
+### 7. Site Rebranding & Visual Reskinning (`docs/`)
+
+- [ ] Define a cohesive visual identity (`docs/DESIGN.md`) aligned with Dazbo's personal brand ([darrenlester.net](https://darrenlester.net)) — covering colour palette (dark/terminal AoC aesthetic vs light/dark toggle), typography, code syntax highlighting, and responsive spacing tokens.
+- [ ] Evaluate replacing or heavily customising the legacy `jekyll-theme-modernist` theme ([`docs/_config.yml`](docs/_config.yml), [`docs/_sass/jekyll-theme-modernist.scss`](docs/_sass/jekyll-theme-modernist.scss), [`docs/assets/css/style.scss`](docs/assets/css/style.scss)), deciding between GitHub Pages' managed Jekyll build and a custom GitHub Actions Pages workflow.
+- [ ] Redesign [`docs/_layouts/default.html`](docs/_layouts/default.html), [`docs/_layouts/day-page.html`](docs/_layouts/day-page.html), and [`docs/_layouts/journey-page.html`](docs/_layouts/journey-page.html) with modern navigation (sticky/collapsible year & Python Journey menus, copy-code buttons, mobile drawer, and cleaner prev/next breadcrumbs).
+- [ ] Refresh visual assets in `docs/assets/images/` — updated hero/banner artwork, favicon, social preview (`og:image`), and refreshed site screenshot in [`README.md`](README.md).
