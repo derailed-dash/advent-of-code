@@ -24,6 +24,7 @@ Advent of Code changed from a 25-day event (2015–2024) to a **12-day event fro
 | [`.github/workflows/`](.github/workflows/pr-checks.yml) | CI checks (`pr-checks.yml`) and Gemini PR/issue workflows | Keep `gemini_model: 'gemini-3.8-flash'`; PR review guardrails in [`.github/review-instruction-additions.md`](.github/review-instruction-additions.md) |
 | [`.agent/rules/`](.agent/rules/aoc-retrieval.md) | Workspace rule for Advent of Code retrieval | Governs `AOC_SESSION_COOKIE`, `User-Agent`, and `desc.html` cleanup |
 | `.agents/skills/` | Workspace AoC skills (`SKILL.md.enc` encrypted in Git) | Plaintext `SKILL.md` files are gitignored via `git-crypt-helper.sh` |
+| [`TODO.md`](TODO.md) | Project roadmap and backlog | Tracks planned code, docs, and skill improvements |
 
 ## Environment, Dependencies & Static Checks
 

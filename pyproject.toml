@@ -93,7 +93,7 @@ pythonVersion = "3.13"
 typeCheckingMode = "standard"
 
 [tool.codespell]
-skip = "*.lock,uv.lock,*input*.txt,.git,.venv,./src/AoC_201*,./src/AoC_202[0-5],./docs/201*,./docs/202[0-5],./docs/Gemfile*,*.drawio"
+skip = "*.lock,uv.lock,*input*.txt,.git,.venv,.pytest_cache,.ruff_cache,./src/AoC_201*,./src/AoC_202[0-5],./docs/_site,./docs/.jekyll-cache,./docs/.sass-cache,./docs/.jekyll-metadata,./docs/201*,./docs/202[0-5],./docs/Gemfile*,*.drawio"
 ignore-words-list = "ore,ans,nd,rouge,parms,deques"
 
 [tool.setuptools.packages.find]

@@ -2,10 +2,6 @@
 
 ### See my walkthroughs at [aoc.just2good.co.uk](https://aoc.just2good.co.uk/).
 
-- **Author:** [Darren "Dazbo" Lester](https://darrenlester.net)
-- [Medium (`@dazbo`)](https://medium.com/@dazbo)
-- [GitHub (`derailed-dash`)](https://github.com/derailed-dash)
-
 - **Author:** [Darren "Dazbo" Lester](https://darrenlester.net) · [Medium (`@dazbo`)](https://medium.com/@dazbo) · [GitHub (`derailed-dash`)](https://github.com/derailed-dash)
 
 ## Overview
@@ -105,6 +101,7 @@ For some years (e.g., 2023–2024), solutions use Jupyter Notebooks combining Py
 | [`pyproject.toml`](pyproject.toml) | Project metadata, dependencies, `ruff`, `codespell`, and `pyright` configuration |
 | [`.env.template`](.env.template) | Template environment variables (`PYTHONPATH=src`, `AOC_SESSION_COOKIE`) |
 | [`AGENTS.md`](AGENTS.md) | Repository guide for coding agents and automated reviewers |
+| [`TODO.md`](TODO.md) | Project roadmap and improvement backlog |
 
 ### Helper Libraries
 
@@ -144,4 +141,4 @@ You can build and serve the documentation website locally using Docker:
 make docs   # runs: cd docs && docker compose up
 ```
 
-The site will be available at `http://127.0.0.1:4000`. If you need to supply `JEKYLL_GITHUB_TOKEN`, restore `docs/.env` via `make sync-secrets` (`git-crypt-helper.sh sync-from-enc`) or copy [`docs/.env.template`](docs/.env.template) to `docs/.env`.
+The site will be available at `http://127.0.0.1:4000`. If you need to supply `JEKYLL_GITHUB_TOKEN`, restore `docs/.env` via `git-crypt-helper.sh sync-from-enc` (check sync status with `make sync-secrets`) or copy [`docs/.env.template`](docs/.env.template) to `docs/.env`.

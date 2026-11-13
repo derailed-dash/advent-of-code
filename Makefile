@@ -6,6 +6,8 @@ SHELL := /bin/bash
 -include .env.template
 -include .env
 
+GIT_CRYPT_HELPER ?= $(shell command -v git-crypt-helper.sh 2>/dev/null || echo "$(HOME)/.gemini/config/skills/secrets-with-git-crypt/scripts/git-crypt-helper.sh")
+
 help: ## Show available targets and usage
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z0-9_-]+:.*##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) }' $(MAKEFILE_LIST)
 
@@ -28,7 +30,11 @@ test: ## Run offline unit tests
 check: lint test ## Run full offline verification gate (lint + unit tests)
 
 sync-secrets: ## Show git-crypt parallel secrets status
-	/home/dazbo/.gemini/config/skills/secrets-with-git-crypt/scripts/git-crypt-helper.sh status
+	@if [ -x "$(GIT_CRYPT_HELPER)" ]; then \
+		"$(GIT_CRYPT_HELPER)" status; \
+	else \
+		git-crypt status -e; \
+	fi
 
 new-year: ## Scaffold AoC year folders: make new-year YEAR=2026 [DAYS=12]
 	@if [ -z "$(YEAR)" ]; then echo "Usage: make new-year YEAR=2026 [DAYS=12]"; exit 1; fi
