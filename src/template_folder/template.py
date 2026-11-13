@@ -1,8 +1,11 @@
 """
 Author: Darren
-Date: 01/12/2023
+Date: 01/12/2026
 
-Solving https://adventofcode.com/2023/day/1
+Solving https://adventofcode.com/2026/day/1
+
+Template solution module providing sample-test scaffolding and input retrieval
+via ``aoc_common.aoc_commons``.
 
 Part 1:
 
@@ -15,8 +18,8 @@ import sys
 import aoc_common.aoc_commons as ac  # General AoC utils
 
 # Set these to the current puzzle
-YEAR = None
-DAY = None
+YEAR: int = 2026
+DAY: int = 1
 
 locations = ac.get_locations(__file__)
 

@@ -271,7 +271,7 @@ Dijkstra's algorithm is perfect for:
 
 ### How It Works
 
-- The frontier is implemented using a [priority queue](/python/priority_queues), which we implement using a `heapq`. The `heapq` data structure allows us to efficiently pop the item with the lowest priotity.
+- The frontier is implemented using a [priority queue](/python/priority_queues), which we implement using a `heapq`. The `heapq` data structure allows us to efficiently pop the item with the lowest priority.
 - Our starting node will have a cumulative cost of 0.
 - For each valid adjacent node, we store this node along with the cumulative cost so far.  This is given by the previous cost, plus the cost of this particular edge. This differs from BFS, since in BFS the cost is always constant for every adjacent node.
 - In BFS, we check for duplicates when we insert.  But in Dijkstra's, if we arrive at a node we've arrived at before, then we can skip it if the current cumulative cost is higher than the previous cost to reach this node. I.e. for each node, always store the minimum cost to reach it.
@@ -302,7 +302,7 @@ To do this, we need two key changes, compared to the BFS:
 So, an A* implementation requires the combination of:
 
 - Cost of the path from the start point to the current point (e.g. steps so far)
-- A heuristic estimation of the cost for the current point to the end piont (e.g. Manhattan distance)
+- A heuristic estimation of the cost for the current point to the end point (e.g. Manhattan distance)
 
 We need both, because if we only include the distance heuristic, then we end up with a _greedy BFS_ which tries to get closer to the goal without considering the path cost so far.
 

@@ -64,7 +64,7 @@ logger = logging.getLogger(__name__) # aoc_common.aoc_commons
 logger.setLevel(logging.INFO)
 
 class ColouredFormatter(logging.Formatter):
-    """ Custom Formater which adds colour to output, based on logging level """
+    """ Custom Formatter which adds colour to output, based on logging level """
 
     level_mapping = {"DEBUG": (Fore.BLUE, "DBG"),
                      "INFO": (Fore.GREEN, "INF"),
@@ -212,18 +212,20 @@ def get_envs_from_file() -> bool:
     logger.warning("No .env file found.")
     return False
 
+AOC_USER_AGENT = "github.com/derailed-dash/Advent-of-Code by derailed.dash@gmail.com"
+
 get_envs_from_file() # read env variables from a .env file, if we can find one
     
 def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
     """ Use session key to obtain user's unique data for this year and day.
-    Only retrieve if the input file does not already exist. 
+    Only retrieve if the input file does not already exist (or is empty). 
     Raises a ValueError if unable to perform request.
     Requires env: AOC_SESSION_COOKIE, which can be set from the .env.
     Returns str:
       - input_file, if the file already exists
       - otherwise, the data retrieved from the request
     """
-    if os.path.exists(locations.input_file):
+    if os.path.exists(locations.input_file) and os.path.getsize(locations.input_file) > 0:
         logger.debug("%s already exists", os.path.basename(locations.input_file))
         return os.path.basename(locations.input_file)
 
@@ -239,13 +241,14 @@ def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
     
     url = f"https://adventofcode.com/{year}/day/{day}/input"
     cookies = {"session": session_cookie}
-    response = requests.get(url, cookies=cookies, timeout=5)
+    headers = {"User-Agent": AOC_USER_AGENT}
+    response = requests.get(url, cookies=cookies, headers=headers, timeout=5)
     
     data = ""
     if response.status_code == 200:
         data = response.text
     
-        with open(locations.input_file, 'w') as file:
+        with open(locations.input_file, 'w', encoding="utf-8") as file:
             logger.debug("Writing input file %s", os.path.basename(locations.input_file))
             file.write(data)
             return data
@@ -530,6 +533,9 @@ import aoc_common.aoc_commons as ac
 Then we can do stuff like this:
 
 ```python
+YEAR: int = 2026
+DAY: int = 1
+
 locations = ac.get_locations(__file__)
 logger = ac.retrieve_console_logger(locations.script_name)
 logger.setLevel(logging.DEBUG)
@@ -543,19 +549,17 @@ except ValueError as e:
 
 We talked about [unit testing](/python/unit_test) before.
 
-Here I've created a test module, for testing the `type_aoc_commons.py` module:
+Here I've created a test module for testing the `aoc_commons.py` module offline:
 
 ```python
-""" 
-Testing the aoc_commons module 
-Make sure your session cookie value is current
-"""
+"""Testing the aoc_commons module."""
 import logging
+import os
 import unittest
-from shutil import rmtree
 from os import path
+from shutil import rmtree
+from unittest.mock import MagicMock, patch
 
-# py -m pip uninstall dazbo-aoc-commons
 import aoc_common.aoc_commons as ac  # for local testing
 
 # Set logging level of aoc_commons
@@ -563,7 +567,7 @@ logger = logging.getLogger("aoc_common.aoc_commons")
 logger.setLevel(logging.INFO)
 
 class TestTypes(unittest.TestCase):
-    """ Unit tests of various classes in type_defs """
+    """Unit tests of various helpers and classes in aoc_commons."""
     
     def setUp(self):
         """ Read locations, clear the input folder, and set up some test data """
@@ -605,20 +609,28 @@ class TestTypes(unittest.TestCase):
         self.assertEqual(self.locations.script_name, this_script)        
 
     def test_write_puzzle_input_file(self):
-        """ Test that we can retrieve AoC input data.
-        This depends on having a valid session cookie. 
-        The ac attempts to read the session cookie from a .env file. """
-        
-        # Try to retrieve input that does not exist
-        with self.assertRaises(ValueError):
-            ac.write_puzzle_input_file(2010, 1, self.locations)
-        
-        # Retrieve legitimate input
-        self.assertIn("(((())))", ac.write_puzzle_input_file(2015, 1, self.locations))
-        
-        # Does not retrieve file if it already exists - returns existing input file path instead
-        self.assertEqual(path.basename(self.locations.input_file), 
-                         ac.write_puzzle_input_file(2015, 1, self.locations))
+        """Test that AoC input retrieval writes data and skips existing files."""
+        mock_404 = MagicMock(status_code=404, text="")
+        mock_200 = MagicMock(status_code=200, text="(((())))")
+
+        with patch.dict(os.environ, {"AOC_SESSION_COOKIE": "dummy_cookie"}):
+            with patch("aoc_common.aoc_commons.requests.get", return_value=mock_404):
+                with self.assertRaises(ValueError):
+                    ac.write_puzzle_input_file(2010, 1, self.locations)
+
+            with patch("aoc_common.aoc_commons.requests.get", return_value=mock_200) as mock_get:
+                self.assertIn("(((())))", ac.write_puzzle_input_file(2015, 1, self.locations))
+                mock_get.assert_called_once()
+                self.assertEqual(
+                    mock_get.call_args.kwargs["headers"]["User-Agent"],
+                    ac.AOC_USER_AGENT,
+                )
+
+            # Does not retrieve file if it already exists
+            self.assertEqual(
+                path.basename(self.locations.input_file),
+                ac.write_puzzle_input_file(2015, 1, self.locations),
+            )
 
     def test_vectors(self):
         """ Test our Vector Enums """
@@ -728,7 +740,7 @@ class TestTypes(unittest.TestCase):
         self.assertEqual(ac.get_factors(8), expected)
         
     def test_to_base_n(self):
-        """ Test our abiltiy to obtain the str representation of a number converted to any base """
+        """ Test our ability to obtain the str representation of a number converted to any base """
         self.assertEqual(ac.to_base_n(10, 2), "1010")
         self.assertEqual(ac.to_base_n(38, 5), "123")
         self.assertEqual(ac.to_base_n(24, 12), "20")

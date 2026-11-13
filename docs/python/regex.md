@@ -146,7 +146,7 @@ if (match := re.match(name_pattern, test)):
          f"{name_dict[first_name_grp]}, {name_dict[last_name_grp]}")
 ```
 
-Note how we're prefixing the pattern string with both `r` to make it _raw_, and `f` in order to use f-string interpoloation, i.e. so that we can reference variables like `{first_name_grp}` within the string.
+Note how we're prefixing the pattern string with both `r` to make it _raw_, and `f` in order to use f-string interpolation, i.e. so that we can reference variables like `{first_name_grp}` within the string.
 
 ## Iterating through Matches
 
@@ -198,7 +198,7 @@ line = re.sub(r"(\d+)", r"RULE_\1", line)
 Here, any number that we find is replaced by "RULE_" + number. E.g.
 `15` becomes `RULE_15`.
 
-The trick to this is to use `\n` to reference the `nth` group in the preceeding pattern.
+The trick to this is to use `\n` to reference the `nth` group in the preceding pattern.
 
 This example turns any number `n` into X(n). E.g. `456` becomes `X(456)`:
 
@@ -224,7 +224,7 @@ INSTR_PATTERN = re.compile(r"(\d+),(\d+) through (\d+),(\d+)")
 
 for line in data:
     match = INSTR_PATTERN.search(line)
-    assert match, "All instruction lines are expeted to match"
+    assert match, "All instruction lines are expected to match"
     tl_x, tl_y, br_x, br_y = map(int, match.groups())
 ```
 

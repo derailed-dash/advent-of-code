@@ -18,7 +18,9 @@ tags:
   - [Installation](#installation)
   - [Per-Repo (or Across Repos) Setup](#per-repo-or-across-repos-setup)
   - [Using Git-Crypt in Your Repo](#using-git-crypt-in-your-repo)
+  - [Parallel Encrypted Files (.enc Pattern)](#parallel-encrypted-files-enc-pattern)
   - [Useful Git-Crypt Commands](#useful-git-crypt-commands)
+  - [Cloning an Existing Repo with Encrypted Files](#cloning-an-existing-repo-with-encrypted-files)
   - [Retrospective Encryption](#retrospective-encryption)
   - [What Does It Look Like in GitHub?](#what-does-it-look-like-in-github)
 
@@ -79,6 +81,17 @@ input*.txt filter=git-crypt diff=git-crypt
 
 Now commit your `.gitattributes`.
 
+### Parallel Encrypted Files (.enc Pattern)
+
+For files that need to be untracked in plaintext — such as `.env`, `docs/.env`, or agent skill definitions that external tools rewrite outside Git — track a **parallel `.enc` twin** instead:
+
+1. Ignore the plaintext file in `.gitignore` (e.g. `.env`, `docs/.env`, `/.agents/skills/*/SKILL.md`).
+2. Encrypt `*.enc` in `.gitattributes`:
+   ```text
+   *.enc filter=git-crypt diff=git-crypt
+   ```
+3. Commit a companion template (e.g. `.env.template`) documenting the expected variable keys without secrets, and synchronise between plaintext and `.enc` twins when setting up or updating secrets.
+
 ### Useful Git-Crypt Commands
 
 ```bash
@@ -98,7 +111,7 @@ git-crypt lock # lock all files locally. (This happens transparently on push to 
 git-crypt unlock [path/to/keyfile] # unlock all encrypted local files. (Transparent on pull.)
 ```
 
-### Cloning an Exiting Repo with Encrypted Files
+### Cloning an Existing Repo with Encrypted Files
 
 For a **newly cloned repo** (e.g. on a new machine), you will need to unlock any encrypted files manually.  You can do this with `git-crypt unlock` and pass in your key. Note: you should do this rather than running `git-crypt init`, when cloning an existing repo.
 

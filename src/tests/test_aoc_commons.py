@@ -1,30 +1,28 @@
-""" 
-Testing the aoc_commons module 
-Make sure your session cookie value is current
+"""Unit tests for the shared ``aoc_common.aoc_commons`` helpers.
+
+All HTTP and environment interactions in ``write_puzzle_input_file`` are mocked
+so the suite runs deterministically offline without a live AoC session cookie.
 """
+
 import logging
 import unittest
 from os import path
 from shutil import rmtree
+from unittest.mock import MagicMock, patch
 
-import dazbo_commons as dc
-
-# py -m pip uninstall dazbo-aoc-commons
-import aoc_common.aoc_commons as ac  # for local testing
-
-# py -m pip install dazbo-aoc-commons
-# import aoc_commons as ac           # for testing using installed pip package
+import aoc_common.aoc_commons as ac
 
 # Set logging level of aoc_commons
 logger = logging.getLogger("aoc_common.aoc_commons")
 logger.setLevel(logging.INFO)
 
+
 class TestTypes(unittest.TestCase):
-    """ Unit tests of various classes in type_defs """
-    
+    """Unit tests for reusable helpers and geometric types in ``aoc_commons``."""
+
     def setUp(self):
-        """ Read locations, clear the input folder, and set up some test data """
-        self.locations = dc.get_locations(__file__)
+        """Read locations, clear the input folder, and set up some test data."""
+        self.locations = ac.get_locations(__file__)
         self.clear_input_folder()
         
         self.points = set()
@@ -53,20 +51,56 @@ class TestTypes(unittest.TestCase):
             rmtree(self.locations.input_dir)
     
     def test_write_puzzle_input_file(self):
-        """ Test that we can retrieve AoC input data.
-        This depends on having a valid session cookie. 
-        The ac attempts to read the session cookie from a .env file. """
-        
-        # Try to retrieve input that does not exist
-        with self.assertRaises(ValueError):
+        """Verify offline AoC input retrieval, User-Agent header, and file caching."""
+        # Missing session cookie raises ValueError without making HTTP calls
+        with (
+            patch("aoc_common.aoc_commons.os.getenv", return_value=None),
+            patch("aoc_common.aoc_commons.requests.get") as mock_get,
+            self.assertRaises(ValueError),
+        ):
+            ac.write_puzzle_input_file(2026, 1, self.locations)
+        mock_get.assert_not_called()
+
+        # Non-200 HTTP response raises ValueError and sends required AoC User-Agent header
+        not_found_response = MagicMock(
+            status_code=404,
+            reason="Not Found",
+            content=b"Puzzle inputs differ by user.",
+        )
+        with (
+            patch("aoc_common.aoc_commons.os.getenv", return_value="test_cookie_123456"),
+            patch("aoc_common.aoc_commons.requests.get", return_value=not_found_response) as mock_get,
+            self.assertRaises(ValueError),
+        ):
             ac.write_puzzle_input_file(2010, 1, self.locations)
-        
-        # Retrieve legitimate input
-        self.assertIn("(((())))", ac.write_puzzle_input_file(2015, 1, self.locations))
-        
-        # Does not retrieve file if it already exists - returns existing input file path instead
-        self.assertEqual(path.basename(self.locations.input_file), 
-                         ac.write_puzzle_input_file(2015, 1, self.locations))
+        self.assertEqual(mock_get.call_args.kwargs["headers"]["User-Agent"], ac.AOC_USER_AGENT)
+
+        # HTTP 200 writes retrieved data to input_file and returns it
+        ok_response = MagicMock(status_code=200, text="(((())))\n")
+        with (
+            patch("aoc_common.aoc_commons.os.getenv", return_value="test_cookie_123456"),
+            patch("aoc_common.aoc_commons.requests.get", return_value=ok_response) as mock_get,
+        ):
+            retrieved = ac.write_puzzle_input_file(2015, 1, self.locations)
+        self.assertEqual(retrieved, "(((())))\n")
+        self.assertEqual(self.locations.input_file.read_text(encoding="utf-8"), "(((())))\n")
+        self.assertEqual(mock_get.call_args.kwargs["headers"]["User-Agent"], ac.AOC_USER_AGENT)
+
+        # Non-empty existing input.txt skips HTTP download and returns filename
+        with patch("aoc_common.aoc_commons.requests.get") as mock_get:
+            cached = ac.write_puzzle_input_file(2015, 1, self.locations)
+        mock_get.assert_not_called()
+        self.assertEqual(cached, path.basename(self.locations.input_file))
+
+        # A 0-byte placeholder input.txt does not block downloading real puzzle input
+        self.locations.input_file.write_text("", encoding="utf-8")
+        with (
+            patch("aoc_common.aoc_commons.os.getenv", return_value="test_cookie_123456"),
+            patch("aoc_common.aoc_commons.requests.get", return_value=ok_response) as mock_get,
+        ):
+            refreshed = ac.write_puzzle_input_file(2015, 1, self.locations)
+        mock_get.assert_called_once()
+        self.assertEqual(refreshed, "(((())))\n")
 
     def test_vectors(self):
         """ Test our Vector Enums """
@@ -191,7 +225,7 @@ class TestTypes(unittest.TestCase):
         self.assertEqual(ac.get_factors(8), expected)
         
     def test_to_base_n(self):
-        """ Test our abiltiy to obtain the str representation of a number converted to any base """
+        """ Test our ability to obtain the str representation of a number converted to any base """
         self.assertEqual(ac.to_base_n(10, 2), "1010")
         self.assertEqual(ac.to_base_n(38, 5), "123")
         self.assertEqual(ac.to_base_n(24, 12), "20")

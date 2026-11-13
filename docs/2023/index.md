@@ -6,7 +6,7 @@ title: Advent of Code 2023
 
 Welcome to [AoC 2023](https://adventofcode.com/2023){:target="_blank"}!
 
-For this AoC event I've decided to use [Jupyter Notebooks](/python/jupyter-notebooks){:target="_blank"}!!  That way I can write the code, write some pretty documentation, and capture the output, all at the same time and and in the same place.
+For this AoC event I've decided to use [Jupyter Notebooks](/python/jupyter-notebooks){:target="_blank"}!! That way I can write the code, write some pretty documentation, and capture the output, all at the same time and in the same place.
 
 You can check out my Advent of Code 2023 solution in these places:
 - In [Jupyter Notebook in GitHub](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}

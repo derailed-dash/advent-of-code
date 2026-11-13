@@ -1,8 +1,9 @@
 ---
+layout: default
 year: 2025
-title: 2025
+title: Advent of Code 2025
 ---
-## 2025
+# {{ page.topic }} {{ page.year }}
 
 Welcome to my Advent of Code 2025 solutions!
 

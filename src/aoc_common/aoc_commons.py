@@ -20,11 +20,13 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from functools import cache
 from pathlib import Path
+from typing import ClassVar
 
-import dazbo_commons as dc
 import requests
 from dotenv import load_dotenv  # python-dotenv
 from rich.logging import RichHandler
+
+AOC_USER_AGENT = "github.com/derailed-dash/Advent-of-Code by derailed.dash@gmail.com"
 
 ##########################################################################
 # SETUP LOGGING
@@ -105,20 +107,21 @@ def setup_file_logging(a_logger: logging.Logger, folder: str|Path=""):
 # Retrieving input data
 ##################################################################
     
-def write_puzzle_input_file(year: int, day: int, locations: dc.Locations) -> str:
+def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
     """ Use session key to obtain user's unique data for this year and day.
     Retrieves the data and writes it as a local file.
     
-    Only retrieve if the input file does not already exist. 
+    Only retrieve if the input file does not already exist and have content.
     Raises a ValueError if unable to perform request.
     Requires env: AOC_SESSION_COOKIE, which can be set from the .env.
     Returns str:
       - input_file, if the file already exists
       - otherwise, the data retrieved from the request
     """
-    if os.path.exists(locations.input_file):
-        logger.debug("%s already exists", os.path.basename(locations.input_file))
-        return os.path.basename(locations.input_file)
+    input_path = Path(locations.input_file)
+    if input_path.exists() and input_path.stat().st_size > 0:
+        logger.debug("%s already exists", input_path.name)
+        return input_path.name
 
     session_cookie = os.getenv('AOC_SESSION_COOKIE')
     if not session_cookie:
@@ -132,7 +135,8 @@ def write_puzzle_input_file(year: int, day: int, locations: dc.Locations) -> str
     
     url = f"https://adventofcode.com/{year}/day/{day}/input"
     cookies = {"session": session_cookie}
-    response = requests.get(url, cookies=cookies, timeout=5)
+    headers = {"User-Agent": AOC_USER_AGENT}
+    response = requests.get(url, cookies=cookies, headers=headers, timeout=15)
     
     data = ""
     if response.status_code == 200:
@@ -237,21 +241,21 @@ class Vectors(Enum):
 
 class VectorDicts:
     """ Contains constants for Vectors """
-    ARROWS = {
+    ARROWS: ClassVar[dict[str, tuple[int, int]]] = {
         '^': Vectors.N.value,
         '>': Vectors.E.value,
         'v': Vectors.S.value,
         '<': Vectors.W.value
     }
 
-    DIRS = {
+    DIRS: ClassVar[dict[str, tuple[int, int]]] = {
         'U': Vectors.N.value,
         'R': Vectors.E.value,
         'D': Vectors.S.value,
         'L': Vectors.W.value
     }
 
-    NINE_BOX: dict[str, tuple[int, int]] = {
+    NINE_BOX: ClassVar[dict[str, tuple[int, int]]] = {
         # x, y vector for adjacent locations
         'tr': (1, 1),
         'mr': (1, 0),

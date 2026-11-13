@@ -14,7 +14,7 @@ My hope is that this site will help others to:
 - Solve AoC problems they might be stuck with.
 - Learn some new libraries and inventive ways of doing things.
 
-Use the navigation above to jump straight into an AoC year. If you're completely new to Python, check out the [Getting Started with Python](python/) page first.
+Use the navigation above to jump straight into an AoC year. If you're completely new to Python, check out the [Getting Started with Python](/python/) page first.
 
 # Page Navigation
 
@@ -42,8 +42,8 @@ Typically, the problems get harder as the month progresses.
 You don't have to wait until December to try your hand at AoC though. 
 All the previous [AoC](https://adventofcode.com/2021/events){:target="_blank"} events are available, and can be completed at _any_ time.
 
-Each day is split into a Part 1 and a Part 2.  A star is awarded for each completed challenge.
-**If you get 50 stars, you save Christmas!**
+Each day is split into a Part 1 and a Part 2. A star is awarded for each completed challenge.
+Traditionally (2015–2024) there were 25 puzzles per year (**50 stars to save Christmas!**); from 2025 onwards, Advent of Code switched to a 12-day December format.
 
 [![Advent of Code]({{ './assets/images/AoC-collect-stars.png' | relative_url }})](https://adventofcode.com/2021/about){:target="_blank"}
 
@@ -56,9 +56,13 @@ Each day gets its own folder, which is named for some of the key Python modules 
 
 ## More Stuff From Me
 
+### Personal Website & Blog
+
+You can also find my wider writing, projects, and technical articles on my personal website at **[darrenlester.net](https://darrenlester.net){:target="_blank"}**.
+
 ### Medium
 
-If you find this resource useful, you might like to check out some of my other content. On **[Medium](https://medium.com/@derailed.dash){:target="_blank"}** I routinely write articles on Cloud, development, and IT Architecture. I would really appreciate if you would **Follow Me** on Medium, and share any content that you think would be useful to your friends and colleauges.
+If you find this resource useful, you might like to check out some of my other content. On **[Medium](https://medium.com/@dazbo){:target="_blank"}** I routinely write articles on Cloud, development, and IT Architecture. I would really appreciate it if you would **Follow Me** on Medium, and share any content that you think would be useful to your friends and colleagues.
 
 Here's a list of a few (but not all) of my articles...
 
@@ -89,15 +93,17 @@ Here's a list of a few (but not all) of my articles...
 
 #### Solution / Technical / Enterprise and Cloud Architecture
 
-- [Architecture Documentation: Where to Draw the Line](https://medium.com/@derailed.dash/architecture-documentation-where-to-draw-the-line-df73fb5ca85c){:target="_blank"}
+- [Architecture Documentation: Where to Draw the Line](https://medium.com/@dazbo/architecture-documentation-where-to-draw-the-line-df73fb5ca85c){:target="_blank"}
 
 #### Other
 
-- [Compelling Pitches and Arguments for any Scenario: Top Down Thinking (TDT)](https://medium.com/@derailed.dash/compelling-pitches-and-arguments-for-any-scenario-top-down-thinking-108c9edda6ec)
+- [Compelling Pitches and Arguments for any Scenario: Top Down Thinking (TDT)](https://medium.com/@dazbo/compelling-pitches-and-arguments-for-any-scenario-top-down-thinking-108c9edda6ec)
 
-### GitHub
+### GitHub & Personal Website
 
 Finally, consider:
 
+- [Visiting darrenlester.net](https://darrenlester.net){:target="_blank"}
+- [Following me on Medium (`@dazbo`)](https://medium.com/@dazbo){:target="_blank"}
 - [Following me on GitHub](https://github.com/derailed-dash){:target="_blank"}
 - [Adding a Star to my Advent-of-Code GitHub Repo](https://github.com/derailed-dash/Advent-of-Code){:target="_blank"}

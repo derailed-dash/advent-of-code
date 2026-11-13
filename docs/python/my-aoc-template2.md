@@ -21,9 +21,9 @@ So let's update the template to make use of these things:
 ```python
 """
 Author: Darren
-Date: 01/12/2023
+Date: 01/12/2026
 
-Solving https://adventofcode.com/2023/day/1
+Solving https://adventofcode.com/2026/day/1
 
 Part 1:
 
@@ -34,21 +34,21 @@ import logging
 import time
 import aoc_common.aoc_commons as ac
 
-YEAR = 2017
-DAY = 1
+YEAR: int = 2026
+DAY: int = 1
 
 locations = ac.get_locations(__file__)
 logger = ac.retrieve_console_logger(locations.script_name)
 logger.setLevel(logging.DEBUG)
-# td.setup_file_logging(logger, locations.output_dir)
+# ac.setup_file_logging(logger, locations.output_dir)
 try:
     ac.write_puzzle_input_file(YEAR, DAY, locations)
 except ValueError as e:
     logger.error(e)
 
-def main():
-    with open(locations.sample_input_file, mode="rt") as f:
-    # with open(locations.input_file, mode="rt") as f:        
+def main() -> None:
+    with open(locations.sample_input_file, mode="rt", encoding="utf-8") as f:
+    # with open(locations.input_file, mode="rt", encoding="utf-8") as f:        
         data = f.read().splitlines()
         
     logger.debug(data)

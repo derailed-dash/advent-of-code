@@ -137,7 +137,7 @@ When this block completes, the context manager takes care of closing the file.  
 
 Think about where you want to save your input files, relative to your program. I always put my input files in a folder called `input`.  And that `input` folder always lives in the same folder as the program itself. Something like this:
 
-![Input Folder]({{ '../assets/images/input_folder_location.png' | relative_url }})
+![Input Folder]({{ '/assets/images/input_folder_location.png' | relative_url }})
 
 Consequently, my AoC programs will always need to read an input file in the relative location `input/input.txt`. I use Python's `Path` object for buildling paths, which are agnostic of the operating system we're running.
 

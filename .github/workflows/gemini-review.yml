@@ -6,13 +6,16 @@ on:
       - master
       - main
     types: [opened, synchronize, reopened]
+    paths-ignore:
+      - 'src/AoC_201*/**'
+      - 'src/AoC_202[0-5]/**'
   issue_comment:
     types: [created]
 
 jobs:
   review:
     if: |
-      github.event_name == 'pull_request' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
       (
         github.event_name == 'issue_comment' &&
         github.event.issue.pull_request &&
@@ -20,6 +23,9 @@ jobs:
         contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
       )
     runs-on: ubuntu-latest
+    concurrency:
+      group: gemini-review-${{ github.event.pull_request.number || github.event.issue.number }}
+      cancel-in-progress: true
     permissions:
       contents: read
       pull-requests: write
@@ -38,7 +44,9 @@ jobs:
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          gemini_model: 'gemini-3.7-flash'
+          gemini_model: 'gemini-3.8-flash'
           persona: 'dazbo'
           language: 'English (UK)'
           include_comment_history: 'true'
+          context_exclude_patterns: 'src/AoC_201*/**,src/AoC_202[0-5]/**'
+          custom_instructions: '.github/review-instruction-additions.md'

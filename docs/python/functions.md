@@ -26,7 +26,7 @@ tags:
 
 ### Overview
 
-A **function** is a way of taking some code and making it callable. This allows us to implement chunks of code that we want to re-use. It also helps us break down our code into manageable and readable units of functionality.
+A **function** is a way of taking some code and making it callable. This allows us to implement chunks of code that we want to reuse. It also helps us break down our code into manageable and readable units of functionality.
 
 The general syntax is:
 

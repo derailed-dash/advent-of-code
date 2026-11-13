@@ -56,7 +56,7 @@ So a class is kind of an abstract concept. But we can create an _instance_ of th
 
 Time for an analogy:
 
-- The _Ford Motor Company_ have a blueprint for creating a _Ford Mustang_. It is a design. A specification. This is analagous to a **class**.
+- The _Ford Motor Company_ have a blueprint for creating a _Ford Mustang_. It is a design. A specification. This is analogous to a **class**.
 - I own a _Ford Mustang_.  It is a real, physical thing.  I can sit in it and drive it.  So, _my_ Mustang is an _instance_ of the Ford Mustang class.  My Ford Mustang is an **object**.
 
 ### Attributes
@@ -94,8 +94,8 @@ In simplistic terms, this is simply a way of programming where we primarily use 
 
 In OOP, there are some standard concepts:
 
-- **Inheritance** - I.e. where an object can inherit - and override - the properties and methods from some sort of ancester, called a _parent class_.  We'll look at this in a bit more detail [later](#inheritance).
-- **Polymorphism** - the idea that different objects can have the same _method signatures_, and exhibit different behavours at runtime, depending on the specific type of class that was instantiated.
+- **Inheritance** - I.e. where an object can inherit - and override - the properties and methods from some sort of ancestor, called a _parent class_.  We'll look at this in a bit more detail [later](#inheritance).
+- **Polymorphism** - the idea that different objects can have the same _method signatures_, and exhibit different behaviours at runtime, depending on the specific type of class that was instantiated.
 - **Encapsulation** - the idea that an object can hide its internal implementation, so that we only interact with the object using its publicly accessible interface.  In Python, _encapsulation_ is not enforced, but there are _conventions_ we should follow.  E.g. if an _attribute_ or _method_ should not be used by anything other than the object itself, then we prefix the _attribute_ or _method_ with an `_` (underscore) character.
 
 ## Defining a Class
@@ -479,7 +479,7 @@ class Circle(Shape):
         return f"Circle of radius {self._radius}"
     
     def __repr__(self):
-        return f"Cicle(radius={self._radius})"
+        return f"Circle(radius={self._radius})"
 
 class Square(Shape):
     def __init__(self, side):
@@ -633,7 +633,7 @@ The factory pattern is a creation design pattern that provides an interface for 
 
 It is typically implemented using a _classmethod_ that allows us to pass in a type, i.e. a specific type of object implementation.
 
-Here I show a useful way to instantiate a class using factory method. In the example below, one factory method instantiates a `Shape` given a `ShapeType` (which is itself a subclass of [Enum](/python/enum)). Another factory method allows us to instantiate a `Shape` given a set of points.
+Here I show a useful way to instantiate a class using factory method. In the example below, one factory method instantiates a `Shape` given a `ShapeType` (which is itself a subclass of [Enum](/python/enumerate#enum)). Another factory method allows us to instantiate a `Shape` given a set of points.
 
 ```python
 from __future__ import annotations
@@ -753,7 +753,7 @@ Subclassing would be better if the subclasses have distinct behaviour.  In this 
 
 ### Overview
 
-This is a very cool _decorator_ which helps us save some time and effort, by circumventing the need to write lots of repetetive [boilerplate code](https://en.wikipedia.org/wiki/Boilerplate_code){:target="_blank"}, when we want to create a _class_ that mostly serves the purpose of storing and exposing some data.
+This is a very cool _decorator_ which helps us save some time and effort, by circumventing the need to write lots of repetitive [boilerplate code](https://en.wikipedia.org/wiki/Boilerplate_code){:target="_blank"}, when we want to create a _class_ that mostly serves the purpose of storing and exposing some data.
 
 Cool things about a `dataclass`:
 
@@ -923,7 +923,7 @@ print(p3.manhattan_distance) # 10
 
 - [Factory Pattern: 2015 Day 22 - Wizards and Spells](/2015/22)
 - [Factory Pattern: 2022 Day 17 - Tetris!](/2022/17)
-- [Inheritence and constructor chaining: 2015 Day 22 - Wizard class](/2015/22)
+- [Inheritance and constructor chaining: 2015 Day 22 - Wizard class](/2015/22)
 - [Cache decorator: 2015 Day 22 - Wizards and Spells](/2015/22)
 - [Cache decorator: type_defs](/python/reusable_code)
 - [NamedTuple for Grid Coordinates: 2025 Day 4 - Printing Department](/2025/4)

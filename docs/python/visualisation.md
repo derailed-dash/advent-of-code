@@ -336,13 +336,13 @@ Here's an example that renders 3D cubes based on a `set` of 3D coordinates:
         plt.show()
 ```
 
-The code above is taken from my [2022 Day 18](/python/2022/18) solution.  The rendered image looks like this:
+The code above is taken from my [2022 Day 18](/2022/18) solution.  The rendered image looks like this:
 
 ![Droplet](/assets/images/lava_droplet.png)
 
 ### Rendering 3D Conway Cubes Animation, With NumPy and 3D Scatter
 
-Taken from [2020 Day 17: Conway Cubes](/2022/17):
+Taken from [2020 Day 17: Conway Cubes](https://github.com/derailed-dash/Advent-of-Code/tree/master/src/AoC_2020/d17_conway_cubes_cell_knows_neighbours):
 
 ```python
 def show_grid(grid):
@@ -396,7 +396,7 @@ def show_grid(grid):
 
 ### 2D Hexagons Animation
 
-Taken from [2020 Day 24: Hexagons and Neighbours](/2020/24):
+Taken from [2020 Day 24: Hexagons and Neighbours](https://github.com/derailed-dash/Advent-of-Code/tree/master/src/AoC_2020/d24_hexagons_and_neighbours):
 
 ```python
 def vis_state(black_tiles, all_tiles, iteration):

@@ -15,11 +15,8 @@ tags:
     link: https://www.pythonpool.com/python-permutations/
   - name: Permutations in Python
     link: https://medium.com/geekculture/permutations-in-python-431cd0c75253
+mathjax: true
 ---
-<script
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
-  type="text/javascript">
-</script>   
 ## Page Contents
 
 - [Overview of Permutations and Combinations](#overview-of-permutations-and-combinations)
@@ -50,7 +47,7 @@ tags:
 
 - **Permutations** 
   - A unique arrangement of a group of things.
-  - Returns unique permutations of items, including their sequence. So, given teh numbers `123`, `123` is a different permutation to `321`.
+  - Returns unique permutations of items, including their sequence. So, given the numbers `123`, `123` is a different permutation to `321`.
 - **Combinations** return unique combinations of items, ignoring sequence. It is about _members_, not _order_. `123` and `321` are _the same_.
 
 The number of permutations will be greater than the number of combinations.
@@ -192,7 +189,7 @@ All unique combinations from two dice, including throwing same on both dice:
 Count of combos=21
 ```
 
-- There are 36 different outcomes from rolling two dice.  These outcomes can be determined using `itertools.product(die, repeat=n)` where `n` is the number of dice. This retuns the _cartesian product_ of our two dice.
+- There are 36 different outcomes from rolling two dice.  These outcomes can be determined using `itertools.product(die, repeat=n)` where `n` is the number of dice. This returns the _cartesian product_ of our two dice.
 - We can use `itertools.permutations(die, n)` to get all unique permutations of the two die rolls.
   - The results `(1,6)` and `(6,1)` are considered two different permutations.
   - Note that we only get 30 permutations.  This is because _permutations_ do not allow repeating numbers. E.g. it disallows `(1,1)`, `(2,2)`, etc. 

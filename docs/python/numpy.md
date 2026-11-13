@@ -18,11 +18,10 @@ tags:
 - [NumPy is Awesome](#numpy-is-awesome)
 - [When Should You Use Numpy?](#when-should-you-use-numpy)
 - [Installing and Importing](#installing-and-importing)
-- [Getting Started](#getting-started)
 - [Creating Arrays](#creating-arrays)
   - [From a List](#from-a-list)
   - [A 2D Array from a list of lists](#a-2d-array-from-a-list-of-lists)
-  - [Initilising with Zeroes](#initilising-with-zeroes)
+  - [Initialising with Zeroes](#initialising-with-zeroes)
   - [Explicitly Setting Type](#explicitly-setting-type)
   - [Initialising with Specified Value](#initialising-with-specified-value)
   - [Initialising a 3D Array with Boolean Type](#initialising-a-3d-array-with-boolean-type)
@@ -141,7 +140,7 @@ Data:
  [4 5 6]]
 ```
 
-### Initilising with Zeroes
+### Initialising with Zeroes
 
 ```python
 # Initialise 1x4 to 0 as floats
@@ -555,7 +554,7 @@ Counts: [2 1 1 2 1 3]
 
 ### Indexing and Slicing with One Dimension
 
-Slicing retuns a new array.
+Slicing returns a new array.
 
 ```python
 one = np.arange(10)
@@ -610,7 +609,7 @@ Accessing a 2D grid with [1:, 2:4]:
 
 As we've seen, we can index an n-dimensional array like this: `my_array[x, y, z]`.
 
-However, if we pass in an array of indeces we can retrieve arbitrary elements from each dimension.  For example, with a one dimensional array, we can pass in an index array [x, y, z], like this: `my_array[[x, y, z]]`:
+However, if we pass in an array of indices we can retrieve arbitrary elements from each dimension.  For example, with a one dimensional array, we can pass in an index array [x, y, z], like this: `my_array[[x, y, z]]`:
 
 ```python
 three = (np.arange(10)**2)+1  # square numbers plus 1
@@ -1180,7 +1179,7 @@ def main():
 def process_instructions(data, lights):
     for line in data:
         match = INSTR_PATTERN.search(line)
-        assert match, "All instruction lines are expeted to match"
+        assert match, "All instruction lines are expected to match"
         tl_x, tl_y, br_x, br_y = map(int, match.groups())
 
         if "toggle" in line:
@@ -1194,7 +1193,7 @@ def process_instructions(data, lights):
 def process_variable_brightness_instructions(data, lights):
     for line in data:
         match = INSTR_PATTERN.search(line)
-        assert match, "All instruction lines are expeted to match"
+        assert match, "All instruction lines are expected to match"
         tl_x, tl_y, br_x, br_y = map(int, match.groups())
 
         if "toggle" in line:

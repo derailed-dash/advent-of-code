@@ -8,10 +8,8 @@ tags:
     link: https://en.wikipedia.org/wiki/Recursion_(computer_science)
   - name: Recursion Introduction (@ RealPython)
     link: https://realpython.com/python-recursion/
+mathjax: true
 ---
-<script id="MathJax-script" async
-    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-</script>
 ## Page Contents
 
 - [Introduction](#introduction)
@@ -23,11 +21,11 @@ tags:
 - [Aside: Let's Build a RecursionTracer Class!](#aside-lets-build-a-recursiontracer-class)
 - [Another Example: Fibonacci Sequence](#another-example-fibonacci-sequence)
 - [Optimising: Memoisation](#optimising-memoisation)
-  - [Counting Leaf Items in a Nested List](#counting-leaf-items-in-a-nested-list)
-  - [Fibonacci](#fibonacci)
+  - [Calculating the Next Term in an Nth-Degree Arithmetic Progression](#calculating-the-next-term-in-an-nth-degree-arithmetic-progression)
 - [Traversal Examples](#traversal-examples)
   - [Tree Traversal](#tree-traversal)
-  - [Calculating the Next Term in an Nth-Degree Arithmetic Progression](#calculating-the-next-term-in-an-nth-degree-arithmetic-progression)
+  - [Counting Leaf Items in a Nested List](#counting-leaf-items-in-a-nested-list)
+- [Recursive DFS: A Case Study](#recursive-dfs-a-case-study)
 - [AoC Examples](#aoc-examples)
 
 ## Introduction
@@ -42,7 +40,7 @@ As an anology, take a look at examples of recursive acronyms.  See how the acron
 |-------|----------|
 |GNU| = GNU's not Linux|
 |LAME| = LAME Ain't an MP3 Encoder|
-|YAML|  YAML Ain't Markup Lanugage|
+|YAML|  YAML Ain't Markup Language|
 
 ## When Do You Use It? 
 
@@ -68,7 +66,7 @@ When creating a recursive function, there are three that must always be followed
 
 ### Countdown
 
-Let's start with a super-simple case: a recursive function that counts down from an arbitary number `n` to 0.  We can do it like this:
+Let's start with a super-simple case: a recursive function that counts down from an arbitrary number `n` to 0.  We can do it like this:
 
 ```python
 def countdown(n):
@@ -109,7 +107,7 @@ Let's try it.  I've added the above code to a file called scratch.py, in my snip
 
 ### Factorial
 
-Recall the defition of factorial:
+Recall the definition of factorial:
 
 \\(k! = k * (k-1)\\)
 
@@ -524,7 +522,7 @@ We can do this with a **Depth-First Search (DFS)**. We can do:
 
 In each case, every traversal results in the current node (if not a leaf) being treated as the current root.
 
-![Tree Traversal](../assets/images/tree-traversal.png)
+![Tree Traversal](/assets/images/tree-traversal.png)
 
 Let's simulate a tree:
 
@@ -576,7 +574,7 @@ And now let's create our recursive function(s) to traverse the tree:
 def pre_order_traverse(root: Node):
     """ root -> left -> right
     Here we don't pass the path in to the call. We create a new path object
-    with each call, and then add it to the exising path, using extend. """
+    with each call, and then add it to the existing path, using extend. """
     path = []
     
     # Base case is when root is None - then we simply return the path

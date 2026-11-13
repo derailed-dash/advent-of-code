@@ -14,12 +14,14 @@ tags:
     link: https://code.visualstudio.com/docs/python/python-tutorial
   - name: Git
     link: https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control
+  - name: uv (Python Package Manager)
+    link: https://docs.astral.sh/uv/
   - name: Virtual Environment
     link: https://docs.python.org/3/library/venv.html
   - name: Conda
     link: https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html
 ---
-If you're new to Python, then you'll want to start here.  If you're already comfortable using Python, then feel free to dive straight into the AoC walkthroughts, using the links above.
+If you're new to Python, then you'll want to start here.  If you're already comfortable using Python, then feel free to dive straight into the AoC walkthroughs, using the links above.
 
 ## Why Python?
 
@@ -31,37 +33,34 @@ For those of you coming from a background with languages like C, C#, Java, Javas
 
 Here are some of Python's strengths:
 
-- It's extremely readable.  It's syntax tends to be aligned to natural language.
+- It's extremely readable.  Its syntax tends to be aligned to natural language.
 - It's highly portable.  Your Python programs will run on just about any operating system.
 - It's really easy to install and use.
 - It's open source: free to use, and free to distribute.
 - It's extremely versatile.  You can use it for console applications, web applications, automation, APIs, data science, machine learning, maths and statistics, graphs, visualisation, writing games, and so much more.
-- There are a massive number open source libraries available, to do just about any task.
+- There are a massive number of open source libraries available, to do just about any task.
 
 ## My Recommendations for Getting Started
 
 I recommend working through the following, to get started:
 
-1. [Install Python](#getting-and-installing-python)
+1. [Install Python 3.13+](#getting-and-installing-python)
 1. Get a [development environment / editor](#development-environment--editor)
 1. [Get Git](#git)
 1. [Learn the Python basics](#python-basics)
-1. [Python Virtual Environments](#python-virtual-environments)
-1. [Using Conda](#using-conda)
+1. [Environments & Packages with uv](#using-uv-recommended) (or standard [`venv`](#python-virtual-environments) / [Conda](#using-conda))
 
 ## Getting and Installing Python
 
-To execute Python programs, you need to install Python on your machine.  It's possible you already have Python installed.  To check, open your command prompt (or shell) and run:
+To execute Python programs, you need a recent Python runtime installed (**Python 3.13+** is recommended for this repository).  To check what you have installed, open your terminal and run:
 
 ```> python --version```
 
-If you get a response that shows you have any Python 3.x version installed, then you're good to go.  E.g.
+If you get a response that shows you have Python 3.13+ installed, then you're good to go.  (Alternatively, [`uv`](#using-uv-recommended) can download and manage isolated Python versions for you automatically!)  E.g.
 
 ![Verify Python Installation]({{'/assets/images/python-version.png' | relative_url }}){:style="width: 600px"}
 
-If you haven't got Python installed, you'll want the latest available Python 3 version, which you can download from [here](https://www.python.org/downloads/){:target="_blank"}.  It's really quick and easy to install.  It should only take a couple of minutes.  Take a look [here](https://wiki.python.org/moin/BeginnersGuide/Download){:target="_blank"} if you need any guidance on installing Python.
-
-Once you've installed it, check the installation as described above.
+If you haven't got Python installed, download the latest Python 3.13+ release from [python.org](https://www.python.org/downloads/){:target="_blank"}, or install it via `uv python install 3.13`.  Take a look [here](https://wiki.python.org/moin/BeginnersGuide/Download){:target="_blank"} if you need additional guidance.
 
 ## Development Environment / Editor
 
@@ -81,7 +80,7 @@ A **development environment** adds a wealth of features, such as:
 
 ### Visual Studio Code
 
-My favourite development environment is **Visual Studio Code** - aka **VS Code** - which can be downloaded and installed from [here](https://code.visualstudio.com/){:target="_blank}.  (Note: VS Code is not the same as _Visual Studio_, which is a different product.)
+My favourite development environment is **Visual Studio Code** - aka **VS Code** - which can be downloaded and installed from [here](https://code.visualstudio.com/){:target="_blank"}.  (Note: VS Code is not the same as _Visual Studio_, which is a different product.)
 
 Some benefits of VS Code:
 
@@ -118,7 +117,7 @@ Now you'll want to install some extensions that will make your Python - and gene
 - **Python Docstring Generator** - a cool plugin that helps with the creation of _docstrings_.  If you don't know what these are, then don't worry about this just yet!
 - **Rainbow CSV** - Colourises any CSV files you open in VS Code.
 - **Reload** - Adds a button to reload your VS Code environment.
-- **Python Indent** - auto-identation for Python.
+- **Python Indent** - auto-indentation for Python.
 
 Note: if you've followed the [Getting started with Python in VS Code Tutorial](https://code.visualstudio.com/docs/python/python-tutorial){:target="_blank"}, this will have guided you through installing some of these extensions.
 
@@ -160,81 +159,43 @@ Finally, if you're completely new to Python, you might want to learn some basics
 - [The w3schools Python Tutorial](https://www.w3schools.com/python/default.asp){:target="_blank"}
 - [Google's Python Class](https://developers.google.com/edu/python/){:target="_blank"}
 
+## Using uv (Recommended)
+
+This repository uses **[`uv`](https://docs.astral.sh/uv/){:target="_blank"}** with `pyproject.toml` and `uv.lock` to manage the Python 3.13+ runtime, virtual environment (`.venv/`), and dependencies cleanly in one step:
+
+```bash
+# Create .venv/ and install all solution, dev, and Jupyter dependencies
+uv sync --dev --extra jupyter   # or: make install
+
+# Run any solution script directly inside .venv/ (no manual activation needed)
+uv run python src/AoC_2025/d01/d01.py
+
+# Launch JupyterLab for notebook solutions
+uv run jupyter lab
+```
+
+VS Code will automatically detect `.venv/` once created.
+
 ## Python Virtual Environments
 
-Virtual environments are isolated Python contexts in which we can install Python packages.  This allows specific and explicit combinations of Python runtimes, packages and frameworks, that may be different from other versions installed in the host OS. Basically, it gives us the ability to install packages in one environment without impacting another environment.
+Under the hood, tools like `uv` still use a standard **virtual environment (`venv`)** — an isolated Python context per project so package versions never conflict across projects or with your operating system.
 
-**In Python, you should ALWAYS work inside a virtual environment (venv). Always install your packages into a venv, rather than at the global OS level.**
+**Always work inside a project virtual environment rather than installing packages globally.**
 
-### General Steps for Creating a Virtual Environment
-
-You need to do this once, per project, per development machine you're working with.
+If you prefer creating a virtual environment with Python's built-in `venv` module instead of `uv`:
 
 ```bash
-# From the root of your project folder
-python -m venv .venv # where .venv is the name of the virtual env you are creating
-```
+# Create .venv/ (never commit .venv/ to Git)
+python -m venv .venv
 
-Note that the .venv folder should NOT be checked-in to source control. You will always create the venv on any given development machine.
+# Activate it
+source .venv/bin/activate        # Linux / macOS
+.venv\Scripts\Activate.ps1       # Windows PowerShell
 
-### Activating the Virtual Environment
-
-A venv must be activated. VS Code will usually detect any virtual environments installed within the project folder that has been opened in VS Code. But outside of VS Code, you activate a venv like this:
-
-```bash
-source .venv/bin/activate # Linux
-.venv\Scripts\activate.ps1 # Windows
-```
-
-### Installing Packages to the Environment
-
-To install packages to an environment for the first time:
-
-```bash
+# Install packages
 python -m pip install some-package
-```
-
-But once you've installed packages, you can "freeze" your current package installation, like this:
-
-```bash
-python -m pip freeze > path/to/requirements.txt
-```
-
-This file WILL be checked-in to source control. So we can use this file to repeat the same package installations on any other machine, i.e.
-
-```bash
-python3 -m pip install -r requirements.txt # install application dependencies
 ```
 
 ## Using Conda
 
-[Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html){:target="_blank"} is a powerful environment and package manager. It has a number of advantages over using pip and Python virtual environments:
-
-- It can install packages and dependencies that are not just pure Python. This can be particularly useful if you're using applications that need to make use of system-level libraries or tools, like ffmpeg and graphviz.
-- It has better dependency management and conflict resolution.
-- It provides pre-compiled and optimised versions of many packages; particularly those related to data science, such as NumPy, Pandas, PyTorch, etc.
-
-A Conda environment is a separate Python installation with a specific set of packages; much like a Python virtual environment. We can work with Conda environments like this:
-
-```bash
-conda env list # see environments and current active env
-
-export AOC_ENV="aoc-conda-env"
-
-# Create and activate an environment
-conda create --name $AOC_ENV
-conda activate $AOC_ENV
-
-# Install some core packages
-# Before trying to run any Python code or Jupyter cells in this env
-conda install -y -c conda-forge python jupyter jupyterlab
-
-# Additional packages - or we could install these from (say) a Jupyter notebook
-conda install pandas hvplot mathjax matplotlib networkx numpy plotly scipy
-
-# Export the current environment config - for source control
-conda env export > $AOC_ENV.yml
-
-# To delete a Conda env
-conda remove --name $AOC_ENV --all
-```
+[Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html){:target="_blank"} is an alternative environment and package manager that can also bundle non-Python system libraries (such as `ffmpeg` or `graphviz`). For this repository, `uv` with `pyproject.toml` replaces our older Conda setup, though if you prefer Conda you can still create a Python 3.13+ environment with `conda create -n aoc-env python=3.13`.

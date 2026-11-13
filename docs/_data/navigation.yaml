@@ -45,7 +45,7 @@ pages:
   - name: Working with Binary and Other Bases
     link: /python/binary
   - name: Visualisations and Plots
-    link: /python/visualisation 
+    link: /python/visualisation
   - name: Graphs and Graph Theory
     link: /python/graph
   - name: Creating and Visualising Graphs with NetworkX
@@ -269,6 +269,9 @@ pages:
   - name: 6
     link: /2018/6
     problem: "Chronal Coordinates"
+- name: "2020"
+  link: /2020/
+  mainnav: True
 - name: "2021"
   link: /2021/
   mainnav: True
@@ -473,3 +476,7 @@ pages:
   - name: 12
     link: /2025/12
     problem: "Packing Presents"
+- name: "2026"
+  link: /2026/
+  mainnav: True
+  members: []
