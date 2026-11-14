@@ -151,8 +151,8 @@ Sometimes you don't need to build a value from the parse tree at all — you onl
 
 Parsimonious distinguishes two failure exceptions cleanly:
 
-- `IncompleteParseError`: A prefix of the input matched `expr`, so more characters remain unconsumed (useful for detecting valid-so-far truncated inputs).
-- `ParseError`: Matching failed at `err.pos` (`0 <= err.pos <= len(text)`). When `err.pos == len(text)`, the parser reached the end of input expecting a closing token (incomplete); when `err.pos < len(text)`, it encountered an unexpected token (corrupted).
+- `IncompleteParseError`: A prefix of the input matched the root rule (`expr = chunk+`), leaving trailing characters unconsumed from `err.pos` onwards. Because those leftover characters could be either a truncated chunk (`"()("`) or an unexpected token (`"()]"`), re-parsing from `pos=err.pos` classifies the remainder cleanly.
+- `ParseError`: Matching failed at `err.pos` (`0 <= err.pos <= len(text)`). Naming the closing-bracket rules (`rparen`, `rbrack`, `rbrace`, `rangle`) ensures Parsimonious advances `err.pos` to `len(text)` whenever input ends mid-chunk (incomplete) while stopping at `err.pos < len(text)` on an unexpected token (corrupted).
 
 ```python
 from parsimonious.exceptions import IncompleteParseError, ParseError
@@ -162,23 +162,30 @@ CHUNK_GRAMMAR = Grammar(
     r"""
     expr   = chunk+
     chunk  = round / square / curly / angle
-    round  = "(" chunk* ")"
-    square = "[" chunk* "]"
-    curly  = "{" chunk* "}"
-    angle  = "<" chunk* ">"
+    round  = "(" chunk* rparen
+    square = "[" chunk* rbrack
+    curly  = "{" chunk* rbrace
+    angle  = "<" chunk* rangle
+    rparen = ")"
+    rbrack = "]"
+    rbrace = "}"
+    rangle = ">"
     """
 )
 
 
 def classify_bracket_line(line: str) -> str:
-    """Return 'valid', 'incomplete', or 'corrupted' for a bracket sequence."""
-    try:
-        CHUNK_GRAMMAR.parse(line)
-    except IncompleteParseError:
-        return "incomplete"
-    except ParseError as err:
-        return "incomplete" if err.pos == len(line) else f"corrupted@{err.pos}"
-    return "valid"
+    """Return 'valid', 'incomplete', or 'corrupted@<idx>' for a bracket sequence."""
+    pos = 0
+    while True:
+        try:
+            CHUNK_GRAMMAR.parse(line, pos=pos)
+            return "valid"
+        except IncompleteParseError as err:
+            # Valid chunk(s) matched up to err.pos; inspect the unconsumed tail
+            pos = err.pos
+        except ParseError as err:
+            return "incomplete" if err.pos == len(line) else f"corrupted@{err.pos}"
 ```
 
 *(Watch out for left recursion in PEG grammars! Rules like `A = A "x" / "y"` recurse infinitely in top-down PEG parsers because ordered choice tries `A` before consuming input. Rewrite left-recursive rules using repetition `A = "y" "x"*` or right-hand grouping `A = "42" A / "42"` — or bounded expansion where depth is finite.)*

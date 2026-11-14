@@ -257,22 +257,24 @@ a \cdot Y_A + b \cdot Y_B &= Y_{\text{prize}}
 \end{align}
 $$
 
-Finding the exact button presses \( a \) and \( b \) to reach the prize is a system of two linear equations with two unknowns. SymPy's `solve()` solves this effortlessly and allows us to verify if both \( a \) and \( b \) are positive integers:
+Finding the exact button presses \( a \) and \( b \) to reach the prize is a system of two linear equations with two unknowns. SymPy's `solve()` solves this effortlessly and allows us to verify that both \( a \) and \( b \) resolve to concrete non-negative integers:
 
 ```python
 import sympy
+
 
 def solve_claw_machine(ax: int, ay: int, bx: int, by: int, px: int, py: int) -> int:
     a, b = sympy.symbols("a b", integer=True)
     eq1 = sympy.Eq(a * ax + b * bx, px)
     eq2 = sympy.Eq(a * ay + b * by, py)
-    
+
     solutions = sympy.solve((eq1, eq2), (a, b), dict=True)
     if solutions:
         sol = solutions[0]
-        a_val, b_val = sol[a], sol[b]
-        if a_val >= 0 and b_val >= 0:
-            return int(3 * a_val + b_val)
+        if a in sol and b in sol:
+            a_val, b_val = sol[a], sol[b]
+            if a_val.is_integer and b_val.is_integer and a_val >= 0 and b_val >= 0:
+                return int(3 * a_val + b_val)
     return 0
 ```
 
