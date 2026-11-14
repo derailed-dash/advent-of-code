@@ -1,26 +1,19 @@
 ---
 permalink: /404.html
 layout: default
+title: Page Not Found
 ---
 
-<style type="text/css" media="screen">
-  .container {
-    margin: 10px auto;
-    max-width: 600px;
-    text-align: center;
-  }
-  h1 {
-    margin: 30px 0;
-    font-size: 4em;
-    line-height: 1;
-    letter-spacing: -1px;
-  }
-</style>
-
-<div class="container">
+<div class="not-found-card">
   <h1>404</h1>
-  <img src="{{ '/assets/images/droids.gif' | relative_url }}" alt="Droids" style="width:400px;"/>
-  <br/><br/>
+  <img
+    src="{{ '/assets/images/droids.gif' | relative_url }}"
+    alt="These are not the droids you're looking for"
+    class="not-found-gif no-mat"
+  />
   <p><strong>These are not the droids you're looking for.</strong></p>
   <p>The requested page could not be found.</p>
+  <p>
+    <a class="primary-cta-btn" href="{{ '/' | relative_url }}">Back to Home</a>
+  </p>
 </div>

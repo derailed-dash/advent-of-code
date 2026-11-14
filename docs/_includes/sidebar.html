@@ -1,0 +1,143 @@
+{% assign repo_url = site.github.repository_url | default: 'https://github.com/derailed-dash/Advent-of-Code' %}
+{% assign current_slug = page.url | replace: '.html', '' | strip %}
+{% if current_slug != '/' %}
+  {% assign last_char = current_slug | slice: -1, 1 %}
+  {% if last_char == '/' %}
+    {% assign trimmed_len = current_slug | size | minus: 1 %}
+    {% assign current_slug = current_slug | slice: 0, trimmed_len %}
+  {% endif %}
+{% endif %}
+
+{% assign latest_walkthrough_year = '' %}
+{% for item in site.data.navigation.pages reversed %}
+  {% if item.name != 'Home' and item.name != 'Python Journey' and item.members and item.members.size > 0 %}
+    {% if latest_walkthrough_year == '' %}
+      {% assign latest_walkthrough_year = item.name | append: '' %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+{% assign page_year_str = page.year | append: '' %}
+{% assign journey_group = site.data.navigation.pages | where: 'name', 'Python Journey' | first %}
+{% assign is_journey_active = false %}
+{% if page.layout == 'journey-page' or page.url contains '/python/' %}
+  {% assign is_journey_active = true %}
+{% endif %}
+
+<aside id="site-sidebar" class="site-sidebar" aria-label="Site navigation">
+  <div class="mobile-drawer-top">
+    <div class="mobile-drawer-top__head">
+      <span class="mobile-drawer-top__title">Navigation</span>
+      <button
+        id="drawer-close"
+        type="button"
+        class="drawer-close-btn"
+        aria-label="Close navigation menu"
+      >&#10005;</button>
+    </div>
+    <div class="mobile-drawer-links">
+      <a href="{{ '/' | relative_url }}" class="mobile-drawer-chip">Home</a>
+      <a href="{{ '/python/' | relative_url }}" class="mobile-drawer-chip">Python Journey</a>
+      <a href="https://darrenlester.net" class="mobile-drawer-chip" target="_blank" rel="noopener noreferrer">darrenlester.net &#8599;</a>
+      <a href="{{ repo_url }}" class="mobile-drawer-chip" target="_blank" rel="noopener noreferrer">GitHub &#8599;</a>
+    </div>
+  </div>
+
+  <p class="sidebar-section-label">Learn Python</p>
+  {% if journey_group %}
+    <details class="sidebar-group"{% if is_journey_active %} open{% endif %}>
+      <summary class="sidebar-group__summary">
+        <span class="sidebar-group__title">
+          <span class="sidebar-caret" aria-hidden="true">&#9656;</span>
+          <span>Python Journey</span>
+        </span>
+        <span class="sidebar-count">{{ journey_group.members.size }}</span>
+      </summary>
+      <ul class="sidebar-list">
+        <li class="sidebar-list__item">
+          <a
+            href="{{ journey_group.link | relative_url }}"
+            class="sidebar-link sidebar-link--overview{% if current_slug == '/python' %} is-active{% endif %}"
+          >Overview &amp; Index</a>
+        </li>
+        {% for member in journey_group.members %}
+          {% assign member_slug = member.link | strip | replace: '.html', '' %}
+          <li class="sidebar-list__item">
+            <a
+              href="{{ member.link | strip | relative_url }}"
+              class="sidebar-link{% if member_slug == current_slug %} is-active{% endif %}"
+            >{{ member.name }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </details>
+  {% endif %}
+
+  <p class="sidebar-section-label">Advent of Code Years</p>
+  {% for item in site.data.navigation.pages reversed %}
+    {% if item.name != 'Home' and item.name != 'Python Journey' %}
+      {% assign item_year_str = item.name | append: '' %}
+      {% assign item_slug = item.link | strip | replace: '.html', '' %}
+      {% if item_slug != '/' %}
+        {% assign item_last = item_slug | slice: -1, 1 %}
+        {% if item_last == '/' %}
+          {% assign item_len = item_slug | size | minus: 1 %}
+          {% assign item_slug = item_slug | slice: 0, item_len %}
+        {% endif %}
+      {% endif %}
+
+      {% if item.members and item.members.size > 0 %}
+        {% assign open_year = false %}
+        {% if page_year_str == item_year_str %}
+          {% assign open_year = true %}
+        {% elsif page.url == '/' and item_year_str == latest_walkthrough_year %}
+          {% assign open_year = true %}
+        {% endif %}
+        <details class="sidebar-group"{% if open_year %} open{% endif %}>
+          <summary class="sidebar-group__summary">
+            <span class="sidebar-group__title">
+              <span class="sidebar-caret" aria-hidden="true">&#9656;</span>
+              <span>{{ item.name }}</span>
+            </span>
+            <span class="sidebar-count">{{ item.members.size }}</span>
+          </summary>
+          <ul class="sidebar-list">
+            <li class="sidebar-list__item">
+              <a
+                href="{{ item.link | relative_url }}"
+                class="sidebar-link sidebar-link--overview{% if current_slug == item_slug %} is-active{% endif %}"
+              >{{ item.name }} Overview</a>
+            </li>
+            {% for member in item.members %}
+              {% assign day_slug = member.link | strip | replace: '.html', '' %}
+              <li class="sidebar-list__item">
+                <a
+                  href="{{ member.link | strip | relative_url }}"
+                  class="sidebar-link{% if day_slug == current_slug %} is-active{% endif %}"
+                >
+                  <span>Day {{ member.name }}{% if member.problem %}: {{ member.problem }}{% endif %}</span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </details>
+      {% else %}
+        <a
+          href="{{ item.link | relative_url }}"
+          class="sidebar-direct-link{% if current_slug == item_slug or page_year_str == item_year_str %} is-active{% endif %}"
+        >
+          <span>{{ item.name }}</span>
+          <span class="sidebar-badge">
+            {% if item_year_str == '2026' %}
+              Upcoming
+            {% elsif item_year_str == '2020' %}
+              Code Index
+            {% else %}
+              Notebook
+            {% endif %}
+          </span>
+        </a>
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+</aside>

@@ -29,9 +29,22 @@ url: https://aoc.just2good.co.uk
 twitter_username: DerailedDash
 github_username:  derailed-dash
 author: Dazbo
+lang: en-GB
+
+twitter:
+  username: DerailedDash
+  card: summary_large_image
+
+social:
+  name: Darren "Dazbo" Lester
+  links:
+    - https://darrenlester.net
+    - https://github.com/derailed-dash
+    - https://dev.to/dazbo
+    - https://medium.com/@dazbo
 
 # Build settings
-theme: jekyll-theme-modernist
+# Custom Midnight AoC theme (_layouts, _includes, _sass) — see docs/DESIGN.md
 plugins:
   - jekyll-relative-links
   - jekyll-sitemap
@@ -47,6 +60,7 @@ exclude:
   - docker-compose.yml
   - _config.docker.yml
   - readme.md
+  - DESIGN.md
   - .env
   - .env.enc
   - .env.template
@@ -60,6 +74,7 @@ defaults:
     values:
       layout: "day-page"  # most of our pages will use this layout; use default for index
       topic: "Advent of Code"
+      image: /assets/images/aoc-social-card.png
   - scope:  # exclude the domain ownership verification from sitemap
       path: google*.html
     values:

@@ -2,51 +2,111 @@
 layout: default
 nav_name: 'Python Journey'
 ---
-<h1>{{ page.topic }} - {{ page.title }}</h1>
-{%- if page.main_img and page.main_img.link -%}
-<img src="{{ page.main_img.link | relative_url }}" alt="{{ page.main_img.name }}" style="margin:15px 10px 10px 10px; float: right; width:300px" />
-{%- endif -%}
-
-{% assign pages = site.data.navigation.pages | where: 'name', layout.nav_name %}
-{% assign members = pages[0].members %}
+{% assign journey_entry = site.data.navigation.pages | where: 'name', layout.nav_name | first %}
 {% assign current_slug = page.url | replace: '.html', '' | strip %}
 {% if current_slug != '/' %}
   {% assign last_char = current_slug | slice: -1, 1 %}
   {% if last_char == '/' %}
-    {% assign new_len = current_slug | size | minus: 1 %}
-    {% assign current_slug = current_slug | slice: 0, new_len %}
+    {% assign trimmed_len = current_slug | size | minus: 1 %}
+    {% assign current_slug = current_slug | slice: 0, trimmed_len %}
   {% endif %}
 {% endif %}
-{% for member in members %}
-  {% assign member_slug = member.link | strip | replace: '.html', '' %}
-  {% if member_slug == current_slug or member.name == page.title %}
-    {% unless forloop.first %}
-      {% assign prev_index = forloop.index0 | minus: 1 %}
-      {% assign prev_member = members[prev_index] %}
-    {%- endunless -%}
-    {% unless forloop.last %}
-      {% assign next_index = forloop.index0 | plus: 1 %}
-      {% assign next_member = members[next_index] %}
-    {%- endunless -%}
-  {%- endif -%}
-{% endfor %}
-<p>
-  {% if prev_member %}<a class="dazbo-link-button nav-button" href="{{ prev_member.link | strip | relative_url }}">&#8249;</a>{%- endif -%}
-  {%- if next_member -%}<a class="dazbo-link-button nav-button" href="{{ next_member.link | strip | relative_url }}">&#8250;</a>{% endif %}
-</p>
-{%- if page.tags -%}
-<h2>Useful Links</h2>
-<p>{% for item in page.tags %}
-  {%- if item.link -%}
-  <a class="dazbo-link-button" href='{{ item.link }}' target="_blank">{{ item.name }}</a>
-  {%- endif -%}
+
+{% assign prev_member = nil %}
+{% assign next_member = nil %}
+{% if journey_entry and journey_entry.members %}
+  {% for member in journey_entry.members %}
+    {% assign member_slug = member.link | strip | replace: '.html', '' %}
+    {% if member_slug == current_slug or member.name == page.title %}
+      {% unless forloop.first %}
+        {% assign prev_index = forloop.index0 | minus: 1 %}
+        {% assign prev_member = journey_entry.members[prev_index] %}
+      {% endunless %}
+      {% unless forloop.last %}
+        {% assign next_index = forloop.index0 | plus: 1 %}
+        {% assign next_member = journey_entry.members[next_index] %}
+      {% endunless %}
+    {% endif %}
   {% endfor %}
-</p>
-{%- endif %}
+{% endif %}
+
+<header class="walkthrough-header">
+  <div class="walkthrough-topbar">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="{{ '/' | relative_url }}">Home</a>
+      <span aria-hidden="true">/</span>
+      <a href="{{ '/python/' | relative_url }}">Python Journey</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">{{ page.title }}</span>
+    </nav>
+
+    {% if prev_member or next_member %}
+      <div class="day-nav-top">
+        {% if prev_member %}
+          <a class="day-nav-pill" href="{{ prev_member.link | strip | relative_url }}" aria-label="Previous guide: {{ prev_member.name }}">&#8249; Prev</a>
+        {% endif %}
+        {% if next_member %}
+          <a class="day-nav-pill" href="{{ next_member.link | strip | relative_url }}" aria-label="Next guide: {{ next_member.name }}">Next &#8250;</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="walkthrough-hero">
+    <div class="walkthrough-meta">
+      <div class="walkthrough-kicker">{{ page.topic | default: 'The Python Journey' }}</div>
+      <h1>{{ page.title }}</h1>
+
+      {% if page.tags and page.tags.size > 0 %}
+        <div class="concept-section-label">Useful Links</div>
+        <div class="concept-pills">
+          {% for item in page.tags %}
+            {% if item.link %}
+              {% assign first_char = item.link | slice: 0, 1 %}
+              {% if first_char == '/' %}
+                <a class="concept-pill concept-pill--internal" href="{{ item.link | relative_url }}">{{ item.name }}</a>
+              {% else %}
+                <a class="concept-pill concept-pill--external" href="{{ item.link }}" target="_blank" rel="noopener noreferrer">{{ item.name }} &#8599;</a>
+              {% endif %}
+            {% else %}
+              <span class="concept-pill concept-pill--static">{{ item.name }}</span>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    {% if page.main_img and page.main_img.link %}
+      <div class="page-hero-media">
+        <img
+          class="page-hero-thumb"
+          src="{{ page.main_img.link | relative_url }}"
+          alt="{{ page.main_img.name | default: page.title | escape }}"
+        />
+      </div>
+    {% endif %}
+  </div>
+</header>
 
 {{ content }}
 
-<p>
-  {% if prev_member %}<a class="dazbo-link-button nav-button" href="{{ prev_member.link | strip | relative_url }}">&#8249;</a>{%- endif -%}
-  {%- if next_member -%}<a class="dazbo-link-button nav-button" href="{{ next_member.link | strip | relative_url }}">&#8250;</a>{% endif %}
-</p>
+{% if prev_member or next_member %}
+  <nav class="day-nav-cards" aria-label="Adjacent guides">
+    <div>
+      {% if prev_member %}
+        <a class="day-nav-card day-nav-card--prev" href="{{ prev_member.link | strip | relative_url }}">
+          <span class="day-nav-card__dir">&#8249; Previous Guide</span>
+          <span class="day-nav-card__title">{{ prev_member.name }}</span>
+        </a>
+      {% endif %}
+    </div>
+    <div>
+      {% if next_member %}
+        <a class="day-nav-card day-nav-card--next" href="{{ next_member.link | strip | relative_url }}">
+          <span class="day-nav-card__dir">Next Guide &#8250;</span>
+          <span class="day-nav-card__title">{{ next_member.name }}</span>
+        </a>
+      {% endif %}
+    </div>
+  </nav>
+{% endif %}

@@ -1,0 +1,248 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 76px;
+  background-color: var(--aoc-bg-canvas);
+  color: var(--aoc-text-primary);
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--aoc-bg-canvas);
+  color: var(--aoc-text-primary);
+  font-family: var(--aoc-font-sans);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.625;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+:focus-visible {
+  outline: 2px solid var(--aoc-primary-action);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  z-index: 100;
+  padding: 8px 14px;
+  border-radius: var(--aoc-radius-md);
+  background-color: var(--aoc-primary-action);
+  color: #FFFFFF;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:focus {
+    left: 16px;
+  }
+}
+
+.prose {
+  color: var(--aoc-text-primary);
+  font-size: 1rem;
+  line-height: 1.65;
+
+  > *:first-child {
+    margin-top: 0;
+  }
+
+  > *:last-child {
+    margin-bottom: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--aoc-text-primary);
+    font-weight: 700;
+    line-height: 1.25;
+    margin-top: 1.75em;
+    margin-bottom: 0.7em;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    letter-spacing: -0.4px;
+    margin-top: 0;
+  }
+
+  h2 {
+    font-size: 1.45rem;
+    font-weight: 600;
+    letter-spacing: -0.25px;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--aoc-border-subtle);
+  }
+
+  h3 {
+    font-size: 1.1875rem;
+    font-weight: 600;
+    color: var(--aoc-brand-purple);
+  }
+
+  h4,
+  h5,
+  h6 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--aoc-text-primary);
+  }
+
+  p,
+  ul,
+  ol,
+  dl {
+    margin-top: 0;
+    margin-bottom: 1.2rem;
+    max-width: 78ch;
+  }
+
+  ul,
+  ol {
+    padding-left: 1.5rem;
+  }
+
+  li {
+    margin-bottom: 0.35rem;
+
+    > ul,
+    > ol {
+      margin-top: 0.35rem;
+      margin-bottom: 0.35rem;
+    }
+  }
+
+  strong {
+    color: var(--aoc-text-primary);
+    font-weight: 700;
+  }
+
+  a {
+    color: var(--aoc-accent-teal);
+    text-decoration: none;
+    text-underline-offset: 3px;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  blockquote {
+    margin: 0 0 1.35rem;
+    padding: 0.9rem 1.25rem;
+    border-left: 4px solid var(--aoc-brand-purple);
+    border-radius: 0 var(--aoc-radius-md) var(--aoc-radius-md) 0;
+    background-color: var(--aoc-blockquote-bg);
+    color: var(--aoc-text-secondary);
+    font-style: italic;
+
+    > p:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  hr {
+    border: 0;
+    height: 1px;
+    background-color: var(--aoc-border-subtle);
+    margin: 1.75rem 0;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--aoc-radius-md);
+  }
+
+  kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    font-family: var(--aoc-font-mono);
+    font-size: 0.75rem;
+    line-height: 1.3;
+    color: var(--aoc-text-primary);
+    background-color: var(--aoc-bg-elevated);
+    border: 1px solid var(--aoc-border-strong);
+    border-bottom-width: 2px;
+    border-radius: var(--aoc-radius-xs);
+    vertical-align: middle;
+  }
+
+  table {
+    width: 100%;
+    max-width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 1.4rem;
+    font-size: 0.9375rem;
+    border: 1px solid var(--aoc-border-subtle);
+    border-radius: var(--aoc-radius-md);
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 0.6rem 0.85rem;
+    border-bottom: 1px solid var(--aoc-border-subtle);
+    vertical-align: top;
+  }
+
+  th {
+    background-color: var(--aoc-bg-elevated);
+    color: var(--aoc-text-primary);
+    font-weight: 600;
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  dt {
+    color: var(--aoc-text-primary);
+    font-weight: 700;
+    margin-top: 0.75rem;
+  }
+
+  dd {
+    margin-left: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: var(--aoc-text-secondary);
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .prose h1 {
+    font-size: 2.125rem;
+    letter-spacing: -0.5px;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--aoc-border-strong);
+  border-radius: var(--aoc-radius-full);
+}

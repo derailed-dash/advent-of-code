@@ -1,0 +1,16 @@
+{% assign repo_url = site.github.repository_url | default: 'https://github.com/derailed-dash/Advent-of-Code' %}
+{% assign owner_url = site.github.owner_url | default: 'https://github.com/derailed-dash' %}
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <p>
+      Maintained by <a href="{{ owner_url }}" target="_blank" rel="noopener noreferrer">{{ site.github.owner_name | default: 'Darren "Dazbo" Lester' }}</a>
+      &middot; <a href="https://darrenlester.net" target="_blank" rel="noopener noreferrer">darrenlester.net</a>
+      &middot; <a href="https://dev.to/dazbo" target="_blank" rel="noopener noreferrer">Dev.to</a>
+      &middot; <a href="https://medium.com/@dazbo" target="_blank" rel="noopener noreferrer">Medium</a>
+    </p>
+    <p>
+      <a href="{{ repo_url }}" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
+      &middot; <a href="https://adventofcode.com/" target="_blank" rel="noopener noreferrer">Advent of Code</a>
+    </p>
+  </div>
+</footer>

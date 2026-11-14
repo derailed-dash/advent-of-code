@@ -1,0 +1,91 @@
+{% assign repo_url = site.github.repository_url | default: 'https://github.com/derailed-dash/Advent-of-Code' %}
+<header class="site-header">
+  <div class="site-header__inner">
+    <div class="site-header__left">
+      <button
+        id="sidebar-toggle"
+        type="button"
+        class="mobile-menu-btn"
+        aria-label="Open navigation menu"
+        aria-controls="site-sidebar"
+        aria-expanded="false"
+      >&#9776;</button>
+
+      <a class="site-brand" href="{{ '/' | relative_url }}">
+        <span class="brand-star" aria-hidden="true">&#9733;</span>
+        <span><span class="brand-accent">Dazbo's</span> Advent of Code</span>
+      </a>
+    </div>
+
+    <nav class="header-nav" aria-label="Primary">
+      <a
+        href="{{ '/' | relative_url }}"
+        class="header-nav__link{% if page.url == '/' %} is-active{% endif %}"
+      >Home</a>
+
+      <a
+        href="{{ '/python/' | relative_url }}"
+        class="header-nav__link{% if page.layout == 'journey-page' or page.url contains '/python/' %} is-active{% endif %}"
+      >Python Journey</a>
+
+      <details class="nav-dropdown" id="years-dropdown">
+        <summary class="nav-dropdown__summary{% if page.year %} is-active{% endif %}">
+          <span>{% if page.year %}{{ page.year }}{% else %}Years{% endif %}</span>
+          <span aria-hidden="true">&#9662;</span>
+        </summary>
+        <div class="nav-dropdown__menu">
+          {% for item in site.data.navigation.pages reversed %}
+            {% if item.name != 'Home' and item.name != 'Python Journey' %}
+              {% assign item_year_str = item.name | append: '' %}
+              {% assign page_year_str = page.year | append: '' %}
+              <a
+                href="{{ item.link | relative_url }}"
+                class="nav-dropdown__item{% if item_year_str == page_year_str %} is-active{% endif %}"
+              >
+                <span>{{ item.name }}</span>
+                <span class="nav-dropdown__meta">
+                  {% if item.members and item.members.size > 0 %}
+                    {{ item.members.size }} days
+                  {% elsif item_year_str == '2026' %}
+                    Upcoming
+                  {% elsif item_year_str == '2020' %}
+                    Code Index
+                  {% else %}
+                    Notebook
+                  {% endif %}
+                </span>
+              </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </details>
+
+      <a
+        href="https://darrenlester.net"
+        class="header-nav__link"
+        target="_blank"
+        rel="noopener noreferrer"
+      >darrenlester.net &#8599;</a>
+
+      <a
+        href="{{ repo_url }}"
+        class="header-nav__link"
+        target="_blank"
+        rel="noopener noreferrer"
+      >GitHub &#8599;</a>
+    </nav>
+
+    <div class="site-header__actions">
+      <button
+        id="theme-toggle"
+        type="button"
+        class="theme-toggle-btn"
+        aria-label="Toggle colour theme"
+        aria-pressed="false"
+      >
+        <span id="theme-toggle-icon" aria-hidden="true">&#9728;</span>
+        <span id="theme-toggle-label">Light</span>
+      </button>
+    </div>
+  </div>
+</header>

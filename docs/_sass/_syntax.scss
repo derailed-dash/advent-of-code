@@ -1,0 +1,251 @@
+.prose :not(pre) > code {
+  background-color: var(--aoc-inline-code-bg);
+  border: 1px solid var(--aoc-border-subtle);
+  border-radius: var(--aoc-radius-xs);
+  padding: 0.12em 0.4em;
+  font-family: var(--aoc-font-mono);
+  font-size: 0.875em;
+  color: var(--aoc-text-primary);
+  word-break: break-word;
+}
+
+.prose div.highlighter-rouge,
+.prose figure.highlight,
+.prose > pre {
+  background-color: var(--aoc-code-bg);
+  border: 1px solid var(--aoc-code-border);
+  border-radius: var(--aoc-radius-md);
+  margin: 0 0 1.4rem;
+  overflow: hidden;
+}
+
+.prose li > div.highlighter-rouge,
+.prose li > pre {
+  margin-top: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.code-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: var(--aoc-code-header-bg);
+  border-bottom: 1px solid var(--aoc-code-border);
+  font-family: var(--aoc-font-mono);
+  font-size: 0.75rem;
+  color: #9AA5BC;
+}
+
+.code-toolbar__lang {
+  text-transform: lowercase;
+  font-weight: 500;
+}
+
+.copy-code-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: var(--aoc-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #E8ECF4;
+  font-family: var(--aoc-font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+  }
+
+  &.is-copied {
+    border-color: #34D399;
+    color: #34D399;
+  }
+}
+
+.prose pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  background-color: var(--aoc-code-bg);
+  color: #E6EDF3;
+  font-family: var(--aoc-font-mono);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+
+  code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    word-break: normal;
+  }
+}
+
+/* Legacy inline terminal colour tags */
+grn {
+  color: #66FF00;
+}
+
+ylw {
+  color: #FFE066;
+}
+
+red {
+  color: #FF6B6B;
+}
+
+mag {
+  color: #F472B6;
+}
+
+cyn {
+  color: #22D3EE;
+}
+
+/* Rouge syntax highlighting */
+.highlight table {
+  width: 100%;
+  margin: 0;
+  border: 0;
+}
+
+.highlight table td {
+  padding: 4px 8px;
+  border: 0;
+}
+
+.highlight table pre {
+  margin: 0;
+  padding: 0;
+}
+
+.highlight,
+.highlight .w {
+  color: #E6EDF3;
+}
+
+.highlight .hll {
+  background-color: rgba(187, 134, 252, 0.16);
+}
+
+.highlight .err {
+  color: #FF6B6B;
+  background-color: rgba(255, 107, 107, 0.14);
+  font-weight: 700;
+}
+
+.highlight .c,
+.highlight .cd,
+.highlight .ch,
+.highlight .cm,
+.highlight .cpf,
+.highlight .c1,
+.highlight .cs {
+  color: #7E8CA6;
+  font-style: italic;
+}
+
+.highlight .cp {
+  color: #FFD166;
+}
+
+.highlight .k,
+.highlight .kd,
+.highlight .kn,
+.highlight .kp,
+.highlight .kr,
+.highlight .kt,
+.highlight .kv {
+  color: #C792EA;
+  font-weight: 500;
+}
+
+.highlight .nf,
+.highlight .fm,
+.highlight .nc,
+.highlight .nn,
+.highlight .nb,
+.highlight .bp,
+.highlight .ne {
+  color: #82AAFF;
+}
+
+.highlight .na,
+.highlight .nd,
+.highlight .nt {
+  color: #FFD166;
+}
+
+.highlight .no,
+.highlight .nv,
+.highlight .vc,
+.highlight .vg,
+.highlight .vi,
+.highlight .vm {
+  color: #E8ECF4;
+}
+
+.highlight .s,
+.highlight .sa,
+.highlight .sb,
+.highlight .sc,
+.highlight .dl,
+.highlight .sd,
+.highlight .s2,
+.highlight .sh,
+.highlight .sx,
+.highlight .s1,
+.highlight .ss {
+  color: #A5D6A7;
+}
+
+.highlight .sr {
+  color: #4FD1C5;
+}
+
+.highlight .si,
+.highlight .se {
+  color: #4FD1C5;
+}
+
+.highlight .m,
+.highlight .mb,
+.highlight .mf,
+.highlight .mh,
+.highlight .mi,
+.highlight .il,
+.highlight .mo,
+.highlight .mx,
+.highlight .kc {
+  color: #FFD166;
+}
+
+.highlight .o,
+.highlight .ow,
+.highlight .p,
+.highlight .pi {
+  color: #4FD1C5;
+}
+
+.highlight .gi {
+  color: #34D399;
+}
+
+.highlight .gd {
+  color: #FF6B6B;
+}
+
+.highlight .gh,
+.highlight .gu {
+  color: #82AAFF;
+  font-weight: 700;
+}

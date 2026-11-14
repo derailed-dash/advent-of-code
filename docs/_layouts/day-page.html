@@ -1,53 +1,120 @@
 ---
 layout: default
 ---
-{% assign year_str = page.year | append: "" %}
-{% assign the_year = site.data.navigation.pages | where: 'name', year_str %}
-{% assign prev = page.day | minus: 1 %}
-{% assign next = page.day | plus: 1 %}
-{% assign current_page = the_year[0].members | where: 'name', page.day %}
-{% assign prev_page = the_year[0].members | where: 'name', prev %}
-{% assign next_page = the_year[0].members | where: 'name', next %}
-{%- if page.main_img and page.main_img.link -%}
-<img src="{{ page.main_img.link | relative_url }}" alt="{{ page.main_img.name }}" style="margin:15px 10px 10px 10px; float: right; width:330px" />
-{%- endif -%}
+{% assign repo_url = site.github.repository_url | default: 'https://github.com/derailed-dash/Advent-of-Code' %}
+{% assign year_str = page.year | append: '' %}
+{% assign year_entry = site.data.navigation.pages | where: 'name', year_str | first %}
+{% assign prev_num = page.day | minus: 1 %}
+{% assign next_num = page.day | plus: 1 %}
+{% assign current_day = nil %}
+{% assign prev_day = nil %}
+{% assign next_day = nil %}
+{% if year_entry and year_entry.members %}
+  {% assign current_day = year_entry.members | where: 'name', page.day | first %}
+  {% assign prev_day = year_entry.members | where: 'name', prev_num | first %}
+  {% assign next_day = year_entry.members | where: 'name', next_num | first %}
+{% endif %}
+{% if year_entry and year_entry.link %}
+  {% assign year_url = year_entry.link %}
+{% else %}
+  {% assign year_url = '/' | append: year_str | append: '/' %}
+{% endif %}
 
-<h1>{{ page.topic}} {{ page.year }} - {{ page.title }}</h1>
-<p>
-  <a class="dazbo-link-button" href='https://adventofcode.com/{{ page.year }}/day/{{ page.day }}' target="_blank">{{ page.title }}: {{ current_page[0].problem }}</a>
-</p>
+<header class="walkthrough-header">
+  <div class="walkthrough-topbar">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="{{ '/' | relative_url }}">Home</a>
+      <span aria-hidden="true">/</span>
+      <a href="{{ year_url | relative_url }}">{{ page.year }}</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">{{ page.title }}</span>
+    </nav>
 
-<h2>Useful Links</h2>
+    {% if prev_day or next_day %}
+      <div class="day-nav-top">
+        {% if prev_day %}
+          <a class="day-nav-pill" href="{{ prev_day.link | strip | relative_url }}" aria-label="Previous day: Day {{ prev_day.name }}">&#8249; Day {{ prev_day.name }}</a>
+        {% endif %}
+        {% if next_day %}
+          <a class="day-nav-pill" href="{{ next_day.link | strip | relative_url }}" aria-label="Next day: Day {{ next_day.name }}">Day {{ next_day.name }} &#8250;</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
 
-<p>
-{% if prev_page[0] %}<a class="dazbo-link-button nav-button" href="{{ prev_page[0].link | relative_url }}">&#8249;</a>{%- endif -%}
-{%- if next_page[0] -%}<a class="dazbo-link-button nav-button" href="{{ next_page[0].link | relative_url }}">&#8250;</a>{% endif %}
-</p>
+  <div class="walkthrough-hero">
+    <div class="walkthrough-meta">
+      <div class="walkthrough-kicker">{{ page.topic | default: 'Advent of Code' }} {{ page.year }}</div>
+      <h1>{{ page.title }}{% if current_day and current_day.problem %}: {{ current_day.problem }}{% endif %}</h1>
 
-<ul>
-  <li><a href="{{ the_year[0].link | relative_url }}">{{ page.year }} Main Page</a></li>
-  <li><a href="{{ site.github.repository_url }}/tree/master/src/AoC_{{ page.year }}" target="_blank">My solution code</a></li>
-</ul>
+      <div class="action-pills">
+        <a
+          class="aoc-problem-pill"
+          href="https://adventofcode.com/{{ page.year }}/day/{{ page.day }}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >&#9733; AoC Problem &#8599;</a>
 
-<h2>Concepts and Packages Demonstrated</h2>
+        <a
+          class="repo-action-pill"
+          href="{{ repo_url }}/tree/master/src/AoC_{{ page.year }}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Solution Code &#8599;</a>
 
-<p>{% for item in page.tags %}
-{%- if item.link -%}
-<a class="dazbo-link-button" href='{{ item.link }}' target="_blank">{{ item.name }}</a>
-{%- endif -%}
-{% endfor %}
-</p>
+        <a class="repo-action-pill" href="{{ year_url | relative_url }}">{{ page.year }} Index</a>
+      </div>
 
-<p>
-{% for item in page.tags %}
-{%- if item.link == Nil -%}
-<span class="dazbo-nolink-button">{{ item.name }}</span>
-{%- endif -%}
-{% endfor %}
-</p>
+      {% if page.tags and page.tags.size > 0 %}
+        <div class="concept-section-label">Concepts &amp; Packages Demonstrated</div>
+        <div class="concept-pills">
+          {% for item in page.tags %}
+            {% if item.link %}
+              {% assign first_char = item.link | slice: 0, 1 %}
+              {% if first_char == '/' %}
+                <a class="concept-pill concept-pill--internal" href="{{ item.link | relative_url }}">{{ item.name }}</a>
+              {% else %}
+                <a class="concept-pill concept-pill--external" href="{{ item.link }}" target="_blank" rel="noopener noreferrer">{{ item.name }} &#8599;</a>
+              {% endif %}
+            {% else %}
+              <span class="concept-pill concept-pill--static">{{ item.name }}</span>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    {% if page.main_img and page.main_img.link %}
+      <div class="page-hero-media">
+        <img
+          class="page-hero-thumb"
+          src="{{ page.main_img.link | relative_url }}"
+          alt="{{ page.main_img.name | default: page.title | escape }}"
+        />
+      </div>
+    {% endif %}
+  </div>
+</header>
+
 {{ content }}
 
-<p>
-  {% if prev_page[0] %}<a class="dazbo-link-button nav-button" href="{{ prev_page[0].link | relative_url }}">&#8249;</a>{%- endif -%}
-  {%- if next_page[0] -%}<a class="dazbo-link-button nav-button" href="{{ next_page[0].link | relative_url }}">&#8250;</a>{% endif %}
-</p>
+{% if prev_day or next_day %}
+  <nav class="day-nav-cards" aria-label="Adjacent days">
+    <div>
+      {% if prev_day %}
+        <a class="day-nav-card day-nav-card--prev" href="{{ prev_day.link | strip | relative_url }}">
+          <span class="day-nav-card__dir">&#8249; Previous Day</span>
+          <span class="day-nav-card__title">Day {{ prev_day.name }}{% if prev_day.problem %}: {{ prev_day.problem }}{% endif %}</span>
+        </a>
+      {% endif %}
+    </div>
+    <div>
+      {% if next_day %}
+        <a class="day-nav-card day-nav-card--next" href="{{ next_day.link | strip | relative_url }}">
+          <span class="day-nav-card__dir">Next Day &#8250;</span>
+          <span class="day-nav-card__title">Day {{ next_day.name }}{% if next_day.problem %}: {{ next_day.problem }}{% endif %}</span>
+        </a>
+      {% endif %}
+    </div>
+  </nav>
+{% endif %}
