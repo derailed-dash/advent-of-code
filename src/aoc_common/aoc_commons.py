@@ -43,7 +43,7 @@ logger.setLevel(logging.INFO)
 
 load_dotenv() # load environment variables
 
-def setup_logging(level: int = logging.INFO) -> None:
+def setup_logging(level: int | str = logging.INFO) -> None:
     """Configures the root logger with Rich logging.
 
     Passes ``force=True`` so repeated calls in scripts or Jupyter notebooks
