@@ -895,7 +895,7 @@ class VisGuardMap(GuardMap):
             self._plot_info = self._setup_fig()
             self._frame_index = 0
     
-    def _setup_fig(self) -> tuple[object, object]:
+    def _setup_fig(self) -> tuple[object, object, float, dict[str, object]]:
         """ Initialise the plot """   
         my_dpi = 120
         fig, axes = plt.subplots(figsize=(1024/my_dpi, 768/my_dpi), dpi=my_dpi, facecolor="white") # set size in pixels

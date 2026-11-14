@@ -205,7 +205,7 @@ Google Colab runs on an isolated virtual machine in the cloud that does not have
 
 ```python
 # Install aoc_common directly from the GitHub repository into Colab:
-!pip install -q "git+https://github.com/derailed-dash/Advent-of-Code.git#subdirectory=src"
+!pip install -q "git+https://github.com/derailed-dash/Advent-of-Code.git"
 
 import aoc_common.aoc_commons as ac
 ```

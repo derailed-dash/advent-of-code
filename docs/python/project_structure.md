@@ -45,11 +45,10 @@ Here is how my AoC repository is structured:
 | `src/aoc_common/runner.py` | Rich console runner driving `run_puzzle`, `SampleInput` checks, and automatic execution timing |
 | `src/aoc_common/cli.py` | Unified repository CLI (`uv run aoc run`, `list`, `fetch`, `new-year`, `clean-inputs`) |
 | `src/template_folder/template.py` | [Template v3](/python/my-aoc-template3) starter script (`-p`, `-s`, `--no-samples`, `-d`, `--json`) |
-| `src/template_folder/jupyter_template.ipynb` | Starter Jupyter notebook template |
+| `src/template_folder/Dazbo's_Advent_of_Code_Template.ipynb` | Starter Jupyter notebook template |
 | `src/tests/test_aoc_commons.py` | Offline unit tests for common algorithms and spatial primitives |
 | `src/tests/test_runner_and_cli.py` | Offline unit tests for the test runner and CLI parser |
 | `scripts/create_year.sh` | Standalone Bash fallback script to scaffold `src/AoC_<year>/d01..d<days>` |
-| `scripts/git-crypt-helper.sh` | Automation script to synchronise parallel `.enc` secret twins (`status`, `sync-from-enc`, `sync-to-enc`) |
 | `docs/` | Jekyll documentation site styled with the custom **Midnight AoC** dark-first theme |
 | `docs/YYYY/` | Jekyll Markdown walkthroughs for each puzzle day |
 | `docs/python/` | Reusable Python concepts, tutorials, and guides |
@@ -73,4 +72,4 @@ uv run aoc new-year 2024 --days 25
 Each generated day folder (e.g. `src/AoC_2026/d01/`) contains:
 
 - `d01.py` — A standalone solution script based on [Template v3](/python/my-aoc-template3).
-- `input/` — Subdirectory holding `sample_input_part_1.txt` and `sample_input_part_2.txt`. Real puzzle input (`input/input.txt`) is downloaded lazily on demand via `uv run aoc fetch` or upon running against real data, avoiding empty placeholder files in version control.
+- `input/` — Subdirectory holding `sample_input_part_1.txt` (reused by Part 2 by default unless a puzzle introduces a separate second sample). Real puzzle input (`input/input.txt`) is downloaded lazily on demand via `uv run aoc fetch` or upon running against real data, avoiding empty placeholder files in version control.

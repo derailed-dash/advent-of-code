@@ -136,7 +136,7 @@ print(f"\nbin digits length: {bin_digit_len}")
 # The "#" means "include 0b prefix"
 # The 0 means include leading zeros
 # The 6 means total length of digits (including the 0b)
-format_specifier = f"#{0}{int(bin_digit_len) + 2}b"
+format_specifier = f"#0{bin_digit_len + 2}b"
 print(f"Format specifier: {format_specifier}")
 
 bin_val_as_bin_str = bin(int(BIN_VAL_AS_STR, 2))

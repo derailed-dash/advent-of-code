@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
 Historically, Windows `cmd.exe` did not interpret ANSI escape codes natively, so older Python code (and earlier AoC chapters in this repository) relied on `colorama.init(autoreset=True)` plus hand-rolled `ColouredFormatter` classes.
 
-Modern Windows Terminal, PowerShell, Linux, and macOS consoles support ANSI natively, and `Rich` handles terminal capability detection automatically (stripping colour cleanly when output is piped to a file or `--json` is used). Consequently, `colorama` is no longer part of core AoC dependencies — it remains strictly inside the optional `legacy` extra in [`pyproject.toml`](https://github.com/derailed-dash/Advent-of-Code/blob/main/pyproject.toml) so untouched 2015–2024 scripts stay runnable.
+Modern Windows Terminal, PowerShell, Linux, and macOS consoles support ANSI natively, and `Rich` handles terminal capability detection automatically (stripping colour cleanly when output is piped to a file or `--json` is used). Consequently, `colorama` is no longer part of core AoC dependencies — it remains strictly inside the optional `legacy` extra in [`pyproject.toml`](https://github.com/derailed-dash/Advent-of-Code/blob/master/pyproject.toml) so untouched 2015–2024 scripts stay runnable.
 
 ---
 

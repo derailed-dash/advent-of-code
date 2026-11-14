@@ -11,6 +11,7 @@ tags:
     link: https://docs.python.org/3/library/heapq.html
   - name: Shortest Path Algorithms
     link: /python/shortest_paths
+mathjax: true
 ---
 
 ## Page Contents

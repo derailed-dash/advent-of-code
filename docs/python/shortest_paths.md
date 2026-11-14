@@ -218,9 +218,9 @@ Notice how setting `heuristic=lambda _: 0` turns `astar` directly back into Dijk
 ## AoC Examples in This Repository
 
 - **[2016 Day 11](/2016/11)** — State-space BFS over floor-and-chip configurations with symmetry pruning
-- **[2018 Day 15](https://github.com/derailed-dash/Advent-of-Code/tree/main/src/AoC_2018)** — Grid BFS with deterministic reading-order tie-breaking
+- **[2018 Day 15](https://github.com/derailed-dash/Advent-of-Code/tree/master/src/AoC_2018)** — Grid BFS with deterministic reading-order tie-breaking
 - **[2021 Day 15](/2021/15)** — Weighted risk grid solved with Dijkstra (`heapq`)
 - **[2022 Day 12](/2022/12)** — Heightmap hill-climbing with `Grid` + BFS
-- **[2023 Day 17](https://github.com/derailed-dash/Advent-of-Code/blob/main/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb)** — Crucible shortest path with `(point, direction, streak)` state nodes
-- **[2024 Day 16](https://github.com/derailed-dash/Advent-of-Code/blob/main/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb)** — Reindeer Maze: weighted `(point, heading)` Dijkstra plus tracking all tied optimal paths
-- **[2024 Day 18](https://github.com/derailed-dash/Advent-of-Code/blob/main/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb)** — BFS combined with `binary_search` over falling byte coordinates
+- **[2023 Day 17](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb)** — Crucible shortest path with `(point, direction, streak)` state nodes
+- **[2024 Day 16](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb)** — Reindeer Maze: weighted `(point, heading)` Dijkstra plus tracking all tied optimal paths
+- **[2024 Day 18](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb)** — BFS combined with `binary_search` over falling byte coordinates

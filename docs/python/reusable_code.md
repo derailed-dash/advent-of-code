@@ -13,7 +13,7 @@ Across years of Advent of Code puzzles, the same supporting chores appear on alm
 
 Early in this repository, helper classes were copied from day to day or imported from an external shared library (`type_defs`, later `dazbo_commons`). That created tight coupling and made older solutions drift whenever utility signatures changed.
 
-Today, all shared AoC infrastructure lives directly inside this repository in the [`src/aoc_common/`](https://github.com/derailed-dash/Advent-of-Code/tree/main/src/aoc_common) package, installed editably into the `.venv` managed by [`uv`](https://docs.astral.sh/uv/) and tested offline with `pytest`. Legacy extras (`dazbo-commons` and `colorama`) remain opt-in only so untouched 2015–2024 scripts keep working without rewriting history.
+Today, all shared AoC infrastructure lives directly inside this repository in the [`src/aoc_common/`](https://github.com/derailed-dash/Advent-of-Code/tree/master/src/aoc_common) package, installed editably into the `.venv` managed by [`uv`](https://docs.astral.sh/uv/) and tested offline with `pytest`. Legacy extras (`dazbo-commons` and `colorama`) remain opt-in only so untouched 2015–2024 scripts keep working without rewriting history.
 
 ---
 
@@ -23,13 +23,13 @@ Today, all shared AoC infrastructure lives directly inside this repository in th
 | :--- | :--- | :--- |
 | **2015–2021** | Copy-pasted boilerplate (`Template v1`) & local helper snippets | Quick to start, hard to fix bugs across days |
 | **2022–2024** | External `dazbo_commons` (`dc`) package + `Template v2` | Reduced duplication, but coupled AoC to unrelated utilities, `colorama`, and eager `.env` side effects |
-| **2025+** | Local [`aoc_common`](https://github.com/derailed-dash/Advent-of-Code/tree/main/src/aoc_common) (`ac`) + `runner` + CLI + `Template v3` | Zero external `dazbo_commons` dependency, Python >= 3.13, `Rich` logging, offline test suite, notebook-safe paths, and automatic sample verification |
+| **2025+** | Local [`aoc_common`](https://github.com/derailed-dash/Advent-of-Code/tree/master/src/aoc_common) (`ac`) + `runner` + CLI + `Template v3` | Zero external `dazbo_commons` dependency, Python >= 3.13, `Rich` logging, offline test suite, notebook-safe paths, and automatic sample verification |
 
 ---
 
 ## Package Layout
 
-[`src/aoc_common/`](https://github.com/derailed-dash/Advent-of-Code/tree/main/src/aoc_common) is split into three cohesive modules, with key symbols re-exported at package level (`import aoc_common as ac`):
+[`src/aoc_common/`](https://github.com/derailed-dash/Advent-of-Code/tree/master/src/aoc_common) is split into three cohesive modules, with key symbols re-exported at package level (`import aoc_common as ac`):
 
 | Module | Responsibility |
 | :--- | :--- |
@@ -195,7 +195,7 @@ For the full script structure, `--json` telemetry, sample assertions, and CLI fl
 
 ## Offline Testing & Static Gate
 
-All shared modules are backed by an offline `pytest` suite in [`src/tests/`](https://github.com/derailed-dash/Advent-of-Code/tree/main/src/tests) (`test_aoc_commons.py` and `test_runner_and_cli.py`) that uses temporary directories and mock HTTP responses so it never touches real secrets or hits `adventofcode.com`:
+All shared modules are backed by an offline `pytest` suite in [`src/tests/`](https://github.com/derailed-dash/Advent-of-Code/tree/master/src/tests) (`test_aoc_commons.py` and `test_runner_and_cli.py`) that uses temporary directories and mock HTTP responses so it never touches real secrets or hits `adventofcode.com`:
 
 ```bash
 # Run the full offline static & test gate (codespell, ruff, pyright, pytest):

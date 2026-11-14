@@ -104,7 +104,7 @@ Some files need to be untracked in plaintext — such as local `.env` files with
 
 ### Automating Secrets with git-crypt-helper.sh
 
-To keep plaintext secrets and their encrypted `.enc` twins synchronised without manual copy-paste errors, this repository uses `scripts/git-crypt-helper.sh` (also exposed via `make sync-secrets`):
+To keep plaintext secrets and their encrypted `.enc` twins synchronised without manual copy-paste errors, we use `git-crypt-helper.sh` from `PATH` (wrapped in this repository by `make sync-secrets`):
 
 ```bash
 # Check encryption state and sync status across all parallel .enc files

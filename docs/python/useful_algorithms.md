@@ -13,6 +13,7 @@ tags:
     link: https://realpython.com/binary-search-python/
   - name: Shortest Path Algorithms
     link: /python/shortest_paths
+mathjax: true
 ---
 
 ## Page Contents

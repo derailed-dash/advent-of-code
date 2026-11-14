@@ -150,7 +150,7 @@ In Advent of Code, assertions are fundamental for verifying puzzle logic against
 In [Template v3](/python/my-aoc-template3), this verification is formalised using `aoc_common` (`ac`):
 
 - **`ac.validate(actual, expected)`**: A concise assertion helper that checks whether an actual calculation matches an expected answer, raising `AssertionError(f"{actual} != {expected}")` on failure.
-- **`SampleInput` and `ac.check_samples()`**: Puzzle scripts define declarative test pairs (`PART1_SAMPLES: list[ac.SampleInput] = [...]`). When running tests (or using `uv run aoc -s`), `ac.check_samples()` temporarily enables `DEBUG` logging, runs each sample through the parser and solver function, and asserts the expected result with `ac.validate`.
+- **`SampleInput` and `ac.check_samples()`**: Puzzle scripts define declarative test pairs (`PART1_SAMPLES: list[ac.SampleInput] = [...]`). When running tests (or using `uv run aoc run <target> -s`), `ac.check_samples()` temporarily enables `DEBUG` logging, runs each sample through the parser and solver function, and asserts the expected result with `ac.validate`.
 
 ## Examples
 
