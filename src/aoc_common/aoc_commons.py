@@ -1,83 +1,101 @@
-""" 
-Author: Darren
-Date: March 2023
+"""Core utilities, spatial primitives, and puzzle helpers for Advent of Code solutions.
 
-A set of helper functions, reusable classes and attributes used by my AoC solutions 
-Test with tests/test_aoc_commons.py
+Purpose & Value:
+    Provides a self-contained, zero-``dazbo-commons`` standard library for both standalone
+    Template v3 scripts and interactive Jupyter/Colab notebooks. Importing this module is
+    side-effect-free: ``.env`` discovery and AoC HTTP calls happen lazily only when input
+    retrieval is invoked.
 
-You can import as follows:
-import aoc_common.aoc_commons as ac                           
+Mechanics & Capabilities:
+    - **Paths & Input Caching**: :func:`get_aoc_locations` resolves year/day directories
+      from either script paths (``__file__``) or notebook working directories (including
+      Colab/Drive fallbacks). :func:`write_puzzle_input_file` loads ``AOC_SESSION_COOKIE``
+      on demand, sends AoC's recommended ``User-Agent`` header, and caches ``input.txt``.
+    - **Logging & Diagnostics**: :func:`setup_logging` configures Rich console handlers
+      (targeting ``stderr`` when requested so ``--json`` stdout stays clean);
+      :func:`top_and_tail` and :func:`timer` support quick inspection and profiling.
+    - **2D / 3D Spatial & Grid Primitives**: :class:`Point`, :class:`Point3D`,
+      :class:`Vectors`, :class:`VectorDicts`, :class:`Grid`, :func:`bounding_box`, and
+      :func:`render_points` for dense grids and sparse coordinate clouds.
+    - **Algorithms**: :func:`binary_search`, :func:`lower_bound`, :func:`upper_bound`,
+      :func:`merge_intervals`, :func:`get_factors`, and :func:`to_base_n`.
+
+Typical usage:
+    ``import aoc_common.aoc_commons as ac`` or ``from aoc_common import Point, Grid``.
 """
-# py -m pip install requests python-dotenv
+
 from __future__ import annotations
 
 import contextlib
 import logging
+import math
 import operator
 import os
 import time
-from collections.abc import Sequence
-from dataclasses import asdict, dataclass
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from enum import Enum
 from functools import cache
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, TypeGuard, overload
 
 import requests
-from dotenv import load_dotenv  # python-dotenv
+from dotenv import load_dotenv
+from rich.console import Console
 from rich.logging import RichHandler
 
 AOC_USER_AGENT = "github.com/derailed-dash/Advent-of-Code by derailed.dash@gmail.com"
+_BASE_DIGITS = "0123456789abcdefghijklmnopqrstuvwxyz"
 
-##########################################################################
-# SETUP LOGGING
-#
-# Create a new instance of "logger" in the client application
-# Set to your preferred logging level
-# And call setup_logging() from this module
-##########################################################################
-
-# logger for aoc_commons only
-logger = logging.getLogger(__name__) # aoc_common.aoc_commons
+# Logger for aoc_commons internals
+logger = logging.getLogger(__name__)  # aoc_common.aoc_commons
 logger.setLevel(logging.INFO)
 
-load_dotenv() # load environment variables
 
-def setup_logging(level: int | str = logging.INFO) -> None:
-    """Configures the root logger with Rich logging.
+##########################################################################
+# LOGGING AND PATHS
+##########################################################################
+
+
+def setup_logging(level: int | str = logging.INFO, *, stderr: bool = False) -> None:
+    """Configure the root logger with Rich console logging.
 
     Passes ``force=True`` so repeated calls in scripts or Jupyter notebooks
     cleanly replace existing root handlers without duplicating log output.
+    Set ``stderr=True`` when structured JSON output is written to ``stdout``.
     """
     logging.basicConfig(
         level=level,
         format="%(asctime)s.%(msecs)03d %(message)s",
         datefmt="%H:%M:%S",
-        handlers=[RichHandler(
-            rich_tracebacks=True,
-            show_path=False,
-            markup=True,
-            show_time=False,  # Disable Rich's time since we're using our own
-        )],
+        handlers=[
+            RichHandler(
+                console=Console(stderr=True) if stderr else None,
+                rich_tracebacks=True,
+                show_path=False,
+                markup=True,
+                show_time=False,  # Disable Rich's time since we format our own
+            )
+        ],
         force=True,
     )
 
+
 @dataclass
 class Locations:
-    """ Dataclass for storing various location properties """
-    script_name: str # The name of this script
-    script_dir: Path # The path where this script is hosted
-    input_dir: Path  # A directory called "input", under the script_dir
-    output_dir: Path # A directory called "output", under the script_dir
-    input_file: Path # A file called input.txt, under the input_dir
+    """Dataclass for storing filesystem paths associated with a puzzle script."""
 
-def get_locations(calling_file_path: str, sub_folder="") -> Locations:
-    """ Set various paths, based on the location of the calling script. """
+    script_name: str
+    script_dir: Path
+    input_dir: Path
+    output_dir: Path
+    input_file: Path
 
-    # Get the directory of the calling script
-    script_dir = Path(calling_file_path).resolve().parent
 
-    # If a sub_folder is provided, append it to the script_dir
+def get_locations(calling_file_path: str | Path, sub_folder: str | Path = "") -> Locations:
+    """Resolve script, input, and output paths relative to ``calling_file_path``."""
+    resolved = Path(calling_file_path).resolve()
+    script_dir = resolved.parent
     if sub_folder:
         script_dir = script_dir / sub_folder
 
@@ -86,24 +104,69 @@ def get_locations(calling_file_path: str, sub_folder="") -> Locations:
     output_dir = script_dir / "output"
     input_file = input_dir / "input.txt"
 
-    return Locations(script_name, script_dir,
-                     input_dir,
-                     output_dir,
-                     input_file)
+    return Locations(
+        script_name=script_name,
+        script_dir=script_dir,
+        input_dir=input_dir,
+        output_dir=output_dir,
+        input_file=input_file,
+    )
 
-def setup_file_logging(a_logger: logging.Logger, folder: str|Path=""):
-    """ Add a FileHandler to the specified logger. File name is based on the logger name.
-    In calling code, we can add a line like this:
-    ac.setup_file_logging(logger, locations.output_dir)
 
-    Args:
-        a_logger (Logger): The existing logger
-        folder (str): Where the log file will be created. Will be created if it doesn't exist
+def get_aoc_locations(
+    year: int,
+    day: int,
+    caller_file: str | Path | None = None,
+    *,
+    base_dir: str | Path | None = None,
+) -> Locations:
+    """Resolve AoC paths safely for both standalone scripts and Jupyter/Colab notebooks.
+
+    When ``caller_file`` is supplied (typically ``__file__``), this delegates
+    to :func:`get_locations`. When ``caller_file`` is ``None``, it walks upward
+    from ``base_dir`` (or the current working directory) for a repository root
+    containing both ``pyproject.toml`` and ``src/`` to target
+    ``src/AoC_<year>/d<day:02d>``, falling back to ``<base_dir>/d<day:02d>`` in
+    standalone environments such as Google Colab.
     """
-    Path(folder).mkdir(parents=True, exist_ok=True)     # Create directory if it does not exist
-    file_handler = logging.FileHandler(Path(folder, a_logger.name + ".log"), mode='w')
-    file_fmt = logging.Formatter(fmt="%(asctime)s.%(msecs)03d:%(name)s:%(levelname)8s: %(message)s", 
-                                datefmt='%H:%M:%S')
+    if year < 2015:
+        raise ValueError(f"AoC year must be >= 2015, got {year}")
+    if not 1 <= day <= 25:
+        raise ValueError(f"AoC day must be between 1 and 25, got {day}")
+
+    if caller_file is not None:
+        return get_locations(caller_file)
+
+    start = Path(base_dir).resolve() if base_dir is not None else Path.cwd().resolve()
+    repo_root = next(
+        (
+            candidate
+            for candidate in (start, *start.parents)
+            if (candidate / "pyproject.toml").is_file() and (candidate / "src").is_dir()
+        ),
+        None,
+    )
+    day_folder = f"d{day:02d}"
+    script_dir = repo_root / "src" / f"AoC_{year}" / day_folder if repo_root is not None else start / day_folder
+    input_dir = script_dir / "input"
+    return Locations(
+        script_name=f"aoc{year}{day_folder}",
+        script_dir=script_dir,
+        input_dir=input_dir,
+        output_dir=script_dir / "output",
+        input_file=input_dir / "input.txt",
+    )
+
+
+def setup_file_logging(a_logger: logging.Logger, folder: str | Path = "") -> None:
+    """Attach a UTF-8 ``FileHandler`` named after ``a_logger`` under ``folder``."""
+    target_dir = Path(folder)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    file_handler = logging.FileHandler(target_dir / f"{a_logger.name}.log", mode="w", encoding="utf-8")
+    file_fmt = logging.Formatter(
+        fmt="%(asctime)s.%(msecs)03d:%(name)s:%(levelname)8s: %(message)s",
+        datefmt="%H:%M:%S",
+    )
     file_handler.setFormatter(file_fmt)
     a_logger.addHandler(file_handler)
 
@@ -116,9 +179,10 @@ def top_and_tail(
 ) -> Any:
     """Summarise a sequence of lines by returning its first and last ``block_size`` items.
 
-    Non-sequence inputs (including ``str`` and ``bytes``) are returned unchanged.
+    Non-sequence inputs (including ``str``, ``bytes``, and ``bytearray``) are
+    returned unchanged.
     """
-    if not isinstance(data, Sequence) or isinstance(data, (str, bytes, bytearray)):
+    if not isinstance(data, Sequence) or isinstance(data, str | bytes | bytearray):
         return data
     if not data:
         return ""
@@ -139,128 +203,243 @@ def top_and_tail(
     tail_start = len(data) - block_size
     tail = [format_line(i, line) for i, line in enumerate(data[tail_start:], start=tail_start)]
     return "\n".join([*top, "...", *tail])
-    
+
+
 ##################################################################
-# Retrieving input data
+# RETRIEVING INPUT DATA
 ##################################################################
-    
+
+
 def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
-    """ Use session key to obtain user's unique data for this year and day.
-    Retrieves the data and writes it as a local file.
-    
-    Only retrieve if the input file does not already exist and have content.
-    Raises a ValueError if unable to perform request.
-    Requires env: AOC_SESSION_COOKIE, which can be set from the .env.
-    Returns str:
-      - input_file, if the file already exists
-      - otherwise, the data retrieved from the request
+    """Download the user's AoC puzzle input to ``locations.input_file`` if not cached.
+
+    Loads ``.env`` lazily if ``AOC_SESSION_COOKIE`` is not already set in the
+    environment. Returns ``locations.input_file.name`` if a non-empty file
+    already exists locally; otherwise returns the downloaded puzzle text.
+    Raises ``ValueError`` if the session cookie is missing or HTTP retrieval fails.
     """
     input_path = Path(locations.input_file)
     if input_path.exists() and input_path.stat().st_size > 0:
         logger.debug("%s already exists", input_path.name)
         return input_path.name
 
-    session_cookie = os.getenv('AOC_SESSION_COOKIE')
+    session_cookie = os.getenv("AOC_SESSION_COOKIE")
     if not session_cookie:
-        raise ValueError("Could not retrieve session cookie.")        
-    
-    logger.info('Session cookie retrieved: %s...%s', session_cookie[0:6], session_cookie[-6:])
-    
-    # Create input folder, if it doesn't exist
-    if not locations.input_dir.exists():
-        locations.input_dir.mkdir(parents=True, exist_ok=True)
-    
+        load_dotenv()
+        session_cookie = os.getenv("AOC_SESSION_COOKIE")
+    if not session_cookie:
+        raise ValueError("Could not retrieve session cookie.")
+
+    logger.info("Session cookie retrieved: %s...%s", session_cookie[:6], session_cookie[-6:])
+
+    locations.input_dir.mkdir(parents=True, exist_ok=True)
+
     url = f"https://adventofcode.com/{year}/day/{day}/input"
     cookies = {"session": session_cookie}
     headers = {"User-Agent": AOC_USER_AGENT}
     response = requests.get(url, cookies=cookies, headers=headers, timeout=15)
-    
-    data = ""
+
     if response.status_code == 200:
         data = response.text
-    
-        with open(locations.input_file, 'w') as file:
-            logger.debug("Writing input file %s", os.path.basename(locations.input_file))
+        with open(input_path, "w", encoding="utf-8") as file:
+            logger.debug("Writing input file %s", input_path.name)
             file.write(data)
-            return data
-    else:
-        raise ValueError("Unable to retrieve input data.\n" +
-                         f"HTTP response: {response.status_code}\n" +
-                         f"{response.reason}: {response.content.decode('utf-8').strip()}")
-       
+        return data
+
+    raise ValueError(
+        "Unable to retrieve input data.\n"
+        f"HTTP response: {response.status_code}\n"
+        f"{response.reason}: {response.content.decode('utf-8').strip()}"
+    )
+
+
 #################################################################
 # TESTING
 #################################################################
 
-def validate(test, answer):
-    """
-    Args:
-        test: the answer given by our solution
-        answer: the expected answer, e.g. from instructions
-    """
+
+def validate(test: Any, answer: Any) -> None:
+    """Assert that a sample test result matches the expected answer."""
     if test != answer:
         raise AssertionError(f"{test} != {answer}")
+
 
 #################################################################
 # POINTS, VECTORS AND GRIDS
 #################################################################
 
-@dataclass(frozen=True)
+
+def _is_int_not_bool(value: object) -> TypeGuard[int]:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+@dataclass(frozen=True, order=True)
 class Point:
-    """ Class for storing a point x,y coordinate """
+    """Immutable, hashable, ordered 2D integer coordinate ``(x, y)``."""
+
     x: int
     y: int
-        
-    def __add__(self, other: Point):
-        return Point(self.x + other.x, self.y + other.y)
-    
-    def __mul__(self, other: Point):
-        """ (x, y) * (a, b) = (xa, yb) """
-        return Point(self.x * other.x, self.y * other.y)
-    
-    def __sub__(self, other: Point):
-        return self + Point(-other.x, -other.y)
 
-    def yield_neighbours(self, include_diagonals=True, include_self=False):
-        """ Generator to yield neighbouring Points """
-        
-        deltas: list
+    def __add__(self, other: Point) -> Point:
+        if isinstance(other, Point):
+            return Point(self.x + other.x, self.y + other.y)
+        return NotImplemented
+
+    @overload
+    def __mul__(self, other: Point) -> Point: ...
+
+    @overload
+    def __mul__(self, other: int) -> Point: ...
+
+    def __mul__(self, other: Point | int) -> Point:
+        """Multiply elementwise with another ``Point`` or scale by an integer."""
+        if isinstance(other, Point):
+            return Point(self.x * other.x, self.y * other.y)
+        if _is_int_not_bool(other):
+            return Point(self.x * other, self.y * other)
+        return NotImplemented
+
+    def __rmul__(self, other: int) -> Point:
+        """Scale this ``Point`` when written as ``scalar * point``."""
+        if _is_int_not_bool(other):
+            return Point(self.x * other, self.y * other)
+        return NotImplemented
+
+    def __sub__(self, other: Point) -> Point:
+        if isinstance(other, Point):
+            return Point(self.x - other.x, self.y - other.y)
+        return NotImplemented
+
+    def yield_neighbours(
+        self,
+        include_diagonals: bool = True,
+        include_self: bool = False,
+    ) -> Iterator[Point]:
+        """Yield neighbouring ``Point``s in 8-way or 4-way orthogonal order."""
+        deltas: list[tuple[int, int]]
         if not include_diagonals:
             deltas = [vector.value for vector in Vectors if abs(vector.value[0]) != abs(vector.value[1])]
         else:
             deltas = [vector.value for vector in Vectors]
-        
+
         if include_self:
             deltas.append((0, 0))
-        
-        for delta in deltas:
-            yield Point(self.x + delta[0], self.y + delta[1])
 
-    def neighbours(self, include_diagonals=True, include_self=False) -> list[Point]:
-        """ Return all the neighbours, with specified constraints.
-        It wraps the generator with a list. """
-        return list(self.yield_neighbours(include_diagonals, include_self))
-    
-    def get_specific_neighbours(self, directions: list[Vectors]) -> list[Point]:
-        """ Get neighbours, given a specific list of allowed locations """
-        return [(self + Point(*vector.value)) for vector in list(directions)]
-    
+        for dx, dy in deltas:
+            yield Point(self.x + dx, self.y + dy)
+
+    def neighbours(
+        self,
+        include_diagonals: bool = True,
+        include_self: bool = False,
+    ) -> list[Point]:
+        """Return all neighbouring ``Point``s matching the given constraints."""
+        return list(self.yield_neighbours(include_diagonals=include_diagonals, include_self=include_self))
+
+    def get_specific_neighbours(self, directions: Iterable[Vectors]) -> list[Point]:
+        """Return neighbours obtained by stepping along each vector in ``directions``."""
+        return [Point(self.x + vector.value[0], self.y + vector.value[1]) for vector in directions]
+
     @staticmethod
     def manhattan_distance(a_point: Point) -> int:
-        """ Return the Manhattan distance value of this vector """
-        return sum(abs(coord) for coord in asdict(a_point).values())     
-        
+        """Return the L1 Manhattan norm ``|x| + |y|`` of ``a_point``."""
+        return abs(a_point.x) + abs(a_point.y)
+
     def manhattan_distance_from(self, other: Point) -> int:
-        """ Manhattan distance between this Vector and another Vector """
-        diff = self-other
-        return Point.manhattan_distance(diff)  
-        
-    def __repr__(self):
+        """Return the Manhattan distance between ``self`` and ``other``."""
+        return abs(self.x - other.x) + abs(self.y - other.y)
+
+    def __repr__(self) -> str:
         return f"P({self.x},{self.y})"
 
+
+_ORTHOGONAL_3D_DELTAS: tuple[tuple[int, int, int], ...] = (
+    (1, 0, 0),
+    (-1, 0, 0),
+    (0, 1, 0),
+    (0, -1, 0),
+    (0, 0, 1),
+    (0, 0, -1),
+)
+_ALL_3D_DELTAS: tuple[tuple[int, int, int], ...] = tuple(
+    (dx, dy, dz) for dx in (-1, 0, 1) for dy in (-1, 0, 1) for dz in (-1, 0, 1) if (dx, dy, dz) != (0, 0, 0)
+)
+
+
+@dataclass(frozen=True, order=True)
+class Point3D:
+    """Immutable, hashable, ordered 3D integer coordinate ``(x, y, z)``."""
+
+    x: int
+    y: int
+    z: int
+
+    def __add__(self, other: Point3D) -> Point3D:
+        if isinstance(other, Point3D):
+            return Point3D(self.x + other.x, self.y + other.y, self.z + other.z)
+        return NotImplemented
+
+    def __sub__(self, other: Point3D) -> Point3D:
+        if isinstance(other, Point3D):
+            return Point3D(self.x - other.x, self.y - other.y, self.z - other.z)
+        return NotImplemented
+
+    @overload
+    def __mul__(self, other: Point3D) -> Point3D: ...
+
+    @overload
+    def __mul__(self, other: int) -> Point3D: ...
+
+    def __mul__(self, other: Point3D | int) -> Point3D:
+        """Multiply elementwise with another ``Point3D`` or scale by an integer."""
+        if isinstance(other, Point3D):
+            return Point3D(self.x * other.x, self.y * other.y, self.z * other.z)
+        if _is_int_not_bool(other):
+            return Point3D(self.x * other, self.y * other, self.z * other)
+        return NotImplemented
+
+    def __rmul__(self, other: int) -> Point3D:
+        """Scale this ``Point3D`` when written as ``scalar * point``."""
+        if _is_int_not_bool(other):
+            return Point3D(self.x * other, self.y * other, self.z * other)
+        return NotImplemented
+
+    def yield_neighbours(
+        self,
+        include_diagonals: bool = True,
+        include_self: bool = False,
+    ) -> Iterator[Point3D]:
+        """Yield 26-way or 6-way orthogonal neighbouring ``Point3D``s."""
+        deltas = _ALL_3D_DELTAS if include_diagonals else _ORTHOGONAL_3D_DELTAS
+        for dx, dy, dz in deltas:
+            yield Point3D(self.x + dx, self.y + dy, self.z + dz)
+        if include_self:
+            yield self
+
+    def neighbours(
+        self,
+        include_diagonals: bool = True,
+        include_self: bool = False,
+    ) -> list[Point3D]:
+        """Return neighbouring ``Point3D``s matching the given constraints."""
+        return list(self.yield_neighbours(include_diagonals=include_diagonals, include_self=include_self))
+
+    @staticmethod
+    def manhattan_distance(a_point: Point3D) -> int:
+        """Return the L1 Manhattan norm ``|x| + |y| + |z|`` of ``a_point``."""
+        return abs(a_point.x) + abs(a_point.y) + abs(a_point.z)
+
+    def manhattan_distance_from(self, other: Point3D) -> int:
+        """Return the Manhattan distance between ``self`` and ``other``."""
+        return abs(self.x - other.x) + abs(self.y - other.y) + abs(self.z - other.z)
+
+    def __repr__(self) -> str:
+        return f"P3D({self.x},{self.y},{self.z})"
+
+
 class Vectors(Enum):
-    """ Enumeration of 8 directions.
-    Note: y axis increments in the North direction, i.e. N = (0, 1) """
+    """Enumeration of 8 compass directions using Cartesian ``y``-up orientation (``N = (0, 1)``)."""
+
     N = (0, 1)
     NE = (1, 1)
     E = (1, 0)
@@ -269,203 +448,381 @@ class Vectors(Enum):
     SW = (-1, -1)
     W = (-1, 0)
     NW = (-1, 1)
-    
+
     @property
-    def y_inverted(self):
-        """ Return vector, but with y-axis inverted. I.e. N = (0, -1) """
+    def y_inverted(self) -> tuple[int, int]:
+        """Return vector tuple with ``y`` inverted for top-left grid coordinates (``N = (0, -1)``)."""
         x, y = self.value
         return (x, -y)
 
+    def to_point(self, *, y_down: bool = False) -> Point:
+        """Convert this direction vector into a ``Point`` step."""
+        x, y = self.y_inverted if y_down else self.value
+        return Point(x, y)
+
+
 class VectorDicts:
-    """ Contains constants for Vectors """
+    """Direction-character lookup tables for Cartesian (``y``-up) and grid (``y``-down) coordinates."""
+
     ARROWS: ClassVar[dict[str, tuple[int, int]]] = {
-        '^': Vectors.N.value,
-        '>': Vectors.E.value,
-        'v': Vectors.S.value,
-        '<': Vectors.W.value
+        "^": Vectors.N.value,
+        ">": Vectors.E.value,
+        "v": Vectors.S.value,
+        "<": Vectors.W.value,
     }
 
     DIRS: ClassVar[dict[str, tuple[int, int]]] = {
-        'U': Vectors.N.value,
-        'R': Vectors.E.value,
-        'D': Vectors.S.value,
-        'L': Vectors.W.value
+        "U": Vectors.N.value,
+        "R": Vectors.E.value,
+        "D": Vectors.S.value,
+        "L": Vectors.W.value,
+    }
+
+    ARROWS_Y_DOWN: ClassVar[dict[str, tuple[int, int]]] = {
+        "^": Vectors.N.y_inverted,
+        ">": Vectors.E.y_inverted,
+        "v": Vectors.S.y_inverted,
+        "<": Vectors.W.y_inverted,
+    }
+
+    DIRS_Y_DOWN: ClassVar[dict[str, tuple[int, int]]] = {
+        "U": Vectors.N.y_inverted,
+        "R": Vectors.E.y_inverted,
+        "D": Vectors.S.y_inverted,
+        "L": Vectors.W.y_inverted,
     }
 
     NINE_BOX: ClassVar[dict[str, tuple[int, int]]] = {
-        # x, y vector for adjacent locations
-        'tr': (1, 1),
-        'mr': (1, 0),
-        'br': (1, -1),
-        'bm': (0, -1),
-        'bl': (-1, -1),
-        'ml': (-1, 0),
-        'tl': (-1, 1),
-        'tm': (0, 1)
+        # (x, y) vector for adjacent locations in a 3x3 neighbourhood
+        "tr": (1, 1),
+        "mr": (1, 0),
+        "br": (1, -1),
+        "bm": (0, -1),
+        "bl": (-1, -1),
+        "ml": (-1, 0),
+        "tl": (-1, 1),
+        "tm": (0, 1),
     }
 
-class Grid:
-    """ 2D grid of point values. """
-    def __init__(self, grid_array: list) -> None:
-        self.array = grid_array
-        self._width = len(self.array[0])
-        self._height = len(self.array)
-        
-    def value_at_point(self, point: Point):
-        """ The value at this point """
+
+def bounding_box(points: Iterable[Point]) -> tuple[Point, Point]:
+    """Return the inclusive ``(min_point, max_point)`` corners spanning ``points``."""
+    iterator = iter(points)
+    first = next(iterator, None)
+    if first is None:
+        raise ValueError("Cannot compute bounding box of empty point collection.")
+
+    min_x = max_x = first.x
+    min_y = max_y = first.y
+    for point in iterator:
+        if point.x < min_x:
+            min_x = point.x
+        elif point.x > max_x:
+            max_x = point.x
+        if point.y < min_y:
+            min_y = point.y
+        elif point.y > max_y:
+            max_y = point.y
+
+    return Point(min_x, min_y), Point(max_x, max_y)
+
+
+def render_points(
+    points: Mapping[Point, Any] | Iterable[Point],
+    *,
+    empty_char: str = ".",
+    fill_char: str = "#",
+    y_down: bool = True,
+) -> str:
+    """Render a sparse ``Point`` mapping or collection as a multiline string grid."""
+    if isinstance(points, Mapping):
+        grid_map: dict[Point, str] = {point: str(value) for point, value in points.items()}
+    else:
+        grid_map = dict.fromkeys(points, fill_char)
+
+    if not grid_map:
+        return ""
+
+    min_pt, max_pt = bounding_box(grid_map)
+    y_range = range(min_pt.y, max_pt.y + 1) if y_down else range(max_pt.y, min_pt.y - 1, -1)
+    x_range = range(min_pt.x, max_pt.x + 1)
+    return "\n".join("".join(grid_map.get(Point(x, y), empty_char) for x in x_range) for y in y_range)
+
+
+class Grid[T]:
+    """2D rectangular grid indexed by ``Point(x, y)`` with top-left origin."""
+
+    def __init__(self, grid_array: Sequence[Iterable[T]]) -> None:
+        self.array: list[list[T]] = [list(row) for row in grid_array]
+        self._height: int = len(self.array)
+        self._width: int = len(self.array[0]) if self._height > 0 else 0
+        if any(len(row) != self._width for row in self.array):
+            raise ValueError("All grid rows must have equal length.")
+
+    def value_at_point(self, point: Point) -> T:
+        """Return the cell value at ``point``."""
         return self.array[point.y][point.x]
 
-    def set_value_at_point(self, point: Point, value):
+    def set_value_at_point(self, point: Point, value: T) -> None:
+        """Set the cell value at ``point``."""
         self.array[point.y][point.x] = value
-        
+
     def valid_location(self, point: Point) -> bool:
-        """ Check if a location is within the grid """
-        if (0 <= point.x < self._width and  0 <= point.y < self._height):
-            return True
-        
-        return False
+        """Return ``True`` if ``point`` lies within the grid bounds."""
+        return 0 <= point.x < self._width and 0 <= point.y < self._height
 
     @property
-    def width(self):
-        """ Array width (cols) """
+    def width(self) -> int:
+        """Grid width (number of columns)."""
         return self._width
-    
+
     @property
-    def height(self):
-        """ Array height (rows) """
+    def height(self) -> int:
+        """Grid height (number of rows)."""
         return self._height
-    
+
+    @property
+    def cols(self) -> list[list[T]]:
+        """Return columns as a list of mutable column lists."""
+        if not self.array or self._width == 0:
+            return []
+        return [list(col) for col in zip(*self.array)]
+
     def all_points(self) -> list[Point]:
-        points = [Point(x, y) for x in range(self.width) for y in range(self.height)]
-        return points
+        """Return all ``Point`` coordinates contained within the grid."""
+        return [Point(x, y) for y in range(self.height) for x in range(self.width)]
 
-    def rows_as_str(self):
-        """ Return the grid """
-        return ["".join(str(char) for char in row) for row in self.array]
-        
-    def cols_as_str(self):
-        """ Render columns as str. Returns: list of str """
-        cols_list = list(zip(*self.array))
-        return ["".join(str(char) for char in col) for col in cols_list]
+    def find_points_with_value(self, value: T) -> list[Point]:
+        """Return all grid coordinates whose current cell value equals ``value``."""
+        return [Point(x, y) for y, row in enumerate(self.array) for x, cell in enumerate(row) if cell == value]
 
-    def transpose(self) -> Grid:
-        return Grid(list(zip(*self.array)))
-    
-    def flip_vertical(self) -> Grid:
-        """ Flip the array about the vertical axis of symmetry """
+    def neighbours_of(
+        self,
+        point: Point,
+        *,
+        include_diagonals: bool = True,
+        include_self: bool = False,
+    ) -> list[Point]:
+        """Return in-bounds neighbours of ``point`` inside this grid."""
+        return [
+            candidate
+            for candidate in point.yield_neighbours(include_diagonals=include_diagonals, include_self=include_self)
+            if self.valid_location(candidate)
+        ]
+
+    def rows_as_str(self) -> list[str]:
+        """Render each row as a concatenated string."""
+        return ["".join(str(cell) for cell in row) for row in self.array]
+
+    def cols_as_str(self) -> list[str]:
+        """Render each column as a concatenated string."""
+        return ["".join(str(cell) for cell in col) for col in self.cols]
+
+    def transpose(self) -> Grid[T]:
+        """Return a new ``Grid`` with rows and columns swapped."""
+        return Grid(self.cols)
+
+    def flip_vertical(self) -> Grid[T]:
+        """Flip the grid horizontally (left-to-right mirror across the vertical axis)."""
         return Grid([row[::-1] for row in self.array])
-    
-    def flip_horizontal(self) -> Grid:
-        """ Flip the array about the horizontal axis of symmetry """
+
+    def flip_horizontal(self) -> Grid[T]:
+        """Flip the grid vertically (top-to-bottom mirror across the horizontal axis)."""
         return Grid(self.array[::-1])
-    
-    def rotate_90(self, ccw=False) -> Grid:
-        """ Rotates 90 degrees CW. It works by transposing, then flipping. """
-        if ccw:
-            flipped = self.flip_vertical()
-        else:
-            flipped = self.flip_horizontal()
-    
+
+    def rotate_90(self, ccw: bool = False) -> Grid[T]:
+        """Rotate the grid 90 degrees clockwise, or counter-clockwise when ``ccw=True``."""
+        flipped = self.flip_vertical() if ccw else self.flip_horizontal()
         return flipped.transpose()
-        
+
     def __repr__(self) -> str:
         return f"Grid(size={self.width}*{self.height})"
-    
+
     def __str__(self) -> str:
         return "\n".join("".join(map(str, row)) for row in self.array)
 
-#################################################################
-# CONSOLE STUFF
-#################################################################
-
-def cls():
-    """ Clear console """
-    os.system('cls' if os.name=='nt' else 'clear')
 
 #################################################################
-# USEFUL FUNCTIONS
+# CONSOLE UTILITIES
 #################################################################
 
-def binary_search(target, low:int, high:int, func, *func_args, reverse_search=False):
-    """ Generic binary search function that takes a target to find,
-    low and high values to start with, and a function to run, plus its args. 
-    Implicitly returns None if the search is exceeded. """
-    
-    res = None  # just set it to something that isn't the target
-    candidate = 0  # initialise; we'll set it to the mid point in a second
-    
-    while low < high:  # search exceeded        
-        candidate = int((low+high) // 2)  # pick mid-point of our low and high        
-        res = func(candidate, *func_args) # run our function, whatever it is
-        logger.debug("%d -> %d", candidate, res)
+
+def cls() -> None:
+    """Clear the terminal console."""
+    os.system("cls" if os.name == "nt" else "clear")
+
+
+#################################################################
+# ALGORITHMS AND TIMING
+#################################################################
+
+
+def binary_search(
+    target: Any,
+    low: int,
+    high: int,
+    func: Callable[..., Any],
+    *func_args: Any,
+    reverse_search: bool = False,
+) -> int | None:
+    """Search integers ``[low, high]`` for ``candidate`` where ``func(candidate, *func_args) == target``.
+
+    Assumes ``func`` is monotonically increasing (or decreasing when
+    ``reverse_search=True``). Returns ``None`` if no integer in ``[low, high]``
+    evaluates to ``target``.
+    """
+    low_i = int(low)
+    high_i = int(high)
+    comp = operator.lt if not reverse_search else operator.gt
+
+    while low_i <= high_i:
+        candidate = (low_i + high_i) // 2
+        res = func(candidate, *func_args)
+        logger.debug("%d -> %s", candidate, res)
         if res == target:
-            return candidate  # solution found
-        
-        comp = operator.lt if not reverse_search else operator.gt
+            return candidate
+
         if comp(res, target):
-            low = candidate
+            low_i = candidate + 1
         else:
-            high = candidate
-            
-def merge_intervals(intervals: list[list]) -> list[list]:
-    """ Takes intervals in the form [[a, b][c, d][d, e]...]
-    Intervals can overlap.  Compresses to minimum number of non-overlapping intervals. """
-    intervals.sort()
-    stack = []
-    stack.append(intervals[0])
-    
-    for interval in intervals[1:]:
-        # Check for overlapping interval
-        if stack[-1][0] <= interval[0] <= stack[-1][-1]:
-            stack[-1][-1] = max(stack[-1][-1], interval[-1])
+            high_i = candidate - 1
+
+    return None
+
+
+def lower_bound(low: int, high: int, predicate: Callable[[int], bool]) -> int | None:
+    """Find the smallest integer in ``[low, high]`` where monotonic ``predicate(x)`` is True.
+
+    Assumes ``predicate`` transitions from ``False`` to ``True`` as ``x``
+    increases. Returns ``None`` if ``predicate(x)`` is never ``True`` in ``[low, high]``.
+    """
+    low_i = int(low)
+    high_i = int(high)
+    best: int | None = None
+
+    while low_i <= high_i:
+        mid = (low_i + high_i) // 2
+        if predicate(mid):
+            best = mid
+            high_i = mid - 1
         else:
-            stack.append(interval)
-      
-    return stack
+            low_i = mid + 1
+
+    return best
+
+
+def upper_bound(low: int, high: int, predicate: Callable[[int], bool]) -> int | None:
+    """Find the largest integer in ``[low, high]`` where monotonic ``predicate(x)`` is True.
+
+    Assumes ``predicate`` transitions from ``True`` to ``False`` as ``x``
+    increases. Returns ``None`` if ``predicate(x)`` is never ``True`` in ``[low, high]``.
+    """
+    low_i = int(low)
+    high_i = int(high)
+    best: int | None = None
+
+    while low_i <= high_i:
+        mid = (low_i + high_i) // 2
+        if predicate(mid):
+            best = mid
+            low_i = mid + 1
+        else:
+            high_i = mid - 1
+
+    return best
+
+
+def merge_intervals(
+    intervals: Iterable[Sequence[int] | range],
+    *,
+    merge_adjacent: bool = False,
+) -> list[list[int]]:
+    """Merge overlapping integer intervals into sorted ``[start, end]`` lists without mutating inputs.
+
+    Unit-step ``range(a, b)`` objects are normalised to closed ``[a, b - 1]`` intervals,
+    skipping empty ranges. Pass ``merge_adjacent=True`` to also coalesce adjacent
+    integer intervals such as ``[1, 5]`` and ``[6, 8]``.
+    """
+    normalised: list[list[int]] = []
+    for interval in intervals:
+        if isinstance(interval, range):
+            if interval.step != 1:
+                raise ValueError(f"range intervals must have step == 1, got {interval.step}")
+            if not interval:
+                continue
+            normalised.append([interval.start, interval.stop - 1])
+        else:
+            if len(interval) != 2:
+                raise ValueError(f"Intervals must have length 2, got {len(interval)}")
+            start, end = int(interval[0]), int(interval[1])
+            if start > end:
+                raise ValueError(f"Invalid interval with start > end: [{start}, {end}]")
+            normalised.append([start, end])
+
+    if not normalised:
+        return []
+
+    normalised.sort()
+    gap = 1 if merge_adjacent else 0
+    merged: list[list[int]] = [normalised[0].copy()]
+
+    for start, end in normalised[1:]:
+        if start <= merged[-1][1] + gap:
+            if end > merged[-1][1]:
+                merged[-1][1] = end
+        else:
+            merged.append([start, end])
+
+    return merged
+
 
 @cache
 def get_factors(num: int) -> set[int]:
-    """ Gets the factors for a given number. Returns a set[int] of factors. 
-        # E.g. when num=8, factors will be 1, 2, 4, 8 """
-    factors = set()
+    """Return all positive integer divisors of ``num``."""
+    if num < 1:
+        raise ValueError(f"num must be a positive integer, got {num}")
 
-    # Iterate from 1 to sqrt of 8,  
-    # since a larger factor of num must be a multiple of a smaller factor already checked
-    for i in range(1, int(num**0.5) + 1):  # e.g. with num=8, this is range(1, 3)
-        if num % i == 0: # if it is a factor, then dividing num by it will yield no remainder
-            factors.add(i)  # e.g. 1, 2
-            factors.add(num//i)  # i.e. 8//1 = 8, 8//2 = 4
-    
+    factors: set[int] = set()
+    for i in range(1, math.isqrt(num) + 1):
+        if num % i == 0:
+            factors.add(i)
+            factors.add(num // i)
     return factors
 
-def to_base_n(number: int, base: int):
-    """ Convert any integer number into a base-n string representation of that number.
-    E.g. to_base_n(38, 5) = 123
 
-    Args:
-        number (int): The number to convert
-        base (int): The base to apply
+def to_base_n(number: int, base: int) -> str:
+    """Convert any integer into its base-``n`` string representation for ``2 <= base <= 36``."""
+    if not 2 <= base <= 36:
+        raise ValueError(f"Base must be between 2 and 36 inclusive, got {base}")
+    if number == 0:
+        return "0"
 
-    Returns:
-        [str]: The string representation of the number
-    """
-    ret_str = ""
-    curr_num = number
-    while curr_num:
-        ret_str = str(curr_num % base) + ret_str
-        curr_num //= base
+    sign = "-" if number < 0 else ""
+    curr = abs(number)
+    digits: list[str] = []
+    while curr:
+        curr, rem = divmod(curr, base)
+        digits.append(_BASE_DIGITS[rem])
 
-    return ret_str if number > 0 else "0"
+    return f"{sign}{''.join(reversed(digits))}"
+
 
 @contextlib.contextmanager
-def timer(description="Execution time"):
-    """A context manager to measure the time taken by a block of code or function.
-    
-    Args:
-    - description (str): A description for the timing output. 
-      Default is "Execution time".
-    """
+def timer(description: str = "Execution time") -> Iterator[None]:
+    """Context manager to log the elapsed wall-clock execution time of a block."""
     t1 = time.perf_counter()
-    yield
-    t2 = time.perf_counter()
-    logger.info(f"{description}: {t2 - t1:.3f} seconds")
+    try:
+        yield
+    finally:
+        t2 = time.perf_counter()
+        logger.info("%s: %.3f seconds", description, t2 - t1)
+
+
+from aoc_common.runner import (  # noqa: E402, F401
+    PartRunSummary,
+    PuzzleRunSummary,
+    SampleInput,
+    check_samples,
+    format_duration,
+    run_puzzle,
+)
