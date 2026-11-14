@@ -16,11 +16,12 @@ import logging
 import operator
 import os
 import time
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from enum import Enum
 from functools import cache
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import requests
 from dotenv import load_dotenv  # python-dotenv
@@ -42,20 +43,23 @@ logger.setLevel(logging.INFO)
 
 load_dotenv() # load environment variables
 
-def setup_logging(level=logging.INFO):
-    """ Configures the root logger with Rich logging. 
-    Use this to setup logging in your solution scripts.
+def setup_logging(level: int | str = logging.INFO) -> None:
+    """Configures the root logger with Rich logging.
+
+    Passes ``force=True`` so repeated calls in scripts or Jupyter notebooks
+    cleanly replace existing root handlers without duplicating log output.
     """
     logging.basicConfig(
         level=level,
         format="%(asctime)s.%(msecs)03d %(message)s",
-        datefmt='%H:%M:%S',
+        datefmt="%H:%M:%S",
         handlers=[RichHandler(
-            rich_tracebacks=True, 
+            rich_tracebacks=True,
             show_path=False,
             markup=True,
-            show_time=False  # Disable Rich's time since we're using our own
-        )]
+            show_time=False,  # Disable Rich's time since we're using our own
+        )],
+        force=True,
     )
 
 @dataclass
@@ -90,7 +94,7 @@ def get_locations(calling_file_path: str, sub_folder="") -> Locations:
 def setup_file_logging(a_logger: logging.Logger, folder: str|Path=""):
     """ Add a FileHandler to the specified logger. File name is based on the logger name.
     In calling code, we can add a line like this:
-    td.setup_file_logging(logger, locations.output_dir)
+    ac.setup_file_logging(logger, locations.output_dir)
 
     Args:
         a_logger (Logger): The existing logger
@@ -102,6 +106,39 @@ def setup_file_logging(a_logger: logging.Logger, folder: str|Path=""):
                                 datefmt='%H:%M:%S')
     file_handler.setFormatter(file_fmt)
     a_logger.addHandler(file_handler)
+
+
+def top_and_tail(
+    data: Sequence[Any] | Any,
+    block_size: int = 5,
+    include_line_numbers: bool = True,
+    zero_indexed: bool = False,
+) -> Any:
+    """Summarise a sequence of lines by returning its first and last ``block_size`` items.
+
+    Non-sequence inputs (including ``str`` and ``bytes``) are returned unchanged.
+    """
+    if not isinstance(data, Sequence) or isinstance(data, (str, bytes, bytearray)):
+        return data
+    if not data:
+        return ""
+
+    start_offset = 0 if zero_indexed else 1
+    max_line_num = len(data) - 1 + start_offset
+    width = len(str(max_line_num))
+
+    def format_line(idx: int, line: Any) -> str:
+        if include_line_numbers:
+            return f"{idx + start_offset:>{width}}: {line}"
+        return str(line)
+
+    if len(data) <= 2 * block_size:
+        return "\n".join(format_line(i, line) for i, line in enumerate(data))
+
+    top = [format_line(i, line) for i, line in enumerate(data[:block_size])]
+    tail_start = len(data) - block_size
+    tail = [format_line(i, line) for i, line in enumerate(data[tail_start:], start=tail_start)]
+    return "\n".join([*top, "...", *tail])
     
 ##################################################################
 # Retrieving input data

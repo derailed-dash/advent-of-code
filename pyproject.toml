@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "advent-of-code"
 version = "0.1.0"
@@ -7,11 +11,10 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.13"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 
 dependencies = [
-    "colorama",
-    "dazbo-commons>=0.2.0",
     "graphviz",
     "imageio",
     "matplotlib",
@@ -52,6 +55,10 @@ jupyter = [
     "jupyter",
     "jupyterlab",
     "jupyterlab-lsp",
+]
+legacy = [
+    "colorama",
+    "dazbo-commons>=0.2.0",
 ]
 
 [tool.ruff]
@@ -98,3 +105,4 @@ ignore-words-list = "ore,ans,nd,rouge,parms,deques"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["aoc_common*"]

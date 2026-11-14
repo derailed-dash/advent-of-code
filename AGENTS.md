@@ -15,7 +15,7 @@ Advent of Code changed from a 25-day event (2015–2024) to a **12-day event fro
 
 | Path | Purpose | Notes |
 | :--- | :--- | :--- |
-| [`src/aoc_common/`](src/aoc_common/aoc_commons.py) | Shared utilities (`Locations`, `Point`, `Grid`, `write_puzzle_input_file`) | Zero dependency on `dazbo_commons`; enforces AoC `User-Agent` header |
+| [`src/aoc_common/`](src/aoc_common/aoc_commons.py) | Shared utilities (`Locations`, `Point`, `Grid`, `write_puzzle_input_file`, `top_and_tail`) | Packaged editably in `.venv`; zero dependency on `dazbo_commons`; enforces AoC `User-Agent` header |
 | [`src/tests/`](src/tests/test_aoc_commons.py) | Offline unit tests (`pytest` / `unittest.mock`) | Must pass completely offline without a live `AOC_SESSION_COOKIE` |
 | [`src/template_folder/`](src/template_folder/template.py) | Starter Python script and Jupyter notebook templates | Target for `scripts/create_year.sh` |
 | `src/AoC_2015/` – `src/AoC_2025/` | Historical AoC puzzle solutions | Excluded from `ruff`, `codespell`, and `pyright` sweeps |
@@ -29,7 +29,7 @@ Advent of Code changed from a 25-day event (2015–2024) to a **12-day event fro
 ## Environment, Dependencies & Static Checks
 
 - Manage the virtual environment strictly with `uv` and [`pyproject.toml`](pyproject.toml) (`requires-python = ">=3.13"`):
-  - Hydrate environment: `make install` (`uv sync --dev --extra jupyter`)
+  - Hydrate environment: `make install` (`uv sync --dev --extra jupyter --extra legacy` — includes `legacy` extras `dazbo-commons` and `colorama` so untouched `2015`–`2024` solutions remain runnable locally; CI runs without `legacy`)
   - Run offline verification gate: `make check` (`codespell -s`, `ruff check --diff`, `pyright`, and `pytest src/tests`)
 - **Historical Solutions Policy**: Do **NOT** run bulk `ruff --fix`, `ruff format`, or `codespell -w` across `src/AoC_2015`–`src/AoC_2025` or prose inside `docs/2015`–`docs/2025` unless explicitly requested. Lint/type gates intentionally cover [`src/aoc_common`](src/aoc_common/aoc_commons.py), [`src/tests`](src/tests/test_aoc_commons.py), [`src/template_folder`](src/template_folder/template.py), and 2026+ code.
 

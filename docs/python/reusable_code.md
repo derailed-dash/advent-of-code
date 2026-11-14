@@ -5,6 +5,7 @@ title: Reusable Code
 ## Page Contents
 
 - [Motivation](#motivation)
+- [Evolution: From `dazbo-commons` (`dc`) to `aoc_common` (`ac`)](#evolution-from-dazbo-commons-dc-to-aoc_common-ac)
 - [aoc_commons.py](#aoc_commonspy)
 - [Unit Tests](#unit-tests)
 
@@ -13,6 +14,17 @@ title: Reusable Code
 In Advent of Code, it's common to need to do similar things over and over.  
 In particular, many problems require working with coordinates, or with many points in a grid.
 Rather than repeating the same code in each solution that requires these things, let's create a shared `aoc_commons.py` module for storing this reusable code.
+
+## Evolution: From `dazbo-commons` (`dc`) to `aoc_common` (`ac`)
+
+Over the years, these helpers went through four main stages:
+
+1. **2021–2022 (`dazbo-commons` on PyPI)**: General-purpose utilities (`colorama`-based `ColouredFormatter`, `retrieve_console_logger`, `Locations`, `top_and_tail`, and `.env` loading) lived in the separate `dazbo-commons` PyPI package.
+2. **May–Sep 2023 (`type_defs.py` → `aoc_commons.py`)**: AoC-specific classes (`Point`, `Vectors`, `Grid`) and puzzle algorithms were extracted in-repo as `type_defs.py` and soon renamed to `aoc_commons.py`.
+3. **May 2024–Oct 2025 (Dual `dc` + `ac`)**: Solutions imported both `dazbo_commons as dc` for general logging/paths and `aoc_common.aoc_commons as ac` for AoC geometry and input retrieval.
+4. **Dec 2025–2026 (Consolidated `ac` + `Rich`)**: Everything was brought back under `aoc_common` using `Rich` (`RichHandler`) for coloured logging, editable packaging in `.venv` so both `.py` scripts and `.ipynb` notebooks import `aoc_common` directly, and `dazbo-commons` moved to an optional `legacy` dependency group for older `2015`–`2024` solutions.
+
+> **Note:** The code listing below preserves the original 2023 walkthrough snapshot (`ColouredFormatter` and `colorama`). The live module in `src/aoc_common/aoc_commons.py` now uses `RichHandler`, and this reference page is scheduled for a Python 3.13+ / `Rich` refresh.
 
 ## aoc_commons.py
 

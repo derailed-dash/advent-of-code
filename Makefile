@@ -11,8 +11,8 @@ GIT_CRYPT_HELPER ?= $(shell command -v git-crypt-helper.sh 2>/dev/null || echo "
 help: ## Show available targets and usage
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z0-9_-]+:.*##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) }' $(MAKEFILE_LIST)
 
-install: ## Install Python and Jupyter dependencies with uv
-	uv sync --dev --extra jupyter
+install: ## Install Python, Jupyter, and legacy AoC dependencies with uv
+	uv sync --dev --extra jupyter --extra legacy
 
 lint: ## Run read-only offline checks (codespell, ruff, pyright)
 	uv run codespell -s

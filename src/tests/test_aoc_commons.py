@@ -10,6 +10,8 @@ from os import path
 from shutil import rmtree
 from unittest.mock import MagicMock, patch
 
+from rich.logging import RichHandler
+
 import aoc_common.aoc_commons as ac
 
 # Set logging level of aoc_commons
@@ -231,6 +233,79 @@ class TestTypes(unittest.TestCase):
         self.assertEqual(ac.to_base_n(24, 12), "20")
         self.assertEqual(ac.to_base_n(0, 12), "0")
         self.assertEqual(ac.to_base_n(57, 10), "57")
+
+    def test_top_and_tail(self):
+        """Verify line summarisation, line numbering options, empty lists, and non-sequences."""
+        short_lines = [f"line {i}" for i in range(1, 11)]
+        expected_short = "\n".join(f"{i:>2}: line {i}" for i in range(1, 11))
+        self.assertEqual(ac.top_and_tail(short_lines), expected_short)
+
+        long_lines = [f"line {i}" for i in range(1, 13)]
+        expected_long = "\n".join([
+            " 1: line 1",
+            " 2: line 2",
+            " 3: line 3",
+            " 4: line 4",
+            " 5: line 5",
+            "...",
+            " 8: line 8",
+            " 9: line 9",
+            "10: line 10",
+            "11: line 11",
+            "12: line 12",
+        ])
+        self.assertEqual(ac.top_and_tail(long_lines), expected_long)
+
+        eight_lines = [f"item {i}" for i in range(1, 9)]
+        expected_custom_block = "\n".join([
+            "1: item 1",
+            "2: item 2",
+            "...",
+            "7: item 7",
+            "8: item 8",
+        ])
+        self.assertEqual(ac.top_and_tail(eight_lines, block_size=2), expected_custom_block)
+
+        expected_no_nums = "\n".join(["item 1", "item 2", "...", "item 7", "item 8"])
+        self.assertEqual(
+            ac.top_and_tail(eight_lines, block_size=2, include_line_numbers=False),
+            expected_no_nums,
+        )
+
+        expected_zero_indexed = "\n".join([
+            "0: item 1",
+            "1: item 2",
+            "...",
+            "6: item 7",
+            "7: item 8",
+        ])
+        self.assertEqual(
+            ac.top_and_tail(eight_lines, block_size=2, zero_indexed=True),
+            expected_zero_indexed,
+        )
+
+        self.assertEqual(ac.top_and_tail([]), "")
+        self.assertEqual(ac.top_and_tail("raw text"), "raw text")
+
+    def test_setup_logging_force_reconfigures_root(self):
+        """Verify setup_logging replaces existing root handlers and updates level."""
+        root_logger = logging.getLogger()
+        original_handlers = root_logger.handlers[:]
+        original_level = root_logger.level
+        dummy_handler = logging.NullHandler()
+
+        try:
+            root_logger.handlers = [dummy_handler]
+            root_logger.setLevel(logging.WARNING)
+
+            ac.setup_logging(level=logging.DEBUG)
+
+            self.assertEqual(root_logger.level, logging.DEBUG)
+            self.assertTrue(any(isinstance(h, RichHandler) for h in root_logger.handlers))
+            self.assertNotIn(dummy_handler, root_logger.handlers)
+        finally:
+            root_logger.handlers = original_handlers
+            root_logger.setLevel(original_level)
           
 if __name__ == "__main__":
     unittest.main(verbosity=2) # if we want to include function names and docstring headers
