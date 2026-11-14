@@ -38,6 +38,9 @@ Repository = "https://github.com/derailed-dash/Advent-of-Code"
 Portfolio = "https://darrenlester.net"
 Blog = "https://medium.com/@dazbo"
 
+[project.scripts]
+aoc = "aoc_common.cli:main"
+
 [dependency-groups]
 dev = [
     "codespell",

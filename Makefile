@@ -1,7 +1,17 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-.PHONY: help install lint fix test check sync-secrets new-year docs docs-build docs-stop clean
+.PHONY: help install lint fix test check sync-secrets list run new-year docs docs-build docs-stop clean
+
+CLI_TARGETS := list run new-year
+PRIMARY_GOAL := $(firstword $(MAKECMDGOALS))
+ifneq ($(filter $(PRIMARY_GOAL),$(CLI_TARGETS)),)
+CLI_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+ifneq ($(CLI_ARGS),)
+.PHONY: $(CLI_ARGS)
+$(eval $(CLI_ARGS):;@:)
+endif
+endif
 
 -include .env.template
 -include .env
@@ -36,9 +46,24 @@ sync-secrets: ## Show git-crypt parallel secrets status
 		git-crypt status -e; \
 	fi
 
-new-year: ## Scaffold AoC year folders: make new-year YEAR=2026 [DAYS=12]
-	@if [ -z "$(YEAR)" ]; then echo "Usage: make new-year YEAR=2026 [DAYS=12]"; exit 1; fi
-	./scripts/create_year.sh "$(YEAR)" "$(if $(DAYS),$(DAYS),12)"
+list: ## List AoC years/progress or one year: make list [2025 | YEAR=2025]
+	uv run aoc list $(if $(CLI_ARGS),$(CLI_ARGS),$(YEAR))
+
+run: ## Run a puzzle: make run <1|01|20251|202501|2025 1> [ARGS="-s -d"]
+	@if [ -n "$(CLI_ARGS)" ]; then \
+		uv run aoc run $(CLI_ARGS) $(ARGS); \
+	elif [ -n "$(YEAR)" ] && [ -n "$(DAY)" ]; then \
+		uv run aoc run "$(YEAR)" "$(DAY)" $(ARGS); \
+	elif [ -n "$(DAY)" ]; then \
+		uv run aoc run "$(DAY)" $(ARGS); \
+	else \
+		echo 'Usage: make run <1|01|20251|202501|YEAR=2026 DAY=1> [ARGS="-s -d"]'; exit 1; \
+	fi
+
+new-year: ## Scaffold AoC year folders: make new-year <2026 | YEAR=2026> [DAYS=12]
+	@year="$(or $(firstword $(CLI_ARGS)),$(YEAR))"; \
+	if [ -z "$$year" ]; then echo "Usage: make new-year <2026 | YEAR=2026> [DAYS=12]"; exit 1; fi; \
+	uv run aoc new-year "$$year" --days "$(if $(DAYS),$(DAYS),12)" $(ARGS)
 
 docs: ## Serve the Jekyll documentation site locally via Docker
 	cd docs && docker compose up

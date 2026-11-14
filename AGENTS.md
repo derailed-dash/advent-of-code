@@ -15,9 +15,9 @@ Advent of Code changed from a 25-day event (2015–2024) to a **12-day event fro
 
 | Path | Purpose | Notes |
 | :--- | :--- | :--- |
-| [`src/aoc_common/`](src/aoc_common/aoc_commons.py) | Shared utilities (`Locations`, `Point`, `Grid`, `write_puzzle_input_file`, `top_and_tail`) | Packaged editably in `.venv`; zero dependency on `dazbo_commons`; enforces AoC `User-Agent` header |
-| [`src/tests/`](src/tests/test_aoc_commons.py) | Offline unit tests (`pytest` / `unittest.mock`) | Must pass completely offline without a live `AOC_SESSION_COOKIE` |
-| [`src/template_folder/`](src/template_folder/template.py) | Starter Python script and Jupyter notebook templates | Target for `scripts/create_year.sh` |
+| [`src/aoc_common/`](src/aoc_common/aoc_commons.py) | Shared utilities (`aoc_commons.py`, `runner.py`, `cli.py` -> `uv run aoc`) | Packaged editably in `.venv`; zero dependency on `dazbo_commons`; enforces AoC `User-Agent` header; notebook-safe `get_aoc_locations` |
+| [`src/tests/`](src/tests/test_aoc_commons.py) | Offline unit tests ([`test_aoc_commons.py`](src/tests/test_aoc_commons.py), [`test_runner_and_cli.py`](src/tests/test_runner_and_cli.py)) | Must pass completely offline without a live `AOC_SESSION_COOKIE` |
+| [`src/template_folder/`](src/template_folder/template.py) | Template v3 script (`-p`, `-s`, `--no-samples`, `-d`, `--json`) and Jupyter notebook template | Target for `scripts/create_year.sh` and `uv run aoc new-year` |
 | `src/AoC_2015/` – `src/AoC_2025/` | Historical AoC puzzle solutions | Excluded from `ruff`, `codespell`, and `pyright` sweeps |
 | [`scripts/create_year.sh`](scripts/create_year.sh) | Scaffolds `src/AoC_<year>/d01..d<days>` | Defaults to `12` days; does not create empty `input.txt` placeholders |
 | [`docs/`](docs/index.md) | Jekyll GitHub Pages site (`https://aoc.just2good.co.uk/`) | Navigation defined in [`docs/_data/navigation.yaml`](docs/_data/navigation.yaml) |

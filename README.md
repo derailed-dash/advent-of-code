@@ -58,8 +58,17 @@ To run the solutions in this repository, you'll need the following:
    ```
 
 3. **Run solutions and checks:**
-   - **Python scripts:**
+   - **Repository CLI (`aoc`):** Run via `uv run aoc ...` (or `make list` / `make run` / `make new-year`):
      ```bash
+     uv run aoc list                     # Overview of all years, day counts, and Standalone/Jupyter format
+     uv run aoc list 2025                # Inspect day scripts and sample/real input readiness for one year
+     uv run aoc run 2026 1 -s            # Template v3 run (samples only)
+     uv run aoc run 2025 1               # Runs legacy standalone scripts too
+     uv run aoc new-year 2026 --dry-run  # Preview scaffolding d01..d12 from Template v3
+     ```
+   - **Python scripts directly:**
+     ```bash
+     uv run python src/AoC_2026/d01/d01.py --sample-only
      uv run python src/AoC_2025/d01/d01.py
      ```
    - **Jupyter Notebooks:** Open directly in VS Code or launch JupyterLab locally:
@@ -70,6 +79,32 @@ To run the solutions in this repository, you'll need the following:
      ```bash
      make check     # runs codespell, ruff, pyright, and pytest src/tests
      ```
+
+## Using the `aoc` CLI
+
+[`pyproject.toml`](pyproject.toml) exposes `[project.scripts] aoc = "aoc_common.cli:main"`, implemented in [`src/aoc_common/cli.py`](src/aoc_common/cli.py). Invoke it from the repository root with `uv run aoc <subcommand> ...` (add `--no-sync` after `uv run` for instant startup once `.venv` is synced via `make install`).
+
+### Subcommands & Parameters
+
+| Command | Parameters & Flags | Purpose |
+| :--- | :--- | :--- |
+| Global | `--root PATH` | Override auto-detected repository root (useful in scripts or tests) |
+| `aoc list` | `[YEAR]` `--json` | List every `AoC_YYYY` year with `Completed/Total` progress (`e.g. 25/25, 12/25, 12/12`) and solution format (`Standalone (.py)`, `Jupyter (.ipynb)`, or `Both`), or inspect `dNN` solved status, scripts, and boolean input/sample readiness for one `YEAR` (terminal output adds clickable OSC 8 hyperlinks on `Year` and `Day` columns pointing to the AoC event and problem pages; never reads input file contents) |
+| `aoc run` | `<TARGET> [DAY]` (`1`, `01`, `d01`, `20251`, `202501`, or `2025 1`) `-p/--part {1,2,all}` `-s/--sample-only` `--no-samples` `-d/--debug` `--json` `--script FILENAME` | Execute a puzzle script; runs Template v3 scripts in-process via [`run_puzzle`](src/aoc_common/runner.py) and legacy scripts via subprocess (when only a day is passed, picks `AOC_YEAR`, else current year if `src/AoC_<year>` exists, else latest existing `AoC_YYYY`; auto-resolves single scripts in historical `dNN_<slug>` folders or prompts with `--script` when multiple variants exist) |
+| `aoc new-year` | `<YEAR>` `--days N` (1–25, default `12`) `--dry-run` `--force` `--json` | Scaffold `src/AoC_<YEAR>/d01..d<days>` from Template v3 without overwriting existing scripts (unless `--force`) and without creating empty `input.txt` files |
+
+Individual Template v3 day scripts (such as [`src/template_folder/template.py`](src/template_folder/template.py)) also accept the same `-p/--part`, `-s/--sample-only`, `--no-samples`, `-d/--debug`, and `--json` flags directly via `uv run python ...` (`-s` and `--no-samples` are mutually exclusive; `--json` emits clean JSON on `stdout` and routes Rich logs to `stderr`).
+
+### `Makefile` Integration
+
+[`Makefile`](Makefile) wraps the primary CLI workflows while leaving standalone shell tooling available:
+
+| Make Target | Underlying Command | Example |
+| :--- | :--- | :--- |
+| `make list` | `uv run aoc list ...` | `make list`, `make list 2025`, or `make list YEAR=2025` |
+| `make run` | `uv run aoc run ...` | `make run 1`, `make run 01`, `make run 20251`, `make run 202501`, or `make run YEAR=2026 DAY=1 ARGS="-s -d"` *(pass runner flags via `ARGS="..."` because `make` intercepts bare `-s`/`-d`)* |
+| `make new-year` | `uv run aoc new-year ...` | `make new-year 2026` or `make new-year YEAR=2026 DAYS=25` |
+| [`scripts/create_year.sh`](scripts/create_year.sh) | Standalone Bash fallback (`sed` scaffold) | `./scripts/create_year.sh 2026` |
 
 ## Structure and Solution Approaches
 
@@ -92,13 +127,13 @@ For some years (e.g., 2023–2024), solutions use Jupyter Notebooks combining Py
 | :--- | :--- |
 | [`docs/`](docs/index.md) | Jekyll source for [aoc.just2good.co.uk](https://aoc.just2good.co.uk/) (`docs/YYYY/` walkthroughs, `docs/python/` guides, `_config.yml`, `docker-compose.yml`) |
 | `src/AoC_YYYY/` | Solution folders (`d01/`..`d12/` from 2025+, `d01/`..`d25/` for 2015–2024), or `.ipynb` notebooks |
-| [`src/aoc_common/`](src/aoc_common/aoc_commons.py) | Shared utility package (`Locations`, `Point`, `Grid`, `write_puzzle_input_file`, algorithms, coloured logging) |
-| [`src/template_folder/`](src/template_folder/template.py) | Starter Python script and Jupyter notebook templates |
-| [`src/tests/`](src/tests/test_aoc_commons.py) | Offline `pytest` / `unittest` suite for `aoc_common` |
+| [`src/aoc_common/`](src/aoc_common/aoc_commons.py) | Shared utility package (`aoc_commons.py`, `runner.py`, `cli.py`: `Locations`, `get_aoc_locations`, `run_puzzle`, `Point`, `Point3D`, `Grid`, algorithms, Rich logging) |
+| [`src/template_folder/`](src/template_folder/template.py) | Starter Python script and Jupyter notebook templates (Template v3) |
+| [`src/tests/`](src/tests/test_aoc_commons.py) | Offline `pytest` / `unittest` suite for `aoc_common`, `runner`, and `aoc` CLI |
 | [`scripts/`](scripts/create_year.sh) | Helper scripts such as [`create_year.sh`](scripts/create_year.sh) |
 | [`.github/workflows/`](.github/workflows/pr-checks.yml) | CI checks (`pr-checks.yml`) and Gemini PR/issue workflows |
 | `.agents/skills/` | Workspace AoC skills (`SKILL.md.enc` encrypted with `git-crypt`) |
-| [`Makefile`](Makefile) | Common targets (`install`, `lint`, `test`, `check`, `new-year`, `docs`, `docs-build`, `docs-stop`, `sync-secrets`) |
+| [`Makefile`](Makefile) | Common targets (`install`, `lint`, `test`, `check`, `list`, `run`, `new-year`, `docs`, `docs-build`, `docs-stop`, `sync-secrets`) |
 | [`pyproject.toml`](pyproject.toml) | Project metadata, dependencies, `ruff`, `codespell`, and `pyright` configuration |
 | [`.env.template`](.env.template) | Template environment variables (`PYTHONPATH=src`, `AOC_SESSION_COOKIE`) |
 | [`AGENTS.md`](AGENTS.md) | Repository guide for coding agents and automated reviewers |
@@ -108,10 +143,10 @@ For some years (e.g., 2023–2024), solutions use Jupyter Notebooks combining Py
 
 Shared utilities live in [`src/aoc_common/aoc_commons.py`](src/aoc_common/aoc_commons.py) and have **zero dependency on `dazbo-commons`**. Because [`pyproject.toml`](pyproject.toml) includes a `[build-system]` packaging `src/aoc_common` editably into `.venv`, both standalone Python scripts and local Jupyter notebooks import `import aoc_common.aoc_commons as ac` directly without setting `PYTHONPATH=src` (and cloud notebooks such as Google Colab install `aoc_common` straight from GitHub):
 
-- **Logging & Output**: `setup_logging` (configured with `RichHandler` and `force=True` for reliable re-initialisation in scripts and notebooks), `setup_file_logging`, and `top_and_tail`.
-- **Paths & Input Retrieval**: `Locations`, `get_locations`, and `write_puzzle_input_file` (with AoC `User-Agent` header enforcement).
-- **Testing & Timing**: `validate` (raising `AssertionError` on mismatch) and the `timer` context manager.
-- **2D Geometry & Algorithms**: `Point`, `Vectors`, `VectorDicts`, and `Grid` classes, plus `binary_search`, `merge_intervals`, `get_factors`, and `to_base_n`.
+- **Logging & Output**: `setup_logging` (configured with `RichHandler`, `force=True`, and `stderr=True` support for `--json` mode), `setup_file_logging`, and `top_and_tail`.
+- **Paths & Input Retrieval**: `Locations`, `get_aoc_locations` (safe in both scripts via `__file__` and Jupyter/Colab notebooks without `__file__`), `get_locations`, and `write_puzzle_input_file` (with AoC `User-Agent` header enforcement).
+- **Runner, Testing & Timing**: `run_puzzle` (`Rich` + `argparse` Template v3 CLI orchestration), `check_samples` (raises `AssertionError` cleanly without `sys.exit`), `validate`, `format_duration`, and the `timer` context manager.
+- **2D/3D Geometry & Algorithms**: `Point`, `Point3D`, `Vectors`, `VectorDicts`, and `Grid` classes, sparse point-cloud helpers (`bounding_box`, `render_points`), plus `binary_search`, `lower_bound`, `upper_bound`, `merge_intervals`, `get_factors`, and `to_base_n`.
 
 #### History: From `dazbo-commons` (`dc`) to `aoc_common` (`ac`)
 
@@ -130,7 +165,8 @@ uv run pytest src/tests
 
 ## Helper Scripts & Makefile Targets
 
-- [`scripts/create_year.sh`](scripts/create_year.sh): Bash script that scaffolds `src/AoC_<year>/d01..d<days>` from `src/template_folder/`. Defaults to `12` days for 2025+ events (`./scripts/create_year.sh 2026` or `make new-year YEAR=2026`), or pass an explicit count for legacy years (`./scripts/create_year.sh 2024 25`).
+- [`uv run aoc new-year <year>`](src/aoc_common/cli.py), `make new-year YEAR=<year>`, and standalone [`scripts/create_year.sh`](scripts/create_year.sh): Scaffold `src/AoC_<year>/d01..d<days>` from [`src/template_folder/template.py`](src/template_folder/template.py) (default `12` days for 2025+; pass `--days 25` / `DAYS=25` for legacy counts).
+- `make list [YEAR=<year>]` & `make run YEAR=<year> DAY=<day> [ARGS="..."]`: Convenience [`Makefile`](Makefile) wrappers around `uv run aoc list` and `uv run aoc run`.
 - `make check`: Runs `codespell -s`, `ruff check --diff`, `pyright`, and `pytest src/tests`.
 
 ## Documentation Website
