@@ -1,3 +1,2 @@
 input*.txt filter=git-crypt diff=git-crypt
 *.enc filter=git-crypt diff=git-crypt
-.gemini/commands/aoc/** filter=git-crypt diff=git-crypt

@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-.PHONY: help install lint fix test check sync-secrets list run fetch new-year docs docs-build docs-stop clean
+.PHONY: help install lint fix test check sync-secrets list run fetch new-year clean-inputs docs docs-build docs-stop clean
 
 CLI_TARGETS := list run fetch new-year
 PRIMARY_GOAL := $(firstword $(MAKECMDGOALS))
@@ -89,6 +89,9 @@ docs-build: ## Build or rebuild the local Jekyll Docker image
 
 docs-stop: ## Stop and remove the local Jekyll documentation container
 	cd docs && docker compose down
+
+clean-inputs: ## Remove locked git-crypt input*.txt files (keeps samples & unlocked inputs)
+	uv run aoc clean-inputs $(ARGS)
 
 clean: ## Remove local Python and Jekyll build caches
 	rm -rf .pytest_cache .ruff_cache .mypy_cache

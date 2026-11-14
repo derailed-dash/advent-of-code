@@ -20,12 +20,13 @@ Mechanics & Coverage:
 
 import json
 import logging
+import os
 import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -225,7 +226,10 @@ def test_check_samples_skips_none_expected_and_none_actual(tmp_path: Path) -> No
 # ---------------------------------------------------------------------------
 
 
-def test_run_puzzle_fresh_parse_per_part_and_none_skipped(tmp_path: Path) -> None:
+def test_run_puzzle_fresh_parse_per_part_and_none_skipped(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     locs = _make_locations(tmp_path, 2026, 2)
     locs.input_file.write_text("1\n2\n3\n", encoding="utf-8")
     part2_seen: list[int] = []
@@ -256,6 +260,29 @@ def test_run_puzzle_fresh_parse_per_part_and_none_skipped(tmp_path: Path) -> Non
 
     assert rc == 0
     assert part2_seen == [1, 2, 3]
+    payload = json.loads(capsys.readouterr().out)
+    part1_summary, part2_summary = payload["parts"]
+    assert part1_summary["status"] == "ok"
+    assert isinstance(part1_summary["elapsed_seconds"], float)
+    assert part2_summary["status"] == "skipped"
+    assert part2_summary["elapsed_seconds"] is None
+
+    # Rich table renders '-' in the Time column for skipped parts returning None
+    rc_table = runner.run_puzzle(
+        year=2026,
+        day=2,
+        part1=part1,
+        part2=part2,
+        parse_input=parse_nums,
+        part1_samples=[("4\n5", 9)],
+        locations=locs,
+        argv=[],
+    )
+    assert rc_table == 0
+    table_out = capsys.readouterr().out
+    part2_line = next(line for line in table_out.splitlines() if "Part 2" in line)
+    part2_cells = [cell.strip() for cell in part2_line.strip("│ ").split("│")]
+    assert part2_cells == ["Part 2", "skipped", "0", "-", "-"]
 
 
 def test_run_puzzle_part_filter_debug_and_sample_flags(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -931,3 +958,110 @@ def test_makefile_forwards_year_d_day_targets() -> None:
     help_proc = subprocess.run(["make", "help"], cwd=repo_root, capture_output=True, text=True, check=False)
     assert help_proc.returncode == 0
     assert "2025d01" in help_proc.stdout
+
+
+def test_cli_clean_inputs_and_locked_input_handling(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    repo = _create_template_repo(tmp_path)
+    assert cli.main(["--root", str(repo), "new-year", "2026", "--days", "2"]) == 0
+    capsys.readouterr()
+
+    d01_input = repo / "src" / "AoC_2026" / "d01" / "input"
+    d02_input = repo / "src" / "AoC_2026" / "d02" / "input"
+    d01_locked = d01_input / "input.txt"
+    d01_sample = d01_input / "sample_input_part_1.txt"
+    d02_plain = d02_input / "input.txt"
+
+    d01_locked.write_bytes(b"\x00GITCRYPT\x00locked-blob")
+    d01_sample.write_text("sample\n", encoding="utf-8")
+    d02_plain.write_text("plaintext-input\n", encoding="utf-8")
+
+    # list detects locked vs ready inputs without leaking contents
+    assert cli.main(["--root", str(repo), "list", "2026", "--json"]) == 0
+    list_json = json.loads(capsys.readouterr().out)
+    d01_entry = next(item for item in list_json["days"] if item["day"] == 1)
+    d02_entry = next(item for item in list_json["days"] if item["day"] == 2)
+    assert d01_entry["has_input"] is False
+    assert d01_entry["input_locked"] is True
+    assert d02_entry["has_input"] is True
+    assert d02_entry["input_locked"] is False
+
+    assert cli.main(["--root", str(repo), "list", "2026"]) == 0
+    table_out = capsys.readouterr().out
+    assert "locked" in table_out
+
+    # fetch treats a locked input.txt as not yet cached
+    assert cli.main(["--root", str(repo), "fetch", "2026d01", "--input-only", "--dry-run", "--json"]) == 0
+    fetch_payload = json.loads(capsys.readouterr().out)
+    assert fetch_payload["input_file"]["action"] == "would_download"
+
+    # clean-inputs --dry-run counts locked vs unlocked inputs without deleting
+    assert cli.main(["--root", str(repo), "clean-inputs", "--dry-run", "--json"]) == 0
+    dry_payload = json.loads(capsys.readouterr().out)
+    assert dry_payload["dry_run"] is True
+    assert dry_payload["removed_count"] == 1
+    assert dry_payload["kept_unlocked_count"] == 1
+    assert d01_locked.exists()
+
+    # clean-inputs removes only the locked blob, preserving sample & unlocked files
+    assert cli.main(["--root", str(repo), "clean-inputs", "--json"]) == 0
+    clean_payload = json.loads(capsys.readouterr().out)
+    assert clean_payload["removed_count"] == 1
+    assert clean_payload["kept_unlocked_count"] == 1
+    assert not d01_locked.exists()
+    assert d01_sample.read_text(encoding="utf-8") == "sample\n"
+    assert d02_plain.read_text(encoding="utf-8") == "plaintext-input\n"
+
+    # Second run is a clean no-op for remaining unlocked files
+    assert cli.main(["--root", str(repo), "clean-inputs", "--json"]) == 0
+    repeat_payload = json.loads(capsys.readouterr().out)
+    assert repeat_payload["removed_count"] == 0
+    assert repeat_payload["kept_unlocked_count"] == 1
+
+
+def test_cli_run_legacy_locked_input_handling(
+    tmp_path: Path,
+    capfd: pytest.CaptureFixture[str],
+) -> None:
+    repo = _create_template_repo(tmp_path)
+    day_dir = repo / "src" / "AoC_2022" / "d02"
+    input_dir = day_dir / "input"
+    input_dir.mkdir(parents=True)
+    (input_dir / "input.txt").write_bytes(b"\x00GITCRYPT\x00locked")
+    (day_dir / "d02.py").write_text(
+        (
+            "from pathlib import Path\n"
+            "def main():\n"
+            '    lines = (Path(__file__).parent / "input" / "input.txt").read_text(encoding="utf-8").splitlines()\n'
+            '    print(f"lines={len(lines)}")\n'
+            'if __name__ == "__main__":\n'
+            "    main()\n"
+        ),
+        encoding="utf-8",
+    )
+
+    # Without cookie, legacy locked input fails cleanly without UnicodeDecodeError
+    with (
+        patch.dict(os.environ, {}, clear=True),
+        patch("aoc_common.aoc_commons.load_dotenv", return_value=False),
+    ):
+        rc_fail = cli.main(["--root", str(repo), "run", "2022d02"])
+    cap_fail = capfd.readouterr()
+    assert rc_fail == 1
+    assert "git-crypt" in cap_fail.err
+    assert "make clean-inputs" in cap_fail.err
+    assert "AOC_SESSION_COOKIE" in cap_fail.err
+
+    # With cookie configured, locked input is overwritten cleanly before subprocess runs
+    ok_response = MagicMock(status_code=200, text="A X\nB Y\n")
+    with (
+        patch.dict(os.environ, {"AOC_SESSION_COOKIE": "cookie123456"}, clear=True),
+        patch("aoc_common.aoc_commons.requests.get", return_value=ok_response) as mock_get,
+    ):
+        rc_ok = cli.main(["--root", str(repo), "run", "2022d02"])
+    cap_ok = capfd.readouterr()
+    assert rc_ok == 0
+    mock_get.assert_called_once()
+    assert "lines=2" in cap_ok.out

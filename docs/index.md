@@ -2,6 +2,7 @@
 layout: default
 title: Dazbo's Advent of Code Walkthroughs
 ---
+
 <img src="{{'/assets/images/AoC-tree.png' | relative_url }}" alt="Advent of Code" style="margin:15px 10px 10px 15px; float: right; width:225px" />
 
 # Welcome to {{ page.title }}
@@ -16,7 +17,7 @@ My hope is that this site will help others to:
 
 Use the navigation above to jump straight into an AoC year. If you're completely new to Python, check out the [Getting Started with Python](/python/) page first.
 
-# Page Navigation
+## Page Navigation
 
 - [What Will You Find in the Python Journey?](#what-will-you-find-in-the-python-journey)
 - [What is Advent of Code?](#what-is-advent-of-code)
@@ -29,7 +30,7 @@ Use the navigation above to jump straight into an AoC year. If you're completely
 
 ## What is Advent of Code?
 
-An awesome [coding challenge](https://adventofcode.com/2021/about){:target="_blank"} created by Eric Wastl,
+An awesome [coding challenge](https://adventofcode.com/about){:target="_blank"} created by Eric Wastl,
 released every December. A new problem is presented each day through the month. 
 Typically the best way to solve any given problem is by writing a program.
 The program can be written in _any language and with any tools you like_.
@@ -40,25 +41,25 @@ others can be a total [PITA](https://acronyms.thefreedictionary.com/PITA){:targe
 Typically, the problems get harder as the month progresses.
 
 You don't have to wait until December to try your hand at AoC though. 
-All the previous [AoC](https://adventofcode.com/2021/events){:target="_blank"} events are available, and can be completed at _any_ time.
+All the previous [AoC](https://adventofcode.com/events){:target="_blank"} events are available, and can be completed at _any_ time.
 
 Each day is split into a Part 1 and a Part 2. A star is awarded for each completed challenge.
 Traditionally (2015–2024) there were 25 puzzles per year (**50 stars to save Christmas!**); from 2025 onwards, Advent of Code switched to a 12-day December format.
 
-[![Advent of Code]({{ './assets/images/AoC-collect-stars.png' | relative_url }})](https://adventofcode.com/2021/about){:target="_blank"}
+[![Advent of Code]({{ './assets/images/AoC-collect-stars.png' | relative_url }})](https://adventofcode.com/about){:target="_blank"}
 
 ## My Solutions
 
-Feel free to peruse the [source code]({{ site.github.repository_url }}){:target="_blank"} directly.
-Each day gets its own folder, which is named for some of the key Python modules and techniques used in that solution.
+Feel free to peruse the [source code]({{ site.github.repository_url }}){:target="_blank"} directly under [`src/`]({{ site.github.repository_url }}/tree/master/src/){:target="_blank"}.
+Most years organise each day into `src/AoC_YYYY/dNN/` folders (with early years also tagging techniques in folder names, and `2023`–`2024` written as Jupyter Notebooks), backed by shared utilities in [`src/aoc_common/`]({{ site.github.repository_url }}/tree/master/src/aoc_common){:target="_blank"}. Each walkthrough page tags the key Python concepts used and links back to the [Python Journey](/python/).
 
-[<img src="{{ './assets/images/AoC_src_folders.png' | relative_url }}" alt="drawing" style="width:300px;"/>]({{ site.github.repository_url }}/tree/master/src/){:target="_blank"}
+[<img src="{{ './assets/images/AoC_src_folders.png' | relative_url }}" alt="Advent of Code source folders" style="width:300px;"/>]({{ site.github.repository_url }}/tree/master/src/){:target="_blank"}
 
 ## More Stuff From Me
 
-### Personal Website & Blog
+### Personal Website & Blogs
 
-You can also find my wider writing, projects, and technical articles on my personal website at **[darrenlester.net](https://darrenlester.net){:target="_blank"}**.
+You can find my wider writing, projects, and technical articles on my personal website at **[darrenlester.net](https://darrenlester.net){:target="_blank"}**, as well as on **[Dev.to (`dazbo`)](https://dev.to/dazbo){:target="_blank"}**.
 
 ### Medium
 
@@ -99,11 +100,12 @@ Here's a list of a few (but not all) of my articles...
 
 - [Compelling Pitches and Arguments for any Scenario: Top Down Thinking (TDT)](https://medium.com/@dazbo/compelling-pitches-and-arguments-for-any-scenario-top-down-thinking-108c9edda6ec)
 
-### GitHub & Personal Website
+### GitHub, Dev.to & Personal Website
 
 Finally, consider:
 
 - [Visiting darrenlester.net](https://darrenlester.net){:target="_blank"}
+- [Following me on Dev.to (`dazbo`)](https://dev.to/dazbo){:target="_blank"}
 - [Following me on Medium (`@dazbo`)](https://medium.com/@dazbo){:target="_blank"}
 - [Following me on GitHub](https://github.com/derailed-dash){:target="_blank"}
 - [Adding a Star to my Advent-of-Code GitHub Repo](https://github.com/derailed-dash/Advent-of-Code){:target="_blank"}

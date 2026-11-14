@@ -117,6 +117,47 @@ class TestTypes(unittest.TestCase):
         mock_get.assert_called_once()
         self.assertEqual(refreshed, "(((())))\n")
 
+    def test_is_git_crypt_locked_and_write_puzzle_input_overwrites_locked_blob(self):
+        """Verify 10-byte git-crypt header detection and locked-blob overwrite behaviour."""
+        self.locations.input_dir.mkdir(parents=True, exist_ok=True)
+        locked_file = self.locations.input_file
+        plain_file = self.locations.input_dir / "plain.txt"
+        empty_file = self.locations.input_dir / "empty.txt"
+        missing_file = self.locations.input_dir / "missing.txt"
+
+        locked_file.write_bytes(b"\x00GITCRYPT\x00\xde\xad\xbe\xef")
+        plain_file.write_text("123\n", encoding="utf-8")
+        empty_file.write_text("", encoding="utf-8")
+
+        self.assertTrue(ac.is_git_crypt_locked(locked_file))
+        self.assertFalse(ac.is_git_crypt_locked(plain_file))
+        self.assertFalse(ac.is_git_crypt_locked(empty_file))
+        self.assertFalse(ac.is_git_crypt_locked(missing_file))
+
+        # Locked file with no session cookie raises an actionable git-crypt error without touching HTTP
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch("aoc_common.aoc_commons.load_dotenv", return_value=False),
+            patch("aoc_common.aoc_commons.requests.get") as mock_get,
+            self.assertRaises(ValueError) as exc_ctx,
+        ):
+            ac.write_puzzle_input_file(2026, 2, self.locations)
+        mock_get.assert_not_called()
+        self.assertIn("git-crypt", str(exc_ctx.exception))
+        self.assertIn("AOC_SESSION_COOKIE", str(exc_ctx.exception))
+
+        # Locked file with valid AOC_SESSION_COOKIE downloads and overwrites the locked blob
+        ok_response = MagicMock(status_code=200, text="fresh-input\n")
+        with (
+            patch.dict(os.environ, {"AOC_SESSION_COOKIE": "test_cookie_123456"}, clear=True),
+            patch("aoc_common.aoc_commons.requests.get", return_value=ok_response) as mock_get,
+        ):
+            refreshed = ac.write_puzzle_input_file(2026, 2, self.locations)
+        mock_get.assert_called_once()
+        self.assertEqual(refreshed, "fresh-input\n")
+        self.assertEqual(locked_file.read_text(encoding="utf-8"), "fresh-input\n")
+        self.assertFalse(ac.is_git_crypt_locked(locked_file))
+
     def test_package_reexports_and_lazy_dotenv(self):
         """Verify package-level re-exports and lazy .env loading without import-time side effects."""
         expected_symbols = (
@@ -132,6 +173,7 @@ class TestTypes(unittest.TestCase):
             "cls",
             "get_factors",
             "get_locations",
+            "is_git_crypt_locked",
             "lower_bound",
             "merge_intervals",
             "render_points",

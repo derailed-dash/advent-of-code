@@ -4,21 +4,21 @@ Guidance for local coding agents and automated CI reviewers working in **Dazbo's
 
 ## Project Overview
 
-Advent of Code changed from a 25-day event (2015–2024) to a **12-day event from 2025 onwards**. Keep [`scripts/create_year.sh`](scripts/create_year.sh) defaulting to `12` days unless an explicit legacy count is passed.
+Advent of Code changed from a 25-day event (2015–2024) to a **12-day event from 2025 onwards**. Keep `uv run aoc new-year` (`make new-year`) and [`scripts/create_year.sh`](scripts/create_year.sh) defaulting to `12` days unless an explicit legacy count is passed.
 
 ## Repository Layout
 
 | Path | Purpose | Notes |
 | :--- | :--- | :--- |
-| [`src/aoc_common/`](src/aoc_common/aoc_commons.py) | Shared utilities (`aoc_commons.py`, `runner.py`, `cli.py` -> `uv run aoc`) | Packaged editably in `.venv`; zero dependency on `dazbo_commons`; enforces AoC `User-Agent` header; in-memory `aoc fetch` parser; notebook-safe `get_aoc_locations` |
+| [`src/aoc_common/`](src/aoc_common/aoc_commons.py) | Shared utilities (`aoc_commons.py`, `runner.py`, `cli.py` -> `uv run aoc` including `clean-inputs`) | Packaged editably in `.venv`; zero dependency on `dazbo_commons`; enforces AoC `User-Agent` header; `is_git_crypt_locked` locked-blob detection; in-memory `aoc fetch` parser; notebook-safe `get_aoc_locations` |
 | [`src/tests/`](src/tests/test_aoc_commons.py) | Offline unit tests ([`test_aoc_commons.py`](src/tests/test_aoc_commons.py), [`test_runner_and_cli.py`](src/tests/test_runner_and_cli.py)) | Must pass completely offline without a live `AOC_SESSION_COOKIE` |
-| [`src/template_folder/`](src/template_folder/template.py) | Template v3 script (`-p`, `-s`, `--no-samples`, `-d`, `--json`) and Jupyter notebook template | Target for `scripts/create_year.sh` and `uv run aoc new-year` |
+| [`src/template_folder/`](src/template_folder/template.py) | Template v3 script (`-p`, `-s`, `--no-samples`, `-d`, `--json`) and Jupyter notebook template | Target for `uv run aoc new-year` (`make new-year`) and [`scripts/create_year.sh`](scripts/create_year.sh) |
 | `src/AoC_2015/` – `src/AoC_2025/` | Historical AoC puzzle solutions | Excluded from `ruff`, `codespell`, and `pyright` sweeps |
-| [`scripts/create_year.sh`](scripts/create_year.sh) | Scaffolds `src/AoC_<year>/d01..d<days>` | Defaults to `12` days; does not create empty `input.txt` placeholders |
+| [`scripts/create_year.sh`](scripts/create_year.sh) | Standalone Bash fallback to scaffold `src/AoC_<year>/d01..d<days>` | Defaults to `12` days; does not create empty `input.txt` placeholders |
 | [`docs/`](docs/index.md) | Jekyll GitHub Pages site (`https://aoc.just2good.co.uk/`) | Navigation defined in [`docs/_data/navigation.yaml`](docs/_data/navigation.yaml) |
 | [`.github/workflows/`](.github/workflows/pr-checks.yml) | CI checks (`pr-checks.yml`) and Gemini PR/issue workflows | Keep `gemini_model: 'gemini-3.8-flash'`; PR review guardrails in [`.github/review-instruction-additions.md`](.github/review-instruction-additions.md) |
 | [`.agents/rules/`](.agents/rules/aoc-retrieval.md) | Model-triggered workspace rule for AoC retrieval | Governs `uv run aoc fetch`, `AOC_SESSION_COOKIE`, `User-Agent`, and zero-temp-file policy |
-| `.agents/skills/` | Workspace AoC skills (`SKILL.md.enc` encrypted in Git) | Plaintext `SKILL.md` files are gitignored via `git-crypt-helper.sh` |
+| `.agents/skills/` | Workspace AoC skills (`aoc-problem-summary`, `aoc-solution-support`, `aoc-create-doc`, `aoc-megathread-post`; `SKILL.md.enc` encrypted in Git) | Plaintext `SKILL.md` files are gitignored via `git-crypt-helper.sh` |
 | [`TODO.md`](TODO.md) | Project roadmap and backlog | Tracks planned code, docs, and skill improvements |
 
 ## Environment, Dependencies & Static Checks

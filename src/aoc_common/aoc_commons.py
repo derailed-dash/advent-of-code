@@ -221,6 +221,20 @@ def top_and_tail(
 # RETRIEVING INPUT DATA
 ##################################################################
 
+_GIT_CRYPT_HEADER: bytes = b"\x00GITCRYPT\x00"
+
+
+def is_git_crypt_locked(path: str | Path) -> bool:
+    """Return True if ``path`` exists on disk with a locked ``git-crypt`` header."""
+    candidate = Path(path)
+    if not candidate.is_file():
+        return False
+    try:
+        with open(candidate, "rb") as handle:
+            return handle.read(len(_GIT_CRYPT_HEADER)) == _GIT_CRYPT_HEADER
+    except OSError:
+        return False
+
 
 @overload
 def get_aoc_session_cookie(*, required: Literal[True] = True) -> str: ...
@@ -275,11 +289,20 @@ def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
     Raises ``ValueError`` if the session cookie is missing or HTTP retrieval fails.
     """
     input_path = Path(locations.input_file)
-    if input_path.exists() and input_path.stat().st_size > 0:
+    locked = is_git_crypt_locked(input_path)
+    if input_path.exists() and input_path.stat().st_size > 0 and not locked:
         logger.debug("%s already exists", input_path.name)
         return input_path.name
 
-    session_cookie = get_aoc_session_cookie(required=True)
+    try:
+        session_cookie = get_aoc_session_cookie(required=True)
+    except ValueError as exc:
+        if locked:
+            raise ValueError(
+                f"{input_path} is git-crypt encrypted. Set AOC_SESSION_COOKIE in .env "
+                "to download your own puzzle input (or pass -s / --sample-only)."
+            ) from exc
+        raise
     logger.info("Session cookie retrieved: %s...%s", session_cookie[:6], session_cookie[-6:])
 
     locations.input_dir.mkdir(parents=True, exist_ok=True)

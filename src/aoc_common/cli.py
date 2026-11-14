@@ -22,6 +22,8 @@ Subcommands & Mechanics:
     - ``aoc new-year <year> [--days 12] [--dry-run] [--force] [--json]``: scaffolds
       ``src/AoC_<year>/d01..d<days>`` from ``src/template_folder/template.py`` without
       creating empty ``input.txt`` placeholders.
+    - ``aoc clean-inputs [--dry-run] [--json]``: removes locked ``git-crypt``
+      ``input*.txt`` blobs while preserving sample inputs and unlocked inputs.
 """
 
 from __future__ import annotations
@@ -116,6 +118,11 @@ def _accepts_v3_argv(script_path: Path) -> bool:
 def _has_nonempty_file(path: Path) -> bool:
     """Return True if ``path`` exists and is non-empty without reading its contents."""
     return path.is_file() and path.stat().st_size > 0
+
+
+def _has_ready_input_file(path: Path) -> bool:
+    """Return True if ``path`` is a non-empty, unlocked puzzle input file."""
+    return _has_nonempty_file(path) and not ac.is_git_crypt_locked(path)
 
 
 def _match_day_dir(name: str) -> int | None:
@@ -428,13 +435,16 @@ def _list_single_year(year: int, year_dir: Path, *, as_json: bool) -> int:
     for day_num, entry in day_dirs:
         scripts = sorted(p.name for p in entry.iterdir() if p.is_file() and p.suffix in {".py", ".ipynb"})
         input_dir = entry / "input"
+        input_path = input_dir / "input.txt"
+        input_locked = ac.is_git_crypt_locked(input_path)
         days_summary.append(
             {
                 "day": day_num,
                 "folder": entry.name,
                 "completed": day_num in solved_days,
                 "scripts": scripts,
-                "has_input": _has_nonempty_file(input_dir / "input.txt"),
+                "has_input": _has_nonempty_file(input_path) and not input_locked,
+                "input_locked": input_locked,
                 "has_sample": _has_nonempty_file(input_dir / "sample_input_part_1.txt"),
             }
         )
@@ -468,11 +478,17 @@ def _list_single_year(year: int, year_dir: Path, *, as_json: bool) -> int:
     table.add_column("Sample 1", justify="center")
     for item in days_summary:
         day_link = f"[link={_aoc_day_url(year, item['day'])}]{escape(item['folder'])}[/link]"
+        if item["input_locked"]:
+            input_cell = "[yellow]locked[/yellow]"
+        elif item["has_input"]:
+            input_cell = "[green]yes[/green]"
+        else:
+            input_cell = "[dim]no[/dim]"
         table.add_row(
             day_link,
             "[green]yes[/green]" if item["completed"] else "[dim]no[/dim]",
             ", ".join(item["scripts"]) or "-",
-            "[green]yes[/green]" if item["has_input"] else "[dim]no[/dim]",
+            input_cell,
             "[green]yes[/green]" if item["has_sample"] else "[dim]no[/dim]",
         )
     Console().print(table)
@@ -717,6 +733,18 @@ def _cmd_run(root: Path, args: argparse.Namespace) -> int:
         )
         return 2
 
+    legacy_locations = ac.get_locations(script_path)
+    if ac.is_git_crypt_locked(legacy_locations.input_file):
+        try:
+            ac.write_puzzle_input_file(year, day, legacy_locations)
+        except (ValueError, requests.RequestException) as exc:
+            return _emit_cli_error(
+                {"year": year, "day": day},
+                f"{exc} (Tip: set AOC_SESSION_COOKIE in .env or run `make clean-inputs`.)",
+                as_json=args.json,
+                code=1,
+            )
+
     completed = subprocess.run([sys.executable, str(script_path)], cwd=script_path.parent, check=False)
     return completed.returncode
 
@@ -763,7 +791,7 @@ def _handle_input_fetch(
 ) -> dict[str, Any]:
     """Cache ``input/input.txt`` unless skipped/dry-run and return metadata without raw contents."""
     input_path = locations.input_file
-    already_cached = _has_nonempty_file(input_path)
+    already_cached = _has_ready_input_file(input_path)
     if desc_only:
         return {"path": str(input_path), "action": "skipped", "exists": already_cached}
     if already_cached:
@@ -771,7 +799,7 @@ def _handle_input_fetch(
     if dry_run:
         return {"path": str(input_path), "action": "would_download", "exists": False}
     ac.write_puzzle_input_file(year, day, locations)
-    return {"path": str(input_path), "action": "downloaded", "exists": _has_nonempty_file(input_path)}
+    return {"path": str(input_path), "action": "downloaded", "exists": _has_ready_input_file(input_path)}
 
 
 def _build_fetch_payload(
@@ -855,6 +883,50 @@ def _cmd_fetch(root: Path, args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_clean_inputs(root: Path, *, dry_run: bool, as_json: bool) -> int:
+    """Remove locked ``git-crypt`` ``input*.txt`` blobs while keeping samples and unlocked inputs."""
+    src_dir = root / "src"
+    if not src_dir.is_dir():
+        msg = f"Source directory not found: {src_dir}"
+        return _emit_cli_error({"root": str(root)}, msg, as_json=as_json, code=1)
+
+    locked_files: list[Path] = []
+    kept_unlocked = 0
+    for path in sorted(src_dir.rglob("input*.txt")):
+        if not path.is_file():
+            continue
+        if ac.is_git_crypt_locked(path):
+            locked_files.append(path)
+            if not dry_run:
+                path.unlink()
+        else:
+            kept_unlocked += 1
+
+    payload = {
+        "root": str(root),
+        "dry_run": dry_run,
+        "removed_count": len(locked_files),
+        "kept_unlocked_count": kept_unlocked,
+        "files": [str(p.relative_to(root)) for p in locked_files],
+    }
+    if as_json:
+        print(json.dumps(payload, indent=2))
+        return 0
+
+    console = Console()
+    if dry_run:
+        console.print(
+            f"[yellow]Dry run:[/yellow] would remove {len(locked_files)} locked git-crypt "
+            f"input file(s) (keeping {kept_unlocked} unlocked input file(s))."
+        )
+    else:
+        console.print(
+            f"Removed {len(locked_files)} locked git-crypt input file(s) "
+            f"(kept {kept_unlocked} unlocked input file(s))."
+        )
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     """Create the top-level ``aoc`` CLI parser."""
     parser = argparse.ArgumentParser(
@@ -924,6 +996,13 @@ def _build_parser() -> argparse.ArgumentParser:
     new_year_parser.add_argument("--force", action="store_true", help="Overwrite existing dNN.py scripts.")
     new_year_parser.add_argument("--json", action="store_true", help="Emit JSON summary on stdout.")
 
+    clean_inputs_parser = subparsers.add_parser(
+        "clean-inputs",
+        help="Remove locked git-crypt input*.txt files while keeping samples and unlocked inputs.",
+    )
+    clean_inputs_parser.add_argument("--dry-run", action="store_true", help="Preview files to remove without deleting.")
+    clean_inputs_parser.add_argument("--json", action="store_true", help="Emit JSON summary on stdout.")
+
     return parser
 
 
@@ -939,6 +1018,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _cmd_fetch(root, args)
     if args.command == "new-year":
         return _cmd_new_year(root, args.year, days=args.days, dry_run=args.dry_run, force=args.force, as_json=args.json)
+    if args.command == "clean-inputs":
+        return _cmd_clean_inputs(root, dry_run=args.dry_run, as_json=args.json)
     if args.command == "run":
         return _cmd_run(root, args)
     return 2

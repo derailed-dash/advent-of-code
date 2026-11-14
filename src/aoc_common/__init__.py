@@ -17,7 +17,7 @@ Package Layout:
       adaptive duration formatting (:func:`format_duration`), and standard standalone CLI
       orchestration (:func:`run_puzzle`).
     - :mod:`aoc_common.cli`: Repository-wide ``aoc`` console entry point (``run``,
-      ``list``, ``fetch``, ``new-year``).
+      ``list``, ``fetch``, ``new-year``, ``clean-inputs``).
 
 Typical usage:
     ``import aoc_common.aoc_commons as ac`` or ``from aoc_common import Point, Grid``.
@@ -46,6 +46,7 @@ from aoc_common.aoc_commons import (
     get_aoc_session_cookie,
     get_factors,
     get_locations,
+    is_git_crypt_locked,
     lower_bound,
     merge_intervals,
     parse_puzzle_html,
@@ -84,6 +85,7 @@ __all__ = [
     "get_aoc_session_cookie",
     "get_factors",
     "get_locations",
+    "is_git_crypt_locked",
     "lower_bound",
     "merge_intervals",
     "parse_puzzle_html",

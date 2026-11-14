@@ -297,7 +297,7 @@ def _execute_real_part(
         return PartRunSummary(
             part=part_num,
             status="skipped",
-            elapsed_seconds=elapsed,
+            elapsed_seconds=None,
             samples_checked=checked_count,
         )
 
