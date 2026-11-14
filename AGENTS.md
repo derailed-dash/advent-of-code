@@ -4,27 +4,20 @@ Guidance for local coding agents and automated CI reviewers working in **Dazbo's
 
 ## Project Overview
 
-- **Author**: Darren "Dazbo" Lester (`derailed-dash`)
-- **Documentation Site**: [aoc.just2good.co.uk](https://aoc.just2good.co.uk/)
-- **Personal Website**: [darrenlester.net](https://darrenlester.net) 
-- **Blog on Medium**: [Medium (`@dazbo`)](https://medium.com/@dazbo)
-- **Blog on Dev.to**: [Dev.to ()]()
-- **Repository README**: [`README.md`](README.md)
-
 Advent of Code changed from a 25-day event (2015–2024) to a **12-day event from 2025 onwards**. Keep [`scripts/create_year.sh`](scripts/create_year.sh) defaulting to `12` days unless an explicit legacy count is passed.
 
 ## Repository Layout
 
 | Path | Purpose | Notes |
 | :--- | :--- | :--- |
-| [`src/aoc_common/`](src/aoc_common/aoc_commons.py) | Shared utilities (`aoc_commons.py`, `runner.py`, `cli.py` -> `uv run aoc`) | Packaged editably in `.venv`; zero dependency on `dazbo_commons`; enforces AoC `User-Agent` header; notebook-safe `get_aoc_locations` |
+| [`src/aoc_common/`](src/aoc_common/aoc_commons.py) | Shared utilities (`aoc_commons.py`, `runner.py`, `cli.py` -> `uv run aoc`) | Packaged editably in `.venv`; zero dependency on `dazbo_commons`; enforces AoC `User-Agent` header; in-memory `aoc fetch` parser; notebook-safe `get_aoc_locations` |
 | [`src/tests/`](src/tests/test_aoc_commons.py) | Offline unit tests ([`test_aoc_commons.py`](src/tests/test_aoc_commons.py), [`test_runner_and_cli.py`](src/tests/test_runner_and_cli.py)) | Must pass completely offline without a live `AOC_SESSION_COOKIE` |
 | [`src/template_folder/`](src/template_folder/template.py) | Template v3 script (`-p`, `-s`, `--no-samples`, `-d`, `--json`) and Jupyter notebook template | Target for `scripts/create_year.sh` and `uv run aoc new-year` |
 | `src/AoC_2015/` – `src/AoC_2025/` | Historical AoC puzzle solutions | Excluded from `ruff`, `codespell`, and `pyright` sweeps |
 | [`scripts/create_year.sh`](scripts/create_year.sh) | Scaffolds `src/AoC_<year>/d01..d<days>` | Defaults to `12` days; does not create empty `input.txt` placeholders |
 | [`docs/`](docs/index.md) | Jekyll GitHub Pages site (`https://aoc.just2good.co.uk/`) | Navigation defined in [`docs/_data/navigation.yaml`](docs/_data/navigation.yaml) |
 | [`.github/workflows/`](.github/workflows/pr-checks.yml) | CI checks (`pr-checks.yml`) and Gemini PR/issue workflows | Keep `gemini_model: 'gemini-3.8-flash'`; PR review guardrails in [`.github/review-instruction-additions.md`](.github/review-instruction-additions.md) |
-| [`.agent/rules/`](.agent/rules/aoc-retrieval.md) | Workspace rule for Advent of Code retrieval | Governs `AOC_SESSION_COOKIE`, `User-Agent`, and `desc.html` cleanup |
+| [`.agents/rules/`](.agents/rules/aoc-retrieval.md) | Model-triggered workspace rule for AoC retrieval | Governs `uv run aoc fetch`, `AOC_SESSION_COOKIE`, `User-Agent`, and zero-temp-file policy |
 | `.agents/skills/` | Workspace AoC skills (`SKILL.md.enc` encrypted in Git) | Plaintext `SKILL.md` files are gitignored via `git-crypt-helper.sh` |
 | [`TODO.md`](TODO.md) | Project roadmap and backlog | Tracks planned code, docs, and skill improvements |
 
@@ -34,6 +27,7 @@ Advent of Code changed from a 25-day event (2015–2024) to a **12-day event fro
   - Hydrate environment: `make install` (`uv sync --dev --extra jupyter --extra legacy` — includes `legacy` extras `dazbo-commons` and `colorama` so untouched `2015`–`2024` solutions remain runnable locally; CI runs without `legacy`)
   - Run offline verification gate: `make check` (`codespell -s`, `ruff check`, `pyright`, and `pytest src/tests`)
 - **Historical Solutions Policy**: Do **NOT** run bulk `ruff --fix`, `ruff format`, or `codespell -w` across `src/AoC_2015`–`src/AoC_2025` or prose inside `docs/2015`–`docs/2025` unless explicitly requested. Lint/type gates intentionally cover [`src/aoc_common`](src/aoc_common/aoc_commons.py), [`src/tests`](src/tests/test_aoc_commons.py), [`src/template_folder`](src/template_folder/template.py), and 2026+ code.
+- **Context-Lean Reads & Searches**: Prefer `uv run --no-sync aoc ... --json` for structured metadata. Never `read_file` a whole yearly `.ipynb` notebook (`400 KB`–`1.1 MB`); locate `## Day <N>` line offsets via `grep -n` first and read bounded slices. Pass `--exclude-dir=_site` whenever running `grep` across `docs/` so local Jekyll HTML builds do not pollute results.
 
 ## Secrets, Puzzle Inputs & `git-crypt` Guardrails
 
@@ -44,7 +38,7 @@ This is a **public** GitHub repository containing private files encrypted via `g
    - Restore locally: `git-crypt-helper.sh sync-from-enc`
    - Update encrypted twin after local edit: `git-crypt-helper.sh sync-to-enc <file>`
    - Inspect [`.env.template`](.env.template) and [`docs/.env.template`](docs/.env.template) for required environment variable keys.
-3. **AoC Retrieval Ethics**: Always follow [`.agent/rules/aoc-retrieval.md`](.agent/rules/aoc-retrieval.md) — identify automation with `User-Agent: github.com/derailed-dash/Advent-of-Code by derailed.dash@gmail.com`, never leak real puzzle outputs in docs, and delete temporary `desc.html` downloads immediately.
+3. **AoC Retrieval Ethics**: Always follow [`.agents/rules/aoc-retrieval.md`](.agents/rules/aoc-retrieval.md) — use `uv run aoc fetch` (enforcing `User-Agent: github.com/derailed-dash/Advent-of-Code by derailed.dash@gmail.com`), never leak real puzzle outputs in docs, and never leave temporary `desc.html` downloads on disk.
 
 ## GitHub Pages (`docs/`) Architecture
 

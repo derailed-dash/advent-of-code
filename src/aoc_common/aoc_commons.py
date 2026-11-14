@@ -9,8 +9,11 @@ Purpose & Value:
 Mechanics & Capabilities:
     - **Paths & Input Caching**: :func:`get_aoc_locations` resolves year/day directories
       from either script paths (``__file__``) or notebook working directories (including
-      Colab/Drive fallbacks). :func:`write_puzzle_input_file` loads ``AOC_SESSION_COOKIE``
-      on demand, sends AoC's recommended ``User-Agent`` header, and caches ``input.txt``.
+      Colab/Drive fallbacks). :func:`get_aoc_session_cookie` and
+      :func:`write_puzzle_input_file` load ``AOC_SESSION_COOKIE`` on demand, send AoC's
+      recommended ``User-Agent`` header, and cache ``input.txt``. :func:`fetch_puzzle_page`
+      and :func:`parse_puzzle_html` parse puzzle descriptions and rank ``<pre><code>``
+      sample candidates in memory without leaving ``desc.html`` files behind.
     - **Logging & Diagnostics**: :func:`setup_logging` configures Rich console handlers
       (targeting ``stderr`` when requested so ``--json`` stdout stays clean);
       :func:`top_and_tail` and :func:`timer` support quick inspection and profiling.
@@ -31,13 +34,15 @@ import logging
 import math
 import operator
 import os
+import re
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from functools import cache
+from html.parser import HTMLParser
 from pathlib import Path
-from typing import Any, ClassVar, Never, TypeGuard, overload
+from typing import Any, ClassVar, Literal, Never, TypeGuard, overload
 
 import requests
 from dotenv import load_dotenv
@@ -46,6 +51,13 @@ from rich.logging import RichHandler
 
 AOC_USER_AGENT = "github.com/derailed-dash/Advent-of-Code by derailed.dash@gmail.com"
 _BASE_DIGITS = "0123456789abcdefghijklmnopqrstuvwxyz"
+_TITLE_RE = re.compile(r"^---\s*Day\s+\d+:\s*(?P<title>.+?)\s*---$")
+_SAMPLE_HINT_PHRASES = (
+    "for example",
+    "here is an example",
+    "suppose you have",
+    "consider the following",
+)
 
 # Logger for aoc_commons internals
 logger = logging.getLogger(__name__)  # aoc_common.aoc_commons
@@ -210,10 +222,40 @@ def top_and_tail(
 ##################################################################
 
 
-def _raise_input_http_error(response: requests.Response) -> Never:
-    """Raise an informative ``ValueError`` when downloading AoC puzzle input fails."""
+@overload
+def get_aoc_session_cookie(*, required: Literal[True] = True) -> str: ...
+
+
+@overload
+def get_aoc_session_cookie(*, required: Literal[False]) -> str | None: ...
+
+
+@overload
+def get_aoc_session_cookie(*, required: bool) -> str | None: ...
+
+
+def get_aoc_session_cookie(*, required: bool = True) -> str | None:
+    """Return stripped ``AOC_SESSION_COOKIE`` after lazily loading ``.env`` if needed.
+
+    Raises ``ValueError`` when ``required=True`` and no cookie is configured; returns
+    ``None`` when ``required=False`` and unset.
+    """
+    raw_cookie = os.getenv("AOC_SESSION_COOKIE")
+    if not raw_cookie:
+        load_dotenv()
+        raw_cookie = os.getenv("AOC_SESSION_COOKIE")
+    session_cookie = (raw_cookie or "").strip().strip("\"'")
+    if not session_cookie:
+        if required:
+            raise ValueError("Could not retrieve session cookie.")
+        return None
+    return session_cookie
+
+
+def _raise_input_http_error(response: requests.Response, *, resource: str = "input data") -> Never:
+    """Raise an informative ``ValueError`` when downloading AoC resources fails."""
     body = response.content.decode("utf-8", errors="replace").strip()
-    msg = f"Unable to retrieve input data.\nHTTP response: {response.status_code}\n{response.reason}: {body}"
+    msg = f"Unable to retrieve {resource}.\nHTTP response: {response.status_code}\n{response.reason}: {body}"
     if response.status_code in {400, 401, 403, 500} and "log in" in body.lower():
         msg += (
             "\nHint: Your AOC_SESSION_COOKIE may have expired (~30-day AoC lifetime). "
@@ -237,14 +279,7 @@ def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
         logger.debug("%s already exists", input_path.name)
         return input_path.name
 
-    raw_cookie = os.getenv("AOC_SESSION_COOKIE")
-    if not raw_cookie:
-        load_dotenv()
-        raw_cookie = os.getenv("AOC_SESSION_COOKIE")
-    session_cookie = (raw_cookie or "").strip().strip("\"'")
-    if not session_cookie:
-        raise ValueError("Could not retrieve session cookie.")
-
+    session_cookie = get_aoc_session_cookie(required=True)
     logger.info("Session cookie retrieved: %s...%s", session_cookie[:6], session_cookie[-6:])
 
     locations.input_dir.mkdir(parents=True, exist_ok=True)
@@ -262,6 +297,237 @@ def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
         return data
 
     _raise_input_http_error(response)
+
+
+@dataclass(frozen=True)
+class SampleCandidate:
+    """Candidate sample input block extracted from an AoC puzzle HTML page."""
+
+    index: int
+    text: str
+    context: str
+    part: int
+    score: int
+
+
+@dataclass(frozen=True)
+class PuzzlePage:
+    """Parsed Advent of Code puzzle page produced in memory without temp HTML files."""
+
+    year: int
+    day: int
+    title: str | None
+    part1_markdown: str
+    part2_markdown: str | None
+    samples: tuple[SampleCandidate, ...]
+    authenticated: bool
+
+
+def _attrs_have_class(attrs: list[tuple[str, str | None]], target_class: str) -> bool:
+    """Return True if HTML attribute list includes ``target_class`` in ``class``."""
+    for name, value in attrs:
+        if name == "class" and value and target_class in value.split():
+            return True
+    return False
+
+
+class _AoCDayHTMLParser(HTMLParser):
+    """Stdlib HTML parser converting AoC ``<article class="day-desc">`` blocks to Markdown."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.authenticated: bool = False
+        self.articles_md: list[str] = []
+        self.raw_samples: list[tuple[str, str, int]] = []
+        self._in_article: bool = False
+        self._article_part: int = 0
+        self._blocks: list[str] = []
+        self._last_context: str = ""
+        self._pre_buf: list[str] | None = None
+        self._elem_buf: list[str] | None = None
+        self._elem_tag: str | None = None
+        self._in_inline_code: bool = False
+
+    def _finish_pre_block(self) -> None:
+        raw_text = "".join(self._pre_buf or ()).strip("\r\n")
+        self._pre_buf = None
+        if not raw_text:
+            return
+        self._blocks.append(f"```\n{raw_text}\n```")
+        self.raw_samples.append((raw_text, self._last_context, self._article_part))
+        self._last_context = ""
+
+    def _finish_text_block(self, tag: str) -> None:
+        text = re.sub(r"\s+", " ", "".join(self._elem_buf or ())).strip()
+        self._elem_buf = None
+        self._elem_tag = None
+        self._in_inline_code = False
+        if not text:
+            return
+        if tag == "h2":
+            self._blocks.append(f"## {text}")
+        elif tag == "li":
+            self._blocks.append(f"- {text}")
+        else:
+            self._blocks.append(text)
+        self._last_context = text
+
+    def _flush_active_elem(self) -> None:
+        """Emit any buffered heading, paragraph, or list item before nested block elements."""
+        if self._elem_buf is not None and self._elem_tag is not None:
+            self._finish_text_block(self._elem_tag)
+
+    def _toggle_inline_tag(self, tag: str, *, opening: bool) -> None:
+        """Toggle inline code/emphasis markers while suppressing bold syntax inside code spans."""
+        if self._elem_buf is None:
+            return
+        if tag == "code":
+            self._in_inline_code = opening
+            self._elem_buf.append("`")
+        elif tag == "em" and not self._in_inline_code:
+            self._elem_buf.append("**")
+
+    def _handle_article_starttag(self, tag: str) -> None:
+        """Handle block and inline start tags inside an active ``day-desc`` article."""
+        if self._pre_buf is not None:
+            return
+        if tag == "pre":
+            self._flush_active_elem()
+            self._pre_buf = []
+        elif tag in {"h2", "p", "li"}:
+            self._flush_active_elem()
+            self._elem_buf = []
+            self._elem_tag = tag
+        elif tag == "ul":
+            self._flush_active_elem()
+        elif self._elem_buf is not None and tag in {"code", "em"}:
+            self._toggle_inline_tag(tag, opening=True)
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        """Track authenticated user banner, ``day-desc`` articles, and Markdown inline/block tags."""
+        if tag == "div" and _attrs_have_class(attrs, "user"):
+            self.authenticated = True
+            return
+        if tag == "article" and _attrs_have_class(attrs, "day-desc"):
+            self._in_article = True
+            self._article_part += 1
+            self._blocks = []
+            self._last_context = ""
+            self._in_inline_code = False
+            return
+        if self._in_article:
+            self._handle_article_starttag(tag)
+
+    def handle_endtag(self, tag: str) -> None:
+        """Close ``day-desc`` articles, code blocks, and inline Markdown wrappers."""
+        if tag == "article" and self._in_article:
+            self._flush_active_elem()
+            self.articles_md.append("\n\n".join(self._blocks))
+            self._in_article = False
+            return
+        if not self._in_article:
+            return
+        if tag == "pre" and self._pre_buf is not None:
+            self._finish_pre_block()
+            return
+        if self._pre_buf is not None:
+            return
+        if self._elem_buf is not None and tag in {"code", "em"}:
+            self._toggle_inline_tag(tag, opening=False)
+            return
+        if self._elem_buf is not None and tag == self._elem_tag:
+            self._finish_text_block(tag)
+
+    def handle_data(self, data: str) -> None:
+        """Collect unescaped text data for the active ``<pre>`` or inline block."""
+        if not self._in_article:
+            return
+        if self._pre_buf is not None:
+            self._pre_buf.append(data)
+        elif self._elem_buf is not None:
+            self._elem_buf.append(data)
+
+
+def _extract_day_title(part1_markdown: str) -> str | None:
+    """Extract the clean puzzle title from a Part 1 ``## --- Day N: Title ---`` heading."""
+    for line in part1_markdown.splitlines():
+        if line.startswith("## "):
+            heading = line[3:].strip()
+            match = _TITLE_RE.match(heading)
+            return match.group("title") if match else heading
+    return None
+
+
+def _score_sample_block(text: str, context: str, *, is_first_in_part: bool) -> int:
+    """Heuristically rank how likely a ``<pre><code>`` block is the main sample input."""
+    score = 0
+    lowered_ctx = context.lower()
+    if any(phrase in lowered_ctx for phrase in _SAMPLE_HINT_PHRASES):
+        score += 50
+    if context.rstrip().endswith(":"):
+        score += 20
+    if "\n" in text:
+        score += 15
+    if is_first_in_part:
+        score += 10
+    return score
+
+
+def parse_puzzle_html(html: str, *, year: int, day: int) -> PuzzlePage:
+    """Parse an AoC day HTML page in memory into Markdown sections and scored sample candidates."""
+    parser = _AoCDayHTMLParser()
+    parser.feed(html)
+    parser.close()
+
+    part1_md = parser.articles_md[0] if parser.articles_md else ""
+    part2_md = parser.articles_md[1] if len(parser.articles_md) > 1 else None
+    seen_parts: set[int] = set()
+    samples: list[SampleCandidate] = []
+    for idx, (text, context, part) in enumerate(parser.raw_samples, start=1):
+        is_first = part not in seen_parts
+        seen_parts.add(part)
+        samples.append(
+            SampleCandidate(
+                index=idx,
+                text=text,
+                context=context,
+                part=part,
+                score=_score_sample_block(text, context, is_first_in_part=is_first),
+            )
+        )
+
+    return PuzzlePage(
+        year=year,
+        day=day,
+        title=_extract_day_title(part1_md),
+        part1_markdown=part1_md,
+        part2_markdown=part2_md,
+        samples=tuple(samples),
+        authenticated=parser.authenticated,
+    )
+
+
+def fetch_puzzle_page(year: int, day: int, *, session_cookie: str | None = None) -> PuzzlePage:
+    """Fetch and parse ``https://adventofcode.com/<year>/day/<day>`` without disk temp files.
+
+    Uses ``AOC_SESSION_COOKIE`` when available so Part 2 is included if solved, while
+    still allowing Part 1 fetches anonymously when no cookie is configured.
+    """
+    if year < 2015:
+        raise ValueError(f"AoC year must be >= 2015, got {year}")
+    if not 1 <= day <= 25:
+        raise ValueError(f"AoC day must be between 1 and 25, got {day}")
+
+    cookie = session_cookie.strip().strip("\"'") if session_cookie is not None else get_aoc_session_cookie(required=False)
+    cookies = {"session": cookie} if cookie else None
+    headers = {"User-Agent": AOC_USER_AGENT}
+    url = f"https://adventofcode.com/{year}/day/{day}"
+    response = requests.get(url, cookies=cookies, headers=headers, timeout=15)
+
+    if response.status_code == 200:
+        return parse_puzzle_html(response.text, year=year, day=day)
+
+    _raise_input_http_error(response, resource="puzzle description")
 
 
 #################################################################

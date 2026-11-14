@@ -20,6 +20,8 @@ Mechanics & Coverage:
 
 import json
 import logging
+import shutil
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -707,12 +709,31 @@ def test_cli_run_shorthands_and_default_year(
     assert payload_env["day"] == 1
     monkeypatch.delenv("AOC_YEAR", raising=False)
 
-    # 4. Combined single-token shorthands: YYYYDD, YYYYD, YYYYdDD
-    for combined in (f"{target_year}01", f"{target_year}1", f"{target_year}d01"):
+    # 4. Combined single-token shorthands: YYYYDD, YYYYD, YYYYdDD, separators, and AoC_YYYY/dDD
+    for combined in (
+        f"{target_year}01",
+        f"{target_year}1",
+        f"{target_year}d01",
+        f"{target_year}d1",
+        f"{target_year}D01",
+        f"{target_year}-d01",
+        f"{target_year}/d01",
+        f"{target_year}_d01",
+        f"AoC_{target_year}/d01",
+    ):
         assert cli.main(["--root", str(repo), "run", combined, "--sample-only", "--json"]) == 0
         payload = json.loads(capsys.readouterr().out)
         assert payload["year"] == target_year
         assert payload["day"] == 1
+
+    # Explicitly verify 2018d07 shorthand variants
+    assert cli.main(["--root", str(repo), "new-year", "2018", "--days", "7"]) == 0
+    capsys.readouterr()
+    for combined_2018 in ("2018d07", "2018d7", "2018_d07", "AoC_2018/d07"):
+        assert cli.main(["--root", str(repo), "run", combined_2018, "--sample-only", "--json"]) == 0
+        payload_2018 = json.loads(capsys.readouterr().out)
+        assert payload_2018["year"] == 2018
+        assert payload_2018["day"] == 7
 
     # 5. Invalid shorthands return exit code 2 cleanly
     for bad in ("2026", "202699", "not-a-day"):
@@ -752,3 +773,161 @@ def test_cli_list_renders_osc8_hyperlinks(tmp_path: Path, capsys: pytest.Capture
         y2020_out = capsys.readouterr().out
         assert ";https://adventofcode.com/2020/day/1\x1b\\" in y2020_out
         assert "d01_expense" in y2020_out
+
+
+def test_cli_fetch_desc_input_and_write_sample(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo = _create_template_repo(tmp_path)
+    assert cli.main(["--root", str(repo), "new-year", "2025", "--days", "1"]) == 0
+    capsys.readouterr()
+
+    fake_page = ac.PuzzlePage(
+        year=2025,
+        day=1,
+        title="Secret Entrance",
+        part1_markdown="## --- Day 1: Secret Entrance ---\n\nFor example:\n\n```\nL68\nL30\n```",
+        part2_markdown=None,
+        samples=(
+            ac.SampleCandidate(index=1, text="L68\nL30", context="For example:", part=1, score=80),
+            ac.SampleCandidate(index=2, text="alt1\nalt2", context="Other block", part=1, score=20),
+        ),
+        authenticated=True,
+    )
+    input_calls: list[tuple[int, int]] = []
+
+    def _fake_write_input(year: int, day: int, locations: ac.Locations) -> str:
+        input_calls.append((year, day))
+        locations.input_dir.mkdir(parents=True, exist_ok=True)
+        locations.input_file.write_text("secret-real-input\n", encoding="utf-8")
+        return "secret-real-input\n"
+
+    monkeypatch.setattr(ac, "fetch_puzzle_page", lambda year, day: fake_page)
+    monkeypatch.setattr(ac, "write_puzzle_input_file", _fake_write_input)
+
+    # 1. --desc-only emits parsed description + ranked candidates, skips input download, leaves no desc.html
+    assert cli.main(["--root", str(repo), "fetch", "202501", "--desc-only", "--json"]) == 0
+    desc_out = capsys.readouterr().out
+    desc_payload = json.loads(desc_out)
+    assert desc_payload["title"] == "Secret Entrance"
+    assert "Secret Entrance" in desc_payload["part1_markdown"]
+    assert desc_payload["recommended_sample_index"] == 1
+    assert len(desc_payload["samples"]) == 2
+    assert input_calls == []
+    assert not list(repo.rglob("desc.html"))
+
+    # 2. --write-sample populates 0-byte scaffolded sample_input_part_1.txt without needing --force
+    sample1_path = repo / "src" / "AoC_2025" / "d01" / "input" / "sample_input_part_1.txt"
+    assert sample1_path.stat().st_size == 0
+    assert cli.main(["--root", str(repo), "fetch", "202501", "--write-sample", "--json"]) == 0
+    fetch_out = capsys.readouterr().out
+    assert "secret-real-input" not in fetch_out
+    fetch_payload = json.loads(fetch_out)
+    assert fetch_payload["sample_file"]["action"] == "written"
+    assert sample1_path.read_text(encoding="utf-8") == "L68\nL30\n"
+    assert fetch_payload["input_file"]["exists"] is True
+    assert input_calls == [(2025, 1)]
+
+    # 3. Re-running without --force skips existing non-empty sample file; --force overwrites; part 2 targets sample 2
+    assert cli.main(["--root", str(repo), "fetch", "202501", "--write-sample", "--json"]) == 0
+    skip_payload = json.loads(capsys.readouterr().out)
+    assert skip_payload["sample_file"]["action"] == "skipped_existing"
+
+    assert (
+        cli.main(
+            [
+                "--root",
+                str(repo),
+                "fetch",
+                "202501",
+                "--desc-only",
+                "--write-sample",
+                "--sample-index",
+                "2",
+                "--sample-part",
+                "2",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    part2_payload = json.loads(capsys.readouterr().out)
+    sample2_path = repo / "src" / "AoC_2025" / "d01" / "input" / "sample_input_part_2.txt"
+    assert part2_payload["sample_file"]["action"] == "written"
+    assert sample2_path.read_text(encoding="utf-8") == "alt1\nalt2\n"
+
+    # 4. --dry-run --write-sample --force does not modify existing files on disk
+    assert (
+        cli.main(
+            [
+                "--root",
+                str(repo),
+                "fetch",
+                "202501",
+                "--desc-only",
+                "--write-sample",
+                "--sample-index",
+                "2",
+                "--force",
+                "--dry-run",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    dry_payload = json.loads(capsys.readouterr().out)
+    assert dry_payload["sample_file"]["action"] == "would_write"
+    assert sample1_path.read_text(encoding="utf-8") == "L68\nL30\n"
+
+    # 5. --force without --dry-run overwrites existing sample file; --input-only --write-sample fails with code 2
+    assert (
+        cli.main(
+            [
+                "--root",
+                str(repo),
+                "fetch",
+                "202501",
+                "--desc-only",
+                "--write-sample",
+                "--sample-index",
+                "2",
+                "--force",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    overwrite_payload = json.loads(capsys.readouterr().out)
+    assert overwrite_payload["sample_file"]["action"] == "written"
+    assert sample1_path.read_text(encoding="utf-8") == "alt1\nalt2\n"
+    assert cli.main(["--root", str(repo), "fetch", "202501", "--input-only", "--write-sample", "--json"]) == 2
+    capsys.readouterr()
+
+    # 6. Extended shorthands (2025_d01, AoC_2025/d01) resolve in fetch
+    for shorthand in ("2025d1", "2025_d01", "AoC_2025/d01"):
+        assert cli.main(["--root", str(repo), "fetch", shorthand, "--desc-only", "--dry-run", "--json"]) == 0
+        shorthand_payload = json.loads(capsys.readouterr().out)
+        assert shorthand_payload["year"] == 2025
+        assert shorthand_payload["day"] == 1
+
+
+@pytest.mark.skipif(shutil.which("make") is None, reason="GNU make not installed")
+def test_makefile_forwards_year_d_day_targets() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    cases = [
+        (["make", "-n", "run", "2018d07"], "uv run aoc run 2018d07"),
+        (["make", "-n", "fetch", "2018d07"], "uv run aoc fetch 2018d07"),
+        (["make", "-n", "run", "2018", "d07"], "uv run aoc run 2018 d07"),
+        (["make", "-n", "run", "TARGET=2018d07"], 'uv run aoc run "2018d07"'),
+        (["make", "-n", "fetch", "TARGET=2018d07"], 'uv run aoc fetch "2018d07"'),
+    ]
+    for cmd, expected_fragment in cases:
+        proc = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True, check=False)
+        assert proc.returncode == 0, f"{cmd} failed: {proc.stderr}"
+        assert expected_fragment in proc.stdout
+
+    help_proc = subprocess.run(["make", "help"], cwd=repo_root, capture_output=True, text=True, check=False)
+    assert help_proc.returncode == 0
+    assert "2025d01" in help_proc.stdout

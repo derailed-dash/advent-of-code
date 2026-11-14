@@ -16,19 +16,19 @@ Roadmap and backlog for modernising repository tooling, reusable Python utilitie
 
 ### 1. Review Workspace Skills, Rules & Legacy Agent Customisations
 
-- [ ] Audit all four encrypted skills in `.agents/skills/` (`aoc-help`, `aoc-doc-intro`, `aoc-create-doc`, `aoc-megathread-post`) and update them where needed for n-day AoC events (e.g. 12 days from 2025+), `uv run`, current `aoc_common` helpers, the new `uv run aoc` / per-script CLI flags and Template v3 conventions, MathJax v3 frontmatter (`mathjax: true`), and diagram guardrails (no Mermaid or ASCII trees).
-- [ ] Review [`.agent/rules/aoc-retrieval.md`](.agent/rules/aoc-retrieval.md) and evaluate whether to relocate from legacy `.agent/rules/` or consolidate retrieval guardrails cleanly with [`AGENTS.md`](AGENTS.md) and `aoc-help`.
-- [ ] Audit legacy Gemini CLI TOML slash commands in `.gemini/commands/aoc/` (`doc-intro.toml`, `doc.toml`, `help.toml`, `sample-input.toml`) — determine whether any unique logic (such as `sample-input.toml`) should be folded into `.agents/skills/` before retiring `.gemini/commands/aoc/`.
-- [ ] Review whether we should improve our skills and context with regard to retrieving a puzzle, creating a doc page, or scanning through the megathread for insight. (Note that we now have the browser subagent, so reading through the megathread may be easier than it used to be?)
-- [ ] Do I already have a skill for retrieving session cookie?
-- [ ] Look for opportunities for improving context management in this repo, so we don't max out our model token window. How can we be faster, consume fewer tokens with iterations, but without compromising?
+- [x] Audit all four encrypted skills in `.agents/skills/` (`aoc-solution-support` (renamed from `aoc-help`), `aoc-problem-summary` (renamed from `aoc-doc-intro`), `aoc-create-doc`, `aoc-megathread-post`) and update them for 12-day AoC events (`2025+`), `uv run --no-sync`, `aoc fetch`, `aoc list` / `aoc run` / Template v3 conventions, `mathjax: true`, and diagram guardrails, then re-sync their `.enc` twins via `git-crypt-helper.sh sync-to-enc` (2026-11-14)
+- [x] Migrate legacy `.agent/rules/aoc-retrieval.md` to [`.agents/rules/aoc-retrieval.md`](.agents/rules/aoc-retrieval.md) with `trigger: model_decision` so retrieval rules load on demand and codify `uv run --no-sync aoc fetch` (2026-11-14)
+- [x] Audit legacy Gemini CLI TOML slash commands in `.gemini/commands/aoc/` (`doc-intro.toml`, `doc.toml`, `help.toml`, `sample-input.toml`), fold semantic sample verification and local capture into [`.agents/rules/aoc-retrieval.md`](.agents/rules/aoc-retrieval.md) and `aoc-solution-support` (`+ --write-sample` CLI shortcut), and remove `.gemini/commands/aoc/` (2026-11-14)
+- [x] Implement `uv run aoc fetch` (`+ make fetch`) using stdlib `html.parser` in [`src/aoc_common/aoc_commons.py`](src/aoc_common/aoc_commons.py) and [`src/aoc_common/cli.py`](src/aoc_common/cli.py) to deterministically extract Part 1/Part 2 Markdown + `<pre><code>` sample candidates in one HTTP call with zero `desc.html` temp files (so agents semantically select and write the exact sample via `write_file`), and route Reddit `/r/adventofcode` megathread lookup through `search_web` or the `browser` subagent (2026-11-14)
+- [x] Verify session cookie handling: no separate AoC session-cookie skill exists globally (global `notebooklm-auth` covers NotebookLM MCP only); AoC's `session` cookie is `HttpOnly`, so `get_aoc_session_cookie` / `_raise_input_http_error` provide inline DevTools + `git-crypt-helper.sh sync-to-enc .env` recovery hints (2026-11-14)
+- [x] Optimise context/token usage across AoC customisations: switched `aoc-retrieval.md` from `always_on` to `trigger: model_decision`, added single-call `aoc fetch --json`, capped exemplar reading, and delegated `docs/python/` tag/link verification in `aoc-create-doc` to `Model: "flash"` `research` subagents (2026-11-14)
 
 ### 2. General Repository Usage Documentation Updates
 
 - [ ] Review [`README.md`](README.md), [`src/readme.md`](src/readme.md), [`docs/readme.md`](docs/readme.md), [`AGENTS.md`](AGENTS.md), and [`docs/index.md`](docs/index.md) end-to-end for accuracy, onboarding clarity, and cross-document consistency.
 - [x] Document the new `uv run aoc` CLI, per-script CLI flags, and Template v3 workflow in [`README.md`](README.md) (building on the updated `Helper Libraries` and `make install` / editable `aoc_common` documentation) (2026-11-14)
 - [ ] Add a concise "Daily AoC Workflow" guide covering year scaffolding (`make new-year YEAR=2026`), `AOC_SESSION_COOKIE` setup, running sample vs real inputs via the CLI, authoring a walkthrough page, updating [`docs/_data/navigation.yaml`](docs/_data/navigation.yaml), and previewing via `make docs`.
-- [ ] Document new-machine `git-crypt` onboarding clearly (`git-crypt unlock ~/localdev/git-crypt-key`, `git-crypt-helper.sh sync-from-enc`, and how `input*.txt` vs `*.enc` filters interact).
+- [ ] Document new-machine `git-crypt` onboarding clearly (`git-crypt unlock ~/localdev/git-crypt-key`, `git-crypt-helper.sh sync-from-enc`, and how `input*.txt` vs `*.enc` filters interact). (Though public consumers may not be using this?)
 
 ### 3. Standardise Repeated Solution Patterns & Refresh `docs/python/` Reference Pages
 

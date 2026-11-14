@@ -16,6 +16,9 @@ Subcommands & Mechanics:
       ``Jupyter (.ipynb)``, or ``Both`` along with ``Completed/Total`` counts (25 days for
       2015-2024, 12 days for 2025+) and input/sample file presence, and renders clickable
       OSC 8 terminal hyperlinks on ``Year`` and ``Day`` columns pointing to AoC pages.
+    - ``aoc fetch <target> [day] [flags]``: downloads and parses the puzzle description in
+      memory (no temp HTML files), ranks ``<pre><code>`` sample input candidates with
+      optional ``--write-sample``, and caches ``input/input.txt`` (metadata-only output).
     - ``aoc new-year <year> [--days 12] [--dry-run] [--force] [--json]``: scaffolds
       ``src/AoC_<year>/d01..d<days>`` from ``src/template_folder/template.py`` without
       creating empty ``input.txt`` placeholders.
@@ -32,17 +35,24 @@ import re
 import subprocess
 import sys
 from collections.abc import Sequence
+from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import requests
 from rich.console import Console
 from rich.markup import escape
 from rich.table import Table
 
+import aoc_common.aoc_commons as ac
+
 _YEAR_DIR_RE = re.compile(r"^AoC_(\d{4})$")
 _DAY_DIR_RE = re.compile(r"^d(\d{1,2})(?:_.*)?$")
-_SHORTHAND_YEAR_DAY_RE = re.compile(r"^(?P<year>\d{4})[-/]?d?(?P<day>\d{1,2})$", re.IGNORECASE)
+_SHORTHAND_YEAR_DAY_RE = re.compile(
+    r"^(?:aoc_)?(?P<year>\d{4})[-/_]?d?(?P<day>\d{1,2})$",
+    re.IGNORECASE,
+)
 _DAY_ONLY_RE = re.compile(r"^d?\d{1,2}$", re.IGNORECASE)
 _YEAR_CONST_RE = re.compile(r"^YEAR: int = 2026$", re.MULTILINE)
 _DAY_CONST_RE = re.compile(r"^DAY: int = 1$", re.MULTILINE)
@@ -621,7 +631,7 @@ def _resolve_default_year(root: Path) -> int:
 
 
 def _resolve_run_target(root: Path, target: str, day_arg: str | None) -> tuple[int, int]:
-    """Parse ``<year> <day>`` or shorthands ``YYYYDD`` (``202501``), ``YYYYD`` (``20251``), ``1``, ``01``."""
+    """Parse ``<year> <day>`` or shorthands ``YYYYdDD`` (``2025d01``), ``YYYYDD`` (``202501``), ``YYYYD``, ``1``, ``d01``."""
     cleaned = target.strip()
     if day_arg is not None:
         return _parse_year(cleaned), _parse_day(day_arg)
@@ -634,7 +644,7 @@ def _resolve_run_target(root: Path, target: str, day_arg: str | None) -> tuple[i
         return _resolve_default_year(root), _parse_day(cleaned)
 
     raise argparse.ArgumentTypeError(
-        f"Invalid run target {target!r}. Expected e.g. '1', '01', '20251', '202501', or '<year> <day>'."
+        f"Invalid run target {target!r}. Expected e.g. '1', '01', 'd01', '20251', '202501', '2025d01', or '<year> <day>'."
     )
 
 
@@ -711,6 +721,140 @@ def _cmd_run(root: Path, args: argparse.Namespace) -> int:
     return completed.returncode
 
 
+def _recommended_sample_index(page: ac.PuzzlePage) -> int | None:
+    """Return the 1-based index of the highest-ranked sample candidate, if any."""
+    if not page.samples:
+        return None
+    return max(page.samples, key=lambda item: (item.score, -item.index)).index
+
+
+def _select_sample_candidate(page: ac.PuzzlePage, sample_index: int | None) -> ac.SampleCandidate:
+    """Select the requested sample candidate or highest-scored default."""
+    if not page.samples:
+        raise ValueError("No sample input code blocks found in puzzle description.")
+    if sample_index is None:
+        return max(page.samples, key=lambda item: (item.score, -item.index))
+    for candidate in page.samples:
+        if candidate.index == sample_index:
+            return candidate
+    raise ValueError(f"Sample index {sample_index} out of range (1..{len(page.samples)}).")
+
+
+def _handle_sample_write(locations: ac.Locations, page: ac.PuzzlePage, args: argparse.Namespace) -> dict[str, Any]:
+    """Write or preview writing the selected sample candidate to ``input/sample_input_part_N.txt``."""
+    candidate = _select_sample_candidate(page, args.sample_index)
+    sample_path = locations.input_dir / f"sample_input_part_{args.sample_part}.txt"
+    if _has_nonempty_file(sample_path) and not args.force:
+        return {"path": str(sample_path), "action": "skipped_existing", "candidate_index": candidate.index}
+    if args.dry_run:
+        return {"path": str(sample_path), "action": "would_write", "candidate_index": candidate.index}
+    sample_path.parent.mkdir(parents=True, exist_ok=True)
+    sample_path.write_text(candidate.text.rstrip("\n") + "\n", encoding="utf-8")
+    return {"path": str(sample_path), "action": "written", "candidate_index": candidate.index}
+
+
+def _handle_input_fetch(
+    year: int,
+    day: int,
+    locations: ac.Locations,
+    *,
+    desc_only: bool,
+    dry_run: bool,
+) -> dict[str, Any]:
+    """Cache ``input/input.txt`` unless skipped/dry-run and return metadata without raw contents."""
+    input_path = locations.input_file
+    already_cached = _has_nonempty_file(input_path)
+    if desc_only:
+        return {"path": str(input_path), "action": "skipped", "exists": already_cached}
+    if already_cached:
+        return {"path": str(input_path), "action": "cached", "exists": True}
+    if dry_run:
+        return {"path": str(input_path), "action": "would_download", "exists": False}
+    ac.write_puzzle_input_file(year, day, locations)
+    return {"path": str(input_path), "action": "downloaded", "exists": _has_nonempty_file(input_path)}
+
+
+def _build_fetch_payload(
+    year: int,
+    day: int,
+    page: ac.PuzzlePage | None,
+    sample_file: dict[str, Any] | None,
+    input_file: dict[str, Any],
+) -> dict[str, Any]:
+    """Assemble JSON-serialisable fetch result while never exposing raw ``input.txt`` data."""
+    return {
+        "year": year,
+        "day": day,
+        "url": f"https://adventofcode.com/{year}/day/{day}",
+        "status": "ok",
+        "authenticated": page.authenticated if page is not None else False,
+        "title": page.title if page is not None else None,
+        "part1_markdown": page.part1_markdown if page is not None else None,
+        "part2_markdown": page.part2_markdown if page is not None else None,
+        "recommended_sample_index": _recommended_sample_index(page) if page is not None else None,
+        "samples": [asdict(item) for item in page.samples] if page is not None else [],
+        "sample_file": sample_file,
+        "input_file": input_file,
+    }
+
+
+def _render_fetch_human(payload: dict[str, Any]) -> None:
+    """Render a concise Rich terminal summary of fetched AoC puzzle assets."""
+    console = Console()
+    heading = f"AoC {payload['year']} Day {payload['day']:02d}"
+    if payload["title"]:
+        heading = f"{heading}: {payload['title']}"
+    console.print(f"[bold cyan][link={payload['url']}]{escape(heading)}[/link][/bold cyan]")
+
+    if payload["part1_markdown"]:
+        parts = "Part 1 + Part 2" if payload["part2_markdown"] else "Part 1 only"
+        console.print(f"Description: {parts} (authenticated={payload['authenticated']})")
+        console.print(f"Sample candidates: {len(payload['samples'])} (recommended=#{payload['recommended_sample_index']})")
+
+    if payload["sample_file"]:
+        sf = payload["sample_file"]
+        console.print(f"Sample file ({sf['action']}): {sf['path']} [candidate #{sf['candidate_index']}]")
+
+    inf = payload["input_file"]
+    console.print(f"Input file ({inf['action']}): {inf['path']} (exists={inf['exists']})")
+
+
+def _cmd_fetch(root: Path, args: argparse.Namespace) -> int:
+    """Fetch puzzle description, ranked sample candidates, and/or real ``input.txt``."""
+    if args.input_only and args.write_sample:
+        return _emit_cli_error(
+            {"target": args.target},
+            "Cannot combine --input-only with --write-sample.",
+            as_json=args.json,
+            code=2,
+        )
+
+    try:
+        year, day = _resolve_run_target(root, args.target, args.day)
+    except argparse.ArgumentTypeError as exc:
+        return _emit_cli_error({"target": args.target}, str(exc), as_json=args.json, code=2)
+
+    if args.json:
+        ac.setup_logging(stderr=True)
+
+    day_dir = _find_day_dir(root / "src" / f"AoC_{year}", day)
+    locations = ac.get_locations(day_dir / f"d{day:02d}.py")
+
+    try:
+        page = None if args.input_only else ac.fetch_puzzle_page(year, day)
+        sample_file = _handle_sample_write(locations, page, args) if (args.write_sample and page is not None) else None
+        input_file = _handle_input_fetch(year, day, locations, desc_only=args.desc_only, dry_run=args.dry_run)
+    except (ValueError, requests.RequestException) as exc:
+        return _emit_cli_error({"year": year, "day": day}, str(exc), as_json=args.json, code=1)
+
+    payload = _build_fetch_payload(year, day, page, sample_file, input_file)
+    if args.json:
+        print(json.dumps(payload, indent=2))
+    else:
+        _render_fetch_human(payload)
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     """Create the top-level ``aoc`` CLI parser."""
     parser = argparse.ArgumentParser(
@@ -726,11 +870,11 @@ def _build_parser() -> argparse.ArgumentParser:
 
     run_parser = subparsers.add_parser(
         "run",
-        help="Run a puzzle script (e.g. `aoc run 2025 1`, `aoc run 202501`, `aoc run 20251`, `aoc run 01`).",
+        help="Run a puzzle script (e.g. `aoc run 2025 1`, `aoc run 2025d01`, `aoc run 202501`, `aoc run d01`).",
     )
     run_parser.add_argument(
         "target",
-        help="Year (with day arg) or shorthand: YYYYDD (202501), YYYYD (20251), or day (1 / 01 / d01).",
+        help="Year (with day arg) or shorthand: YYYYdDD (2025d01), YYYYDD (202501), YYYYD (20251), or day (1 / 01 / d01).",
     )
     run_parser.add_argument(
         "day",
@@ -750,6 +894,29 @@ def _build_parser() -> argparse.ArgumentParser:
     list_parser.add_argument("year", nargs="?", type=_parse_year, default=None, help="Optional year to inspect.")
     list_parser.add_argument("--json", action="store_true", help="Emit JSON output on stdout.")
 
+    fetch_parser = subparsers.add_parser(
+        "fetch",
+        help="Fetch AoC puzzle description, sample candidates, and input.txt (no temp desc.html).",
+    )
+    fetch_parser.add_argument(
+        "target",
+        help="Year (with day arg) or shorthand: YYYYdDD (2025d01), YYYYDD (202501), YYYYD (20251), or day (1 / 01 / d01).",
+    )
+    fetch_parser.add_argument("day", nargs="?", default=None, help="Puzzle day when year is supplied separately.")
+    fetch_mode = fetch_parser.add_mutually_exclusive_group()
+    fetch_mode.add_argument("--desc-only", action="store_true", help="Fetch puzzle description/samples only.")
+    fetch_mode.add_argument("--input-only", action="store_true", help="Download/cache input.txt only.")
+    fetch_parser.add_argument(
+        "--write-sample",
+        action="store_true",
+        help="Save selected/recommended sample block to input/sample_input_part_N.txt.",
+    )
+    fetch_parser.add_argument("--sample-part", choices=("1", "2"), default="1", help="Target sample file part (default: 1).")
+    fetch_parser.add_argument("--sample-index", type=int, default=None, help="1-based sample candidate index to write.")
+    fetch_parser.add_argument("--force", action="store_true", help="Overwrite an existing non-empty sample input file.")
+    fetch_parser.add_argument("--dry-run", action="store_true", help="Preview writes/downloads without modifying files.")
+    fetch_parser.add_argument("--json", action="store_true", help="Emit JSON output on stdout and logs on stderr.")
+
     new_year_parser = subparsers.add_parser("new-year", help="Scaffold src/AoC_<year>/d01..d<days> from Template v3.")
     new_year_parser.add_argument("year", type=_parse_year, help="Year to scaffold (e.g. 2026).")
     new_year_parser.add_argument("--days", type=int, default=12, help="Number of days to create (1..25, default: 12).")
@@ -768,6 +935,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.command == "list":
         return _cmd_list(root, args.year, as_json=args.json)
+    if args.command == "fetch":
+        return _cmd_fetch(root, args)
     if args.command == "new-year":
         return _cmd_new_year(root, args.year, days=args.days, dry_run=args.dry_run, force=args.force, as_json=args.json)
     if args.command == "run":

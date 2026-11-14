@@ -623,6 +623,99 @@ class TestTypes(unittest.TestCase):
             ac.write_puzzle_input_file(2018, 7, self.locations)
         self.assertIn("Hint: Your AOC_SESSION_COOKIE may have expired", str(ctx.exception))
 
+    def test_parse_puzzle_html_part1_part2_and_samples(self):
+        """Parse AoC puzzle HTML articles, Markdown formatting, and ranked sample candidates."""
+        html = (
+            "<html><body>"
+            '<header><div class="user">Darren</div></header>'
+            "<main>"
+            '<article class="day-desc">'
+            "<h2>--- Day 1: Secret Entrance ---</h2>"
+            "<p>Intro with <code>inline</code> &amp; <em>bold</em>.</p>"
+            "<p>For example:</p>"
+            "<pre><code><em>L68</em>\nL30 &lt; R48\n</code></pre>"
+            "<pre><code>tiny</code></pre>"
+            "</article>"
+            '<article class="day-desc">'
+            '<h2 id="part2">--- Part Two ---</h2>'
+            "<p>Second part question: <em>what is the password?</em></p>"
+            "</article>"
+            "</main>"
+            "</body></html>"
+        )
+        page = ac.parse_puzzle_html(html, year=2025, day=1)
+
+        self.assertEqual(page.title, "Secret Entrance")
+        self.assertTrue(page.authenticated)
+        self.assertIn("`inline`", page.part1_markdown)
+        self.assertIn("**bold**", page.part1_markdown)
+        self.assertIsNotNone(page.part2_markdown)
+        assert page.part2_markdown is not None
+        self.assertIn("**what is the password?**", page.part2_markdown)
+        self.assertEqual(len(page.samples), 2)
+        self.assertEqual(page.samples[0].text, "L68\nL30 < R48")
+        self.assertGreater(page.samples[0].score, page.samples[1].score)
+
+    def test_parse_puzzle_html_nested_code_em_and_li_pre(self):
+        """Suppress bold markers inside inline code and flush list text before nested <pre> blocks."""
+        html = (
+            "<main>"
+            '<article class="day-desc">'
+            "<h2>--- Day 7: Some Assembly ---</h2>"
+            "<p>Answer is <code><em>CABDFE</em></code>, "
+            "policy <code>1-3 a: <em>a</em>bcde</code>, "
+            "or <em><code>142</code></em>.</p>"
+            "<ul>"
+            "<li>For example:<pre><code>Step C\nStep A\n</code></pre></li>"
+            "</ul>"
+            "</article>"
+            "</main>"
+        )
+        page = ac.parse_puzzle_html(html, year=2018, day=7)
+
+        self.assertIn("Answer is `CABDFE`", page.part1_markdown)
+        self.assertIn("policy `1-3 a: abcde`", page.part1_markdown)
+        self.assertIn("or **`142`**.", page.part1_markdown)
+        self.assertNotIn("**CABDFE**", page.part1_markdown)
+        self.assertNotIn("**a**", page.part1_markdown)
+
+        li_pos = page.part1_markdown.index("- For example:")
+        pre_pos = page.part1_markdown.index("```\nStep C\nStep A\n```")
+        self.assertLess(li_pos, pre_pos)
+
+        self.assertEqual(len(page.samples), 1)
+        self.assertEqual(page.samples[0].context, "For example:")
+        self.assertGreaterEqual(page.samples[0].score, 70)
+
+    def test_fetch_puzzle_page_optional_cookie_and_http_error(self):
+        """Allow anonymous page fetches when AOC_SESSION_COOKIE is absent and fail loudly on HTTP errors."""
+        ok_html = (
+            '<main><article class="day-desc"><h2>--- Day 1: Secret Entrance ---</h2>'
+            "<p>For example:</p><pre><code>L68\n</code></pre></article></main>"
+        )
+        ok_resp = MagicMock(status_code=200, text=ok_html)
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch("aoc_common.aoc_commons.load_dotenv"),
+            patch("aoc_common.aoc_commons.requests.get", return_value=ok_resp) as mock_get,
+        ):
+            page = ac.fetch_puzzle_page(2025, 1)
+
+        self.assertEqual(page.title, "Secret Entrance")
+        self.assertFalse(page.authenticated)
+        self.assertIsNone(mock_get.call_args.kwargs["cookies"])
+        self.assertEqual(mock_get.call_args.kwargs["headers"], {"User-Agent": ac.AOC_USER_AGENT})
+
+        err_resp = MagicMock(status_code=404, reason="Not Found", content=b"404 Not Found")
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch("aoc_common.aoc_commons.load_dotenv"),
+            patch("aoc_common.aoc_commons.requests.get", return_value=err_resp),
+            self.assertRaises(ValueError) as ctx,
+        ):
+            ac.fetch_puzzle_page(2025, 1)
+        self.assertIn("Unable to retrieve puzzle description", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)  # if we want to include function names and docstring headers

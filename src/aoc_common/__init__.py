@@ -8,7 +8,8 @@ Purpose & Value:
 
 Package Layout:
     - :mod:`aoc_common.aoc_commons`: Path resolution (:func:`get_aoc_locations`), lazy
-      ``.env`` loading and compliant AoC HTTP caching (:func:`write_puzzle_input_file`),
+      ``.env`` loading and compliant AoC HTTP caching (:func:`get_aoc_session_cookie`,
+      :func:`write_puzzle_input_file`, :func:`fetch_puzzle_page`, :func:`parse_puzzle_html`),
       Rich logging (:func:`setup_logging`), 2D/3D spatial primitives (:class:`Point`,
       :class:`Point3D`, :class:`Vectors`, :class:`VectorDicts`, :class:`Grid`), sparse
       point-cloud rendering, and search/interval/number-theory helpers.
@@ -16,7 +17,7 @@ Package Layout:
       adaptive duration formatting (:func:`format_duration`), and standard standalone CLI
       orchestration (:func:`run_puzzle`).
     - :mod:`aoc_common.cli`: Repository-wide ``aoc`` console entry point (``run``,
-      ``list``, ``new-year``).
+      ``list``, ``fetch``, ``new-year``).
 
 Typical usage:
     ``import aoc_common.aoc_commons as ac`` or ``from aoc_common import Point, Grid``.
@@ -29,7 +30,9 @@ from aoc_common.aoc_commons import (
     PartRunSummary,
     Point,
     Point3D,
+    PuzzlePage,
     PuzzleRunSummary,
+    SampleCandidate,
     SampleInput,
     VectorDicts,
     Vectors,
@@ -37,12 +40,15 @@ from aoc_common.aoc_commons import (
     bounding_box,
     check_samples,
     cls,
+    fetch_puzzle_page,
     format_duration,
     get_aoc_locations,
+    get_aoc_session_cookie,
     get_factors,
     get_locations,
     lower_bound,
     merge_intervals,
+    parse_puzzle_html,
     render_points,
     run_puzzle,
     setup_file_logging,
@@ -62,7 +68,9 @@ __all__ = [
     "PartRunSummary",
     "Point",
     "Point3D",
+    "PuzzlePage",
     "PuzzleRunSummary",
+    "SampleCandidate",
     "SampleInput",
     "VectorDicts",
     "Vectors",
@@ -70,12 +78,15 @@ __all__ = [
     "bounding_box",
     "check_samples",
     "cls",
+    "fetch_puzzle_page",
     "format_duration",
     "get_aoc_locations",
+    "get_aoc_session_cookie",
     "get_factors",
     "get_locations",
     "lower_bound",
     "merge_intervals",
+    "parse_puzzle_html",
     "render_points",
     "run_puzzle",
     "setup_file_logging",
