@@ -24,29 +24,16 @@ import logging
 import sys
 import textwrap
 
-import dazbo_commons as dc  # For locations
-from rich.logging import RichHandler
-
 import aoc_common.aoc_commons as ac  # General AoC utils
 
 # Set these to the current puzzle
 YEAR = 2025
 DAY = 1
 
-locations = dc.get_locations(__file__)
+locations = ac.get_locations(__file__)
 
 # Configure root logger with Rich logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s.%(msecs)03d %(message)s",
-    datefmt='%H:%M:%S',
-    handlers=[RichHandler(
-        rich_tracebacks=True, 
-        show_path=False,
-        markup=True,
-        show_time=False  # Disable Rich's time since we're using our own
-    )]
-)
+ac.setup_logging()
 logger = logging.getLogger(locations.script_name)
 logger.setLevel(logging.DEBUG)
 
@@ -121,7 +108,7 @@ def main():
             input_data = f.read().splitlines() # Most puzzles are multiline strings
             # input_data = f.read().strip() # Raw string
             
-            logger.debug(dc.top_and_tail(input_data))
+            logger.debug(ac.top_and_tail(input_data))
     except (ValueError, FileNotFoundError) as e:
         logger.error("Could not read input file: %s", e)
         return 1

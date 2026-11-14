@@ -41,6 +41,7 @@ To run the solutions in this repository, you'll need the following:
 - **Python >=3.13**
 - **[`uv`](https://docs.astral.sh/uv/)**: Manages the virtual environment, Python runtime, and lockfile dependencies (`pyproject.toml` / `uv.lock`).
 - **Jupyter**: Installed via `--extra jupyter` for running the notebook-based solutions (`.ipynb` files).
+- **Legacy (`2015`–`2024`) Dependencies**: Historical solutions that still import `dazbo-commons` / `colorama` are supported via `--extra legacy` (included in `make install`).
 
 ### Installation
 
@@ -52,8 +53,8 @@ To run the solutions in this repository, you'll need the following:
 
 2. **Create a virtual environment and install dependencies:**
    ```bash
-   # Install project, dev tooling, and Jupyter dependencies
-   make install   # runs: uv sync --dev --extra jupyter
+   # Install project, dev tooling, Jupyter, and legacy (2015-2024) dependencies
+   make install   # runs: uv sync --dev --extra jupyter --extra legacy
    ```
 
 3. **Run solutions and checks:**
@@ -105,12 +106,19 @@ For some years (e.g., 2023–2024), solutions use Jupyter Notebooks combining Py
 
 ### Helper Libraries
 
-Shared utilities live in [`src/aoc_common/aoc_commons.py`](src/aoc_common/aoc_commons.py), which has **zero external dependency on `dazbo-commons`** (older historical scripts imported `dazbo-commons`, whereas current `aoc_common` and 2026+ templates handle everything self-contained):
+Shared utilities live in [`src/aoc_common/aoc_commons.py`](src/aoc_common/aoc_commons.py) and have **zero dependency on `dazbo-commons`**. Because [`pyproject.toml`](pyproject.toml) includes a `[build-system]` packaging `src/aoc_common` editably into `.venv`, both standalone Python scripts and local Jupyter notebooks import `import aoc_common.aoc_commons as ac` directly without setting `PYTHONPATH=src` (and cloud notebooks such as Google Colab install `aoc_common` straight from GitHub):
 
-- **AoC Utilities**: `Point`, `Vectors`, `VectorDicts`, and `Grid` classes for 2D grid problems; `binary_search`, `merge_intervals`, `get_factors`, and `to_base_n`; `timer` context manager; and `write_puzzle_input_file` (with AoC `User-Agent` header enforcement).
-- **Coloured Console & File Logging**: Built-in `ColouredFormatter` (using `colorama`), `retrieve_console_logger`, and `setup_file_logging`.
+- **Logging & Output**: `setup_logging` (configured with `RichHandler` and `force=True` for reliable re-initialisation in scripts and notebooks), `setup_file_logging`, and `top_and_tail`.
+- **Paths & Input Retrieval**: `Locations`, `get_locations`, and `write_puzzle_input_file` (with AoC `User-Agent` header enforcement).
+- **Testing & Timing**: `validate` (raising `AssertionError` on mismatch) and the `timer` context manager.
+- **2D Geometry & Algorithms**: `Point`, `Vectors`, `VectorDicts`, and `Grid` classes, plus `binary_search`, `merge_intervals`, `get_factors`, and `to_base_n`.
 
-Note that `aoc_common` is imported directly in standalone scripts, while notebooks stay self-contained so they remain portable (e.g. in Colab).
+#### History: From `dazbo-commons` (`dc`) to `aoc_common` (`ac`)
+
+1. **2021–2022 (`dazbo-commons` on PyPI)**: Published [`dazbo-commons-py`](https://github.com/derailed-dash/dazbo-commons-py) as a general-purpose PyPI utility package providing `colorama`-based `ColouredFormatter` / `retrieve_console_logger`, `Locations` / `get_locations`, `top_and_tail`, and `.env` loading (`get_envs_from_file`).
+2. **May–Sep 2023 (`type_defs.py` → `aoc_commons.py`)**: Extracted AoC-specific helpers (`Point`, `Vectors`, `Grid`, `binary_search`, `merge_intervals`, `to_base_n`) into an in-repo `type_defs` module, renamed it to `aoc_commons.py`, and briefly trialled PyPI packaging before keeping it inside this repository.
+3. **May 2024–Oct 2025 (Dual `dc` + `ac` era)**: Scripts and the 2024 notebook imported both `dazbo_commons as dc` (for general logging, `Locations`, and `top_and_tail`) and `aoc_common.aoc_commons as ac` (for AoC geometry and puzzle retrieval).
+4. **Dec 2025–2026 (Consolidated `ac` + `Rich`)**: Replaced `colorama` logging with `Rich` (`RichHandler`), consolidated `Locations`, `load_dotenv()`, and `top_and_tail` back into `aoc_common`, enabled editable packaging in `pyproject.toml` so scripts and notebooks share a single import path, and moved `dazbo-commons` and `colorama` into `[project.optional-dependencies] legacy` solely so untouched `2015`–`2024` solutions remain runnable.
 
 ### Assertions and Testing
 

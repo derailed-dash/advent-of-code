@@ -9,10 +9,8 @@ resolution-markers = [
 [[package]]
 name = "advent-of-code"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
-    { name = "colorama" },
-    { name = "dazbo-commons" },
     { name = "graphviz" },
     { name = "imageio" },
     { name = "matplotlib" },
@@ -39,6 +37,10 @@ jupyter = [
     { name = "jupyterlab" },
     { name = "jupyterlab-lsp" },
 ]
+legacy = [
+    { name = "colorama" },
+    { name = "dazbo-commons" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -51,8 +53,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "colorama" },
-    { name = "dazbo-commons", specifier = ">=0.2.0" },
+    { name = "colorama", marker = "extra == 'legacy'" },
+    { name = "dazbo-commons", marker = "extra == 'legacy'", specifier = ">=0.2.0" },
     { name = "graphviz" },
     { name = "imageio" },
     { name = "ipykernel", marker = "extra == 'jupyter'" },
@@ -75,7 +77,7 @@ requires-dist = [
     { name = "sympy" },
     { name = "tqdm" },
 ]
-provides-extras = ["jupyter"]
+provides-extras = ["jupyter", "legacy"]
 
 [package.metadata.requires-dev]
 dev = [
