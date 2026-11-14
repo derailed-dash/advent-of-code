@@ -1,5 +1,6 @@
 ---
 title: Creating and Visualising Graphs with NetworkX
+description: Creating, manipulating, and visualising graphs in Python using NetworkX for Advent of Code graph algorithms.
 main_img:
   name: NetworkX Graphs
   link: /assets/images/networkx_graph.png
@@ -30,6 +31,9 @@ tags:
 - [More Interesting Graphs](#more-interesting-graphs)
   - [Colouring Nodes Based on Attributes](#colouring-nodes-based-on-attributes)
   - [Colouring a Particular Path](#colouring-a-particular-path)
+  - [Identifying Cliques](#identifying-cliques)
+  - [Find Maximal Cliques](#find-maximal-cliques)
+  - [Graph Partitioning and Minimum Cut](#graph-partitioning-and-minimum-cut)
 - [Examples](#examples)
 
 ## Introduction
@@ -38,8 +42,8 @@ tags:
 
 ## Installing NetworkX
 
-```
-py -m pip install networks
+```bash
+uv add networkx
 ```
 
 ## NetworkX Guides and Tutorials
@@ -51,11 +55,11 @@ Here are a few useful links:
 - [Examples Gallery](https://networkx.org/documentation/stable/auto_examples/index.html){:target="_blank"}
 - [Layouts](https://networkx.org/documentation/stable/reference/drawing.html#module-networkx.drawing.layout){:target="_blank"}
 - [Algorithms](https://networkx.org/documentation/stable/reference/algorithms/index.html){:target="_blank"}
-- [Customizing NetworkX Graphs](https://towardsdatascience.com/customizing-networkx-graphs-f80b4e69bedf){:target="_blank"}
+- [Customising NetworkX Graphs](https://towardsdatascience.com/customizing-networkx-graphs-f80b4e69bedf){:target="_blank"}
 
 ## Getting Started With NetworkX
 
-We need to import the relevant packages.  You'll probably want to import `matplotlib.pyplot` if you want to render any [graph visualisations](/python/visualisation){:target="_blank"}.
+We need to import the relevant packages. You'll probably want to import `matplotlib.pyplot` if you want to render any [graph visualisations](/python/visualisation).
 
 ```python
 import networkx as nx
@@ -64,19 +68,19 @@ import matplotlib.pyplot as plt
 
 ## Supplying Graph Data
 
-Typically, we'll want to build a graph by supplying edge information.  I.e. a connection between one node and another.
+Typically, we'll want to build a graph by supplying edge information. I.e. a connection between one node and another.
 
-For example, let's say we have a list of input data, where each line of data contains two locations.  We might build an _unweighted, undirected graph_ like this:
+For example, let's say we have a list of input data, where each line of data contains two locations. We might build an _unweighted, undirected graph_ like this:
 
 ```python
-def build_graph(data) -> nx.Graph:
-    """ Build graph from list of connected points.
+def build_graph(data: list[str]) -> nx.Graph:
+    """Build graph from list of connected points.
 
     Args:
-        data (list[str]): pairs of points, in the form "Name_X connected to Name_Y"
+        data: pairs of points, in the form "Name_X connected to Name_Y"
 
     Returns:
-        dict: (start, end) = distance
+        nx.Graph: unweighted, undirected graph
     """
     graph = nx.Graph()
     points_match = re.compile(r"^(\w+) connected to (\w+)")
@@ -89,17 +93,17 @@ def build_graph(data) -> nx.Graph:
     return graph
 ```
 
-Or, if we also have some sort of weight information (e.g. distance between points, cost of a route, etc), then we can build a _directed graph_ like this:
+Or, if we also have some sort of weight information (e.g. distance between points, cost of a route, etc), then we can build a _weighted graph_ like this:
 
 ```python
-def build_graph(data) -> nx.Graph:
-    """ Build graph from list of connected points.
+def build_graph(data: list[str]) -> nx.Graph:
+    """Build graph from list of connected points.
 
     Args:
-        data (list[str]): pairs of points, in the form "Name_X to Name_Y = distance_n"
+        data: pairs of points, in the form "Name_X to Name_Y = distance_n"
 
     Returns:
-        dict: (start, end) = distance
+        nx.Graph: weighted graph with distance attribute
     """
     graph = nx.Graph()
     distance_match = re.compile(r"^(\w+) to (\w+) = (\d+)")
@@ -107,20 +111,19 @@ def build_graph(data) -> nx.Graph:
     # Add each edge, in the form of a location pair
     for edge in data:
         start, end, distance = distance_match.findall(edge)[0]
-        distance = int(distance)
-        graph.add_edge(start, end, distance=distance)
+        graph.add_edge(start, end, distance=int(distance))
     
     return graph
 ```
 
-Or we could be a _directed weighted graph_, like this:
+Or we could build a _directed weighted graph_, like this:
 
 ```python
-def build_graph(rules):
-    """ Builds a graph from a dict of rules
+def build_graph(rules: dict[str, dict[str, int]]) -> nx.DiGraph:
+    """Builds a graph from a dict of rules.
 
     Args:
-        rules (dict): Look like... 'shiny plum': {'dotted beige': 5, 'faded orange': 1}
+        rules: Look like... {'shiny plum': {'dotted beige': 5, 'faded orange': 1}}
 
     Returns:
         nx.DiGraph: Directed graph
@@ -339,7 +342,7 @@ The visualisation looks like this:
 
 ### Identifying Cliques
 
-This is taken from [AoC 2024 Day 23 - LAN Party](https://colab.research.google.com/github/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb){:target="_blank"}
+This is taken from [AoC 2024 Day 23 - LAN Party](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb){:target="_blank"}:
 
 A clique is a subset of vertices such that every two distinct vertices are adjacent. What this means is that there is an **edge between every pair of nodes in the clique**. To put it another way: every node in the subset is directly connected to every other node.
 
@@ -357,7 +360,7 @@ qp-ub
 We can identify cliques like this:
 
 ```python
-def identify_triangle_cliques(data: list[str], real=True):
+def identify_triangle_cliques(data: list[str], real: bool = True) -> int:
     graph = nx.Graph()
     for line in data:
         if not line.strip():
@@ -382,7 +385,7 @@ def identify_triangle_cliques(data: list[str], real=True):
     visualise_graph(graph, real=real, chief_candidates=chief_candidates)
     return len(chief_candidates)            
 
-def visualise_graph(graph, real, chief_candidates=None, largest_clique=None):
+def visualise_graph(graph: nx.Graph, real: bool, chief_candidates: list[set[str]] | None = None, largest_clique: set[str] | list[str] | None = None) -> None:
     fig, ax = plt.subplots(figsize=(12, 12), dpi=80)
     
     if real: 
@@ -425,12 +428,12 @@ def visualise_graph(graph, real, chief_candidates=None, largest_clique=None):
 
 ### Find Maximal Cliques
 
-This is taken from [AoC 2024 Day 23 - LAN Party](https://colab.research.google.com/github/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb){:target="_blank"}
+This is taken from [AoC 2024 Day 23 - LAN Party](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb){:target="_blank"}:
 
 A maximal clique is a clique that cannot be extended by adding more nodes while remaining fully connected. So we can just retrieve all the maximal cliques, and then return the one that is largest. I.e. the largest clique where all nodes are directly connected to each other. 
 
 ```python
-def solve_part2(data, real=True):
+def solve_part2(data: list[str], real: bool = True) -> str:
     graph = nx.Graph()
     for line in data:
         if not line.strip():
@@ -451,10 +454,26 @@ def solve_part2(data, real=True):
 
 ![Largest Clique]({{"/assets/images/largest-clique.png" | relative_url }}){:style="width:600px"}
 
+### Graph Partitioning and Minimum Cut
+
+In Advent of Code problems such as [2023 Day 25](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}, we need to divide a network into two disconnected components by severing a minimal number of edges. NetworkX provides algorithms like `nx.minimum_edge_cut()` or `nx.stoer_wagner()` to compute the partition efficiently:
+
+```python
+# Cut the graph into two components by removing the minimum cut edges
+cut_edges = nx.minimum_edge_cut(graph)
+graph.remove_edges_from(cut_edges)
+components = list(nx.connected_components(graph))
+result = len(components[0]) * len(components[1])
+```
+
+Similarly, in [2025 Day 11](/2025/11), NetworkX makes traversing Directed Acyclic Graphs (DAGs) straightforward via `nx.all_simple_paths()` and topological sorting.
+
 ## Examples
 
 - [Travelling Salesman - 2015 Day 9](/2015/9)
 - [Seating arrangement - 2015 Day 13](/2015/13)
 - [Cave navigating and visualisation - 2021 Day 12](/2021/12)
 - [Hillclimbing - shortest path length and multi_source_dijkstra - 2022 Day 12](/2022/12)
-- [LAN Party - AoC 2024 Day 23](https://colab.research.google.com/github/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb)
+- [Snowverload - minimum cut - 2023 Day 25](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}
+- [LAN Party - finding cliques and maximal clique - 2024 Day 23](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb){:target="_blank"}
+- [Reactor Cooling - DAG paths - 2025 Day 11](/2025/11)

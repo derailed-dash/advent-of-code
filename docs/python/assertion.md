@@ -1,19 +1,23 @@
 ---
 title: Assertion
+description: "Testing invariants in Python with assert statements, handling AssertionError, and validating Advent of Code sample cases with Template v3."
 tags: 
   - name: Assertions in Python
     link: https://www.tutorialspoint.com/python/assertions_in_python.htm
   - name: Exceptions
     link: /python/exceptions
+  - name: Template v3
+    link: /python/my-aoc-template3
 ---
 ## Page Contents
 
 - [Assertions and Invariants](#assertions-and-invariants)
   - [Overview](#overview)
-  - [Handing AssertionError](#handing-assertionerror)
+  - [Handling AssertionError](#handling-assertionerror)
   - [Assertions as a Way to Comment Code](#assertions-as-a-way-to-comment-code)
   - [Asserting Unreachable Conditions](#asserting-unreachable-conditions)
   - [Performance Considerations](#performance-considerations)
+- [Assertions in Advent of Code (Template v3)](#assertions-in-advent-of-code-template-v3)
 - [Examples](#examples)
 
 ## Assertions and Invariants
@@ -68,12 +72,12 @@ Output:
 
 ```text
 Traceback (most recent call last):
-  File "f:\Users\Darren\localdev\Python\Basic-Scripts\src\Exceptions\assertion_demo.py", line 2, in <module>
+  File "/path/to/advent-of-code/src/snippets/assertion_demo.py", line 2, in <module>
     assert okay, "We're not okay!"
 AssertionError: We're not okay!
 ```
 
-### Handing AssertionError
+### Handling AssertionError
 
 Like any exception in Python, we _can_ handle it programmatically:
 
@@ -124,7 +128,7 @@ Output:
 
 ```text
 Traceback (most recent call last):
-  File "f:\Users\Darren\localdev\Python\Basic-Scripts\src\Exceptions\assertion_demo.py", line 7, in <module>
+  File "/path/to/advent-of-code/src/snippets/assertion_demo.py", line 7, in <module>
     assert False, "Looks like we did a poor job validating the input."   
 AssertionError: Looks like we did a poor job validating the input.  
 ```
@@ -138,6 +142,15 @@ Used judiciously, assertions should have no significant impact on your applicati
 - It may not be wise to place an assert within a loop that runs many times. (But sometimes it may be worth it!)
 - It is unwise to provide an assert condition that is computationally intensive.
 - You can always tell your program to run without assertions, by passing the `-O` command line parameter at run time.
+
+## Assertions in Advent of Code (Template v3)
+
+In Advent of Code, assertions are fundamental for verifying puzzle logic against example data provided in the problem brief before running against full puzzle inputs.
+
+In [Template v3](/python/my-aoc-template3), this verification is formalised using `aoc_common` (`ac`):
+
+- **`ac.validate(actual, expected)`**: A concise assertion helper that checks whether an actual calculation matches an expected answer, raising `AssertionError(f"{actual} != {expected}")` on failure.
+- **`SampleInput` and `ac.check_samples()`**: Puzzle scripts define declarative test pairs (`PART1_SAMPLES: list[ac.SampleInput] = [...]`). When running tests (or using `uv run aoc run <target> -s`), `ac.check_samples()` temporarily enables `DEBUG` logging, runs each sample through the parser and solver function, and asserts the expected result with `ac.validate`.
 
 ## Examples
 

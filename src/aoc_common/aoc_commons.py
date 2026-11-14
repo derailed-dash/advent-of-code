@@ -36,6 +36,7 @@ import operator
 import os
 import re
 import time
+from collections import deque
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
@@ -93,7 +94,7 @@ def setup_logging(level: int | str = logging.INFO, *, stderr: bool = False) -> N
     )
 
 
-@dataclass
+@dataclass(slots=True)
 class Locations:
     """Dataclass for storing filesystem paths associated with a puzzle script."""
 
@@ -322,7 +323,7 @@ def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
     _raise_input_http_error(response)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class SampleCandidate:
     """Candidate sample input block extracted from an AoC puzzle HTML page."""
 
@@ -333,7 +334,7 @@ class SampleCandidate:
     score: int
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class PuzzlePage:
     """Parsed Advent of Code puzzle page produced in memory without temp HTML files."""
 
@@ -573,7 +574,25 @@ def _is_int_not_bool(value: object) -> TypeGuard[int]:
     return isinstance(value, int) and not isinstance(value, bool)
 
 
-@dataclass(frozen=True, order=True)
+_ORTHOGONAL_2D_DELTAS: tuple[tuple[int, int], ...] = (
+    (0, 1),
+    (1, 0),
+    (0, -1),
+    (-1, 0),
+)
+_ALL_2D_DELTAS: tuple[tuple[int, int], ...] = (
+    (0, 1),
+    (1, 1),
+    (1, 0),
+    (1, -1),
+    (0, -1),
+    (-1, -1),
+    (-1, 0),
+    (-1, 1),
+)
+
+
+@dataclass(frozen=True, order=True, slots=True)
 class Point:
     """Immutable, hashable, ordered 2D integer coordinate ``(x, y)``."""
 
@@ -616,17 +635,11 @@ class Point:
         include_self: bool = False,
     ) -> Iterator[Point]:
         """Yield neighbouring ``Point``s in 8-way or 4-way orthogonal order."""
-        deltas: list[tuple[int, int]]
-        if not include_diagonals:
-            deltas = [vector.value for vector in Vectors if abs(vector.value[0]) != abs(vector.value[1])]
-        else:
-            deltas = [vector.value for vector in Vectors]
-
-        if include_self:
-            deltas.append((0, 0))
-
+        deltas = _ALL_2D_DELTAS if include_diagonals else _ORTHOGONAL_2D_DELTAS
         for dx, dy in deltas:
             yield Point(self.x + dx, self.y + dy)
+        if include_self:
+            yield self
 
     def neighbours(
         self,
@@ -635,6 +648,10 @@ class Point:
     ) -> list[Point]:
         """Return all neighbouring ``Point``s matching the given constraints."""
         return list(self.yield_neighbours(include_diagonals=include_diagonals, include_self=include_self))
+
+    def orthogonal_neighbours(self) -> list[Point]:
+        """Return the 4 orthogonally adjacent ``Point``s (N, E, S, W)."""
+        return self.neighbours(include_diagonals=False)
 
     def get_specific_neighbours(self, directions: Iterable[Vectors]) -> list[Point]:
         """Return neighbours obtained by stepping along each vector in ``directions``."""
@@ -648,6 +665,14 @@ class Point:
     def manhattan_distance_from(self, other: Point) -> int:
         """Return the Manhattan distance between ``self`` and ``other``."""
         return abs(self.x - other.x) + abs(self.y - other.y)
+
+    def chebyshev_distance_from(self, other: Point) -> int:
+        """Return the L-infinity (chessboard) distance between ``self`` and ``other``."""
+        return max(abs(self.x - other.x), abs(self.y - other.y))
+
+    def euclidean_distance_from(self, other: Point) -> float:
+        """Return the L2 Euclidean distance between ``self`` and ``other``."""
+        return math.hypot(self.x - other.x, self.y - other.y)
 
     def __repr__(self) -> str:
         return f"P({self.x},{self.y})"
@@ -666,7 +691,7 @@ _ALL_3D_DELTAS: tuple[tuple[int, int, int], ...] = tuple(
 )
 
 
-@dataclass(frozen=True, order=True)
+@dataclass(frozen=True, order=True, slots=True)
 class Point3D:
     """Immutable, hashable, ordered 3D integer coordinate ``(x, y, z)``."""
 
@@ -724,6 +749,10 @@ class Point3D:
         """Return neighbouring ``Point3D``s matching the given constraints."""
         return list(self.yield_neighbours(include_diagonals=include_diagonals, include_self=include_self))
 
+    def orthogonal_neighbours(self) -> list[Point3D]:
+        """Return the 6 orthogonally adjacent ``Point3D``s along +/-X, +/-Y, +/-Z."""
+        return self.neighbours(include_diagonals=False)
+
     @staticmethod
     def manhattan_distance(a_point: Point3D) -> int:
         """Return the L1 Manhattan norm ``|x| + |y| + |z|`` of ``a_point``."""
@@ -732,6 +761,14 @@ class Point3D:
     def manhattan_distance_from(self, other: Point3D) -> int:
         """Return the Manhattan distance between ``self`` and ``other``."""
         return abs(self.x - other.x) + abs(self.y - other.y) + abs(self.z - other.z)
+
+    def chebyshev_distance_from(self, other: Point3D) -> int:
+        """Return the L-infinity Chebyshev distance between ``self`` and ``other``."""
+        return max(abs(self.x - other.x), abs(self.y - other.y), abs(self.z - other.z))
+
+    def euclidean_distance_from(self, other: Point3D) -> float:
+        """Return the L2 Euclidean distance between ``self`` and ``other``."""
+        return math.hypot(self.x - other.x, self.y - other.y, self.z - other.z)
 
     def __repr__(self) -> str:
         return f"P3D({self.x},{self.y},{self.z})"
@@ -859,13 +896,34 @@ class Grid[T]:
         if any(len(row) != self._width for row in self.array):
             raise ValueError("All grid rows must have equal length.")
 
+    @classmethod
+    def from_text(cls, raw_text: str) -> Grid[str]:
+        """Construct a character ``Grid`` from multiline puzzle text, ignoring empty lines."""
+        return Grid([line for line in raw_text.splitlines() if line])
+
+    def _require_valid_point(self, point: Point) -> None:
+        """Raise ``IndexError`` when ``point`` is outside bounds (including negative indices)."""
+        if not self.valid_location(point):
+            raise IndexError(f"Point {point} is outside grid bounds ({self._width}x{self._height}).")
+
     def value_at_point(self, point: Point) -> T:
         """Return the cell value at ``point``."""
+        self._require_valid_point(point)
         return self.array[point.y][point.x]
 
     def set_value_at_point(self, point: Point, value: T) -> None:
         """Set the cell value at ``point``."""
+        self._require_valid_point(point)
         self.array[point.y][point.x] = value
+
+    def __getitem__(self, point: Point) -> T:
+        return self.value_at_point(point)
+
+    def __setitem__(self, point: Point, value: T) -> None:
+        self.set_value_at_point(point, value)
+
+    def __contains__(self, point: object) -> bool:
+        return isinstance(point, Point) and self.valid_location(point)
 
     def valid_location(self, point: Point) -> bool:
         """Return ``True`` if ``point`` lies within the grid bounds."""
@@ -888,13 +946,37 @@ class Grid[T]:
             return []
         return [list(col) for col in zip(*self.array)]
 
+    def copy(self) -> Grid[T]:
+        """Return a shallow-copied ``Grid`` whose row mutations do not affect this grid."""
+        return Grid(self.array)
+
     def all_points(self) -> list[Point]:
         """Return all ``Point`` coordinates contained within the grid."""
         return [Point(x, y) for y in range(self.height) for x in range(self.width)]
 
+    def items(self) -> Iterator[tuple[Point, T]]:
+        """Yield ``(Point(x, y), value)`` pairs across the grid in row-major order."""
+        for y, row in enumerate(self.array):
+            for x, cell in enumerate(row):
+                yield Point(x, y), cell
+
     def find_points_with_value(self, value: T) -> list[Point]:
         """Return all grid coordinates whose current cell value equals ``value``."""
-        return [Point(x, y) for y, row in enumerate(self.array) for x, cell in enumerate(row) if cell == value]
+        return [point for point, cell in self.items() if cell == value]
+
+    def find_first(self, value: T) -> Point | None:
+        """Return the first ``Point`` whose cell value equals ``value``, or ``None`` if absent."""
+        for point, cell in self.items():
+            if cell == value:
+                return point
+        return None
+
+    def find_one(self, value: T) -> Point:
+        """Return the unique ``Point`` matching ``value``, raising ``ValueError`` if 0 or >1 exist."""
+        matches = self.find_points_with_value(value)
+        if len(matches) != 1:
+            raise ValueError(f"Expected exactly 1 occurrence of {value!r}, found {len(matches)}.")
+        return matches[0]
 
     def neighbours_of(
         self,
@@ -909,6 +991,29 @@ class Grid[T]:
             for candidate in point.yield_neighbours(include_diagonals=include_diagonals, include_self=include_self)
             if self.valid_location(candidate)
         ]
+
+    def flood_fill(
+        self,
+        start: Point,
+        *,
+        include_diagonals: bool = False,
+        predicate: Callable[[T], bool] | None = None,
+    ) -> set[Point]:
+        """Return all connected in-bounds ``Point``s reachable from ``start`` matching ``predicate`` (or ``grid[start]``)."""
+        start_value = self[start]
+        match_fn: Callable[[T], bool] = predicate if predicate is not None else (lambda cell: cell == start_value)
+        if not match_fn(start_value):
+            return set()
+
+        visited: set[Point] = {start}
+        queue: deque[Point] = deque([start])
+        while queue:
+            current = queue.popleft()
+            for neighbour in self.neighbours_of(current, include_diagonals=include_diagonals):
+                if neighbour not in visited and match_fn(self[neighbour]):
+                    visited.add(neighbour)
+                    queue.append(neighbour)
+        return visited
 
     def rows_as_str(self) -> list[str]:
         """Render each row as a concatenated string."""

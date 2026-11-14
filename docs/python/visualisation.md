@@ -1,5 +1,6 @@
 ---
 title: Visualisation in Python
+description: Comprehensive guide to data and algorithmic visualisation in Python for Advent of Code, covering Matplotlib, 3D animations, Rich terminal rendering, and Pillow GIFs.
 redirect_from: /python/matplotlib
 main_img:
   name: matplotlib
@@ -63,7 +64,7 @@ tags:
 
 ## Overview
 
-Visualisation is a superpower. Whether you're debugging a complex algorithm or just want so show off your solution on Reddit, a good chart (or animation) is worth a thousand `print()` statements.
+Visualisation is a superpower. Whether you're debugging a complex algorithm or just want to show off your solution on Reddit, a good chart (or animation) is worth a thousand `print()` statements.
 
 In this guide, we'll look at the industry standard—**Matplotlib**—for creating static, animated, and interactive visualisations. But we won't stop there. We'll also look at how to create **retro console animations** using `Rich`, and how to stitch images together into GIFs using `Pillow`.
 
@@ -71,14 +72,14 @@ So... grab a piña colada, fire up your IDE, and let's get visual!
 
 ## Installing
 
-```text
-py -m pip install matplotlib
+```bash
+uv add matplotlib
 ```
 
 ## Basic Usage
 
 - Many of the basic capabilities you'll need are exposed through the `pyplot`. So the first thing you'll want to do is import `pyplot`.
-- Visualisations are created on `figures`, which in turn contain one more more `axes`; i.e. an individual plot area.
+- Visualisations are created on `figures`, which in turn contain one or more `axes`; i.e. an individual plot area.
 
 ### Getting Axes
 
@@ -432,11 +433,11 @@ def vis_state(black_tiles, all_tiles, iteration):
     ax.scatter(white_x, white_y, marker=shape, s=mkr_size, color='white', edgecolors='black')
     ax.set_title(f"Tile Floor, Iteration: {iteration-1}")
     
-    if not os.path.exists(OUTPUT_DIR):
-        os.makedirs(OUTPUT_DIR)
+    output_dir = Path(OUTPUT_DIR)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # save the plot as a frame
-    filename = OUTPUT_DIR + "tiles_anim_" + str(iteration) + ".png"
+    filename = output_dir / f"tiles_anim_{iteration}.png"
     plt.savefig(filename)
     # plt.show()
     anim_frame_files.append(filename)
@@ -761,7 +762,7 @@ def plot(grid, start, visited: set):
 Taken from [2023 Day 18: Filling the Lava Lagoon](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}:
 
 ```python
-def plot_path(perimeter: list[tuple]):
+def plot_path(perimeter: list[tuple[int, int]]) -> None:
     # Extract x and y values from the perimeter
     perimeter_x_values = [point[0] for point in perimeter]
     perimeter_y_values = [point[1] for point in perimeter]
@@ -789,7 +790,8 @@ def plot_path(perimeter: list[tuple]):
 Taken from [2023 Day 18: Filling the Lava Lagoon](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}:
 
 ```python
-def plot_path(path: list[tuple], inside: set[tuple]=set()):
+def plot_path(path: list[tuple[int, int]], inside: set[tuple[int, int]] | None = None) -> None:
+    inside = inside or set()
     # Extract x and y values from the path
     loop_x_values = [point[0] for point in path]
     loop_y_values = [point[1] for point in path]
@@ -821,11 +823,12 @@ def plot_path(path: list[tuple], inside: set[tuple]=set()):
 Taken from [2023 Day 18: Filling the Lava Lagoon](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}:
 
 ```python
-def plot_path(path: list[tuple], inside: set[tuple]=set()):
+def plot_path(path: list[tuple[int, int]], inside: set[tuple[int, int]] | None = None) -> None:
+    inside = inside or set()
     fig, ax = plt.subplots()
 
-    # Function to add a 1x1 square with the point at its center
-    def add_square(x, y, colour, fill=False):
+    # Function to add a 1x1 square with the point at its centre
+    def add_square(x: int, y: int, colour: str, fill: bool = False) -> None:
         square = Rectangle((x - 0.5, y - 0.5), 1, 1, fill=fill, edgecolor=colour, facecolor=colour)
         ax.add_patch(square)
 
@@ -875,16 +878,16 @@ Taken from [2024 Day 6: Guard Gallivant](https://github.com/derailed-dash/Advent
 My `VisGuardMap` extends `GuardMap`. It animates the path of a guard moving through a grid.
 
 - `create_animation()` sets up the animation using matplotlib's `FuncAnimation`. 
-- It initializes a plot showing obstacles and creates empty scatter plots for each movement direction. 
-- The key is `animate_step`, called for each frame. It iterates through the `_visited` list, which stores visited grid points and their associated directions up to the current frame (`n`). 
-- For each direction, it updates the corresponding scatter plot with the coordinates of newly visited points. 
+- It initialises a plot showing obstacles and creates empty scatter plots for each movement direction.
+- The key is `animate_step`, called for each frame. It iterates through the `_visited` list, which stores visited grid points and their associated directions up to the current frame (`n`).
+- For each direction, it updates the corresponding scatter plot with the coordinates of newly visited points.
 - FuncAnimation then compiles these frames into an animation, saved as a video file.
 
 This approach is efficient since we don't recreate the axes with each frame.
 
 ```python
 class VisGuardMap(GuardMap):
-    def __init__(self, grid_array: list, animating: bool = True, **kwargs) -> None:
+    def __init__(self, grid_array: list[list[str]], animating: bool = True, **kwargs: object) -> None:
         super().__init__(grid_array=grid_array, **kwargs)
         
         self.animating = animating
@@ -892,16 +895,16 @@ class VisGuardMap(GuardMap):
             self._plot_info = self._setup_fig()
             self._frame_index = 0
     
-    def _setup_fig(self):
+    def _setup_fig(self) -> tuple[object, object, float, dict[str, object]]:
         """ Initialise the plot """   
         my_dpi = 120
         fig, axes = plt.subplots(figsize=(1024/my_dpi, 768/my_dpi), dpi=my_dpi, facecolor="white") # set size in pixels
 
         axes.get_xaxis().set_visible(True)
         axes.get_yaxis().set_visible(True)
-        axes.tick_params(axis='both', colors='black')  # Change tick color
-        axes.xaxis.label.set_color('black')  # Change x-axis label color
-        axes.yaxis.label.set_color('black')  # Change y-axis label color
+        axes.tick_params(axis='both', colors='black')  # Change tick colour
+        axes.xaxis.label.set_color('black')  # Change x-axis label colour
+        axes.yaxis.label.set_color('black')  # Change y-axis label colour
         axes.invert_yaxis()
         
         axes.set_aspect('equal') # set x and y to equal aspect
@@ -1013,7 +1016,7 @@ By using `rich.live.Live` and a `Layout`, we can create a smooth terminal animat
 
 ### Generating GIFs with Pillow
 
-For **2025 Day 4: Printing Department**, we needed to help elves optimize forklift access to paper rolls on a grid. Matplotlib is great for the static frame, but for the animation, we can just save each frame as an image and stitch them together using `Pillow`.
+For **2025 Day 4: Printing Department**, we needed to help elves optimise forklift access to paper rolls on a grid. Matplotlib is great for the static frame, but for the animation, we can just save each frame as an image and stitch them together using `Pillow`.
 
 This is often more robust than `FuncAnimation` if you want per-frame control.
 
@@ -1028,7 +1031,7 @@ This is often more robust than `FuncAnimation` if you want per-frame control.
 
 ### Complex Animations
 
-For **2025 Day 8: Playground**, we found ourselves in a massive underground playground connecting lighting circuits between junction boxes in 3D space. We used `FuncAnimation` to visualize the clusters of connected boxes forming circuits.
+For **2025 Day 8: Playground**, we found ourselves in a massive underground playground connecting lighting circuits between junction boxes in 3D space. We used `FuncAnimation` to visualise the clusters of connected boxes forming circuits.
 
 <video width="100%" controls autoplay loop muted>
   <source src="/assets/media/2025_d08_vis.mp4" type="video/mp4">
@@ -1038,4 +1041,4 @@ Your browser does not support the video tag.
 
 ## Seaborn
 
-// Coming Soon
+[Seaborn](https://seaborn.pydata.org/){:target="_blank"} is a statistical data visualisation library built on top of Matplotlib. It provides high-level abstractions, attractive default themes, and built-in support for Pandas DataFrames — ideal for heatmaps, statistical distributions, and categorical plots.

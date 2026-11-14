@@ -1,64 +1,75 @@
 ---
 title: Opening and Reading Files
+description: Modern file I/O in Python 3.13+, path handling with pathlib, block parsing, and the automated Advent of Code input retrieval workflow.
 tags: 
   - name: Context Manager
     link: https://www.geeksforgeeks.org/context-manager-in-python/
+  - name: pathlib Documentation
+    link: https://docs.python.org/3/library/pathlib.html
 ---
-Almost every challenge in Advent of Code requires you to read some input data. Perhaps the easiest approach to get this data into your Python program is to simply save the supplied input data as a file. You can then read that file in your program.
+Almost every challenge in Advent of Code requires you to read and parse some input data. Perhaps the easiest approach to get this data into your Python program is to save the supplied input data as a file. You can then read that file in your program.
 
-## Saving Your Files
+## Organising Your Input Files
 
-Generally, I like to create two files for each program:
+Generally, each AoC day works with two types of data:
 
-1. A file of sample data, which I call `sample_input.txt`.  Most AoC problems come with some sample data, which is usually much less complex or smaller than the actual data. It's a good idea to build your solution around that sample data. Get your solution working with the sample data, before progressing to working with the actual data.
-1. A file of actual data, which I call `input.txt`.  The actual data varies between participants. Consequently, different AoC participants will need to solve the problem using _different_ right answers.
+1. **Sample data**: Most AoC problems provide one or more small example inputs in the puzzle description, which are much simpler and smaller than the real data. It is always best practice to build and test your solution against this sample data first.
+2. **Actual puzzle data**: The actual input data is unique to your Advent of Code user account. Consequently, different AoC participants will solve the problem using different inputs and answers.
 
-I tend to create blank versions of these files, and then simply copy-paste the data from the browser in to these files.
+In older AoC years, participants had to manually create empty text files and copy-paste values from the browser. In our modern repository workflow, this is automated:
+
+- `uv run aoc fetch <target> --write-sample` fetches the problem description in memory, saves the top-ranked example into `input/sample_input_part_1.txt`, and caches `input/input.txt` lazily.
+- We deliberately avoid committing empty `input.txt` placeholder files to version control.
 
 ## Reading The Data
 
-This is basically a three step process:
+Reading a text file in Python involves three steps:
 
 1. Open the file.
-1. Read the file.
-1. Close the file.
+2. Read the contents.
+3. Close the file.
 
 ### Opening the File
 
-Python provides an `open()` method, for opening files. When you open a file, you need to tell Python:
+Python provides a built-in `open()` function for opening files. When you open a file, you should tell Python:
 
-- What sort of data to expect, e.g. binary (`b`) or text (`t`). Most AoC programs supply text input.
-- What you're expecting to do with the data, e.g. reading (`r`), writing (`w`), or appending (`a`). I would generally recommend that you only ever _read_ your input data. If you want to modify this data or generate some output, then write it to a new output file.
-
-And thus, to open a text file for reading:
+- What mode to use: reading (`r`), writing (`w`), or appending (`a`), combined with text (`t`) or binary (`b`). For AoC text inputs, use mode `"rt"`.
+- The text encoding: always specify `encoding="utf-8"` explicitly to prevent platform-dependent encoding bugs (such as Windows default CP-1252 decoding errors).
 
 ```python
-f = open(input_file, mode="rt")
+f = open(input_file, mode="rt", encoding="utf-8")
 ```
 
 ### Reading the File
 
-The object returned is a _file-like_ object. There are a few different ways we can read the data and turn it into a useful object we can work with. Here I'll cover some of the more useful ways in AoC:
+The object returned by `open()` is a file-like stream object. There are a few different ways we can read and transform the data:
 
 ```python
-# Read all the data in one go, and store it as a single str
-input_data = f.read()
+# 1. Read all the data in one go as a single str
+raw_data = f.read()
 ```
 
 ```python
-# Split the data at each newline, in order to obtain a list of str
-data_things = f.read().splitlines()
+# 2. Split the data at each newline to obtain a list of strings
+data_lines = f.read().splitlines()
 
-# And now we can process the data thing by thing...
-for thing in data_things:
-    # do something with thing
+# Process line by line:
+for line in data_lines:
+    # do something with line
+    pass
 ```
 
-### Reading Blocks
+### Reading Blocks and Paragraphs
 
-Here is an example function taken from [2023 Day 5](https://colab.research.google.com/github/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb#scrollTo=jNJnpu7n8ChB){:target="_blank"}.
+Many AoC puzzles present input grouped into distinct "blocks" or paragraphs separated by double newlines (`\n\n`), such as bingo cards, navigation maps, or batches of rules.
 
-It is intended to read data like this:
+To parse block-structured input cleanly, strip trailing whitespace and split on `"\n\n"`:
+
+```python
+blocks = raw_data.strip().split("\n\n")
+```
+
+Here is an example inspired by 2023 Day 5 where the input has a header followed by multiple mapping tables:
 
 ```text
 seeds: 79 14 55 13
@@ -71,48 +82,41 @@ soil-to-fertilizer map:
 0 15 37
 37 52 2
 39 0 15
-
-... etc
 ```
 
-The goal is to read the first row into one data structure, and then read the rest as _blocks_.
+We can unpack the first block into the seeds list, and collect the remaining blocks with `*blocks`:
 
 ```python
 def parse_data(data: str) -> tuple[list[int], list[GardinerMap]]:
-    """ Parse input data, and convert to:
-    - seeds: list of int
-    - GardinerMap instances: list of GardinerMap 
-    """
+    """Parse input data into seeds and GardinerMap instances."""
+    seeds_line, *blocks = data.strip().split("\n\n")
+    assert seeds_line.startswith("seeds"), "First line must contain seeds values"
     
-    seeds = []
-    maps = [] # Store our GardinerMap instances
-    
-    # split into blocks. Store the first in seeds_line, and the rest in *blocks
-    seeds_line, *blocks = data.split("\n\n") 
-    assert seeds_line.startswith("seeds"), "First line contains the seeds values"
     _, seeds_part = seeds_line.split(":")
     seeds = [int(x) for x in seeds_part.split()]
     
+    maps: list[GardinerMap] = []
     for block in blocks:
-        block_header, *block_record = block.splitlines() # Split the block into a header row and remaining rows
+        block_header, *block_records = block.splitlines()
         map_src_type, _, map_dest_type = block_header.split()[0].split("-")
-        map = GardinerMap(map_src_type, map_dest_type) # initialise our GardinerMap
-        for line in block_record:
+        gardiner_map = GardinerMap(map_src_type, map_dest_type)
+        
+        for line in block_records:
             assert line[0].isdigit(), "Line must start with numbers"
             dest_start, src_start, interval_len = [int(x) for x in line.split()]
-            map.add_range(src_start=src_start, dest_start=dest_start, range_length=interval_len)
+            gardiner_map.add_range(src_start=src_start, dest_start=dest_start, range_length=interval_len)
         
-        map.finalise()
-        maps.append(map)
+        gardiner_map.finalise()
+        maps.append(gardiner_map)
             
     return seeds, maps
 ```
 
-The cool trick here is that when we have a function that returns a `list` - like `splitlines()` - then we can unpack the return value across more than one variable. In the example above, one variable is used to receive the first line, and another variable is used to receive all the remaining elements of the returned list.
+Extended iterable unpacking (`seeds_line, *blocks = ...`) is an expressive Python idiom: one variable captures the leading block, and `*blocks` captures the remainder as a list.
 
 ### Closing the File
 
-Having read all the data, we should close the file, e.g.
+Having read all the data, you should always close the file:
 
 ```python
 f.close()
@@ -120,35 +124,66 @@ f.close()
 
 ### Exception Handling
 
-At any point during opening the file or reading the file, something could go wrong. E.g. maybe you try to open a file that doesn't exist. Maybe you try to read data beyond the end of the file. Maybe you try to write to a read-only file. So, your program should handle these exceptions. But the good news is... You don't have to do that yourself!
+During file operations, errors can easily happen — the file might not exist, permissions might be restricted, or the disk might be unreadable. Your program should handle these situations gracefully. Fortunately, Python makes this effortless with context managers!
 
-## The Better Way
+## The Better Way: Context Managers
 
-Python provides a construct called a _context manager_ for dealing with this sort of thing.  I won't get into the details of how a _context manager_ works here.  But suffice it to say, this is a better pattern you should use for opening and reading files:
+Python provides the `with` statement (a context manager) for file operations:
 
 ```python
-with open(input_file, mode="rt") as f:
-    depths = f.read().splitlines()
+with open(input_file, mode="rt", encoding="utf-8") as f:
+    data = f.read().splitlines()
 ```
 
-When this block completes, the context manager takes care of closing the file.  It also handles exceptions for you.
+When the `with` block exits, Python guarantees that the file stream is closed immediately — even if an unhandled exception is raised inside the block.
 
-## File Location and Paths
-
-Think about where you want to save your input files, relative to your program. I always put my input files in a folder called `input`.  And that `input` folder always lives in the same folder as the program itself. Something like this:
-
-![Input Folder]({{ '/assets/images/input_folder_location.png' | relative_url }})
-
-Consequently, my AoC programs will always need to read an input file in the relative location `input/input.txt`. I use Python's `Path` object for buildling paths, which are agnostic of the operating system we're running.
-
-Putting it all together:
+Alternatively, for simple whole-file reads where you don't need a stream handle, Python's `pathlib.Path` offers a concise one-liner:
 
 ```python
 from pathlib import Path
 
-SCRIPT_DIR = os.path.dirname(__file__)  # get the folder my program lives in
-INPUT_FILE = Path(SCRIPT_DIR, "input/input.txt")    # get the Path to my input file
-
-with open(INPUT_FILE, mode="rt") as f:  # open the input file
-    data = f.read().splitlines()    # read it
+raw_data = Path(input_file).read_text(encoding="utf-8")
 ```
+
+## File Locations and Paths with pathlib
+
+Always keep file paths relative to your script rather than assuming the current working directory of your terminal shell:
+
+```python
+from pathlib import Path
+
+# Build paths using pathlib's / operator
+SCRIPT_DIR = Path(__file__).parent
+INPUT_FILE = SCRIPT_DIR / "input" / "input.txt"
+
+with open(INPUT_FILE, mode="rt", encoding="utf-8") as f:
+    data = f.read().splitlines()
+```
+
+Using `pathlib.Path` with the `/` operator is cross-platform, handling Windows and POSIX path separators transparently without brittle string concatenation.
+
+## The Modern AoC Workflow (Template v3)
+
+In our repository's [Template v3](/python/my-aoc-template3), path resolution and file handling are integrated into the execution lifecycle via `aoc_common`:
+
+```python
+import aoc_common.aoc_commons as ac
+
+YEAR: int = 2026
+DAY: int = 1
+
+# Automatically resolves script_dir, input_dir, and input_file
+locations = ac.get_aoc_locations(YEAR, DAY, __file__)
+
+# Define declarative sample assertions (file paths or inline strings)
+PART1_SAMPLES: list[ac.SampleInput] = [
+    (locations.input_dir / "sample_input_part_1.txt", 142),
+    ("1abc2\npqr3stu8vwx\na1b2c3d4e5f\ntreb7uchet", 142),
+]
+```
+
+Key advantages of this architecture:
+
+1. **Sample validation first**: Run `uv run aoc run <target> -s` to test your parser and logic against sample inputs before touching real data.
+2. **Lazy retrieval**: You never need empty `input.txt` placeholders. When you run against real input (`uv run aoc run <target>`), the runner checks if `input/input.txt` exists. If not (and if `AOC_SESSION_COOKIE` is configured in `.env`), it downloads and caches your puzzle input automatically.
+3. **Fresh parsing per part**: The runner passes fresh `raw` text to `parse_input(raw)` before each sample and each puzzle part, ensuring in-place mutations in Part 1 can never contaminate Part 2.

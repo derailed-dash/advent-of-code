@@ -1,5 +1,6 @@
 ---
 title: Comprehensions
+description: "List, set, and dictionary comprehensions in Python, conditional filtering, and generator expressions for concise Advent of Code data pipelines."
 main_img:
   name: That's convenient
   link: /assets/images/convenient.png
@@ -63,7 +64,7 @@ Note the use of square brackets around the comprehension. Thus, this comprehensi
 
 ## Aggregate Functions
 
-Add we can apply aggregate functions, like we would with any other list. For example, if wanted to calculate the sum of the first 10 cube numbers:
+And we can apply aggregate functions, like we would with any other list. For example, if wanted to calculate the sum of the first 10 cube numbers:
 
 ```python
 total = sum([num**3 for num in range(1, 11)])
@@ -88,8 +89,10 @@ print(total)
 This example starts by creating a `Point` class. It's just a dataclass. Then I create a list of `vectors`, which is made up of four `(x,y)` vectors to get from any given point to all its adjacent orthogonal points.
 
 ```python
-@dataclass
-class Point():
+from dataclasses import dataclass
+
+@dataclass(frozen=True, slots=True)
+class Point:
     x: int
     y: int
 
@@ -240,14 +243,14 @@ In order to return only the values that match a filter condition, the general co
 
 ```python
 vals = [expression for value in iterable
-		if condition]
+        if condition]
 ```
 
 What if we wanted to return a value when the condition doesn't match?  We can do this:
 
 ```python
 vals = [expression if condition
-		else value for value in iterable]
+        else value for value in iterable]
 ```
 
 ## Aggregating Comprehensions
@@ -255,7 +258,7 @@ vals = [expression if condition
 Here we want to add up the values, but only for keys that match a condition:
 
 ```python
-sum_of_values = sum([fields[x] for x in fields.keys() if x.startswith("departure")])
+sum_of_values = sum(fields[x] for x in fields.keys() if x.startswith("departure"))
 ```
 
 And here are two equivalent ways to count values that match a boolean condition:

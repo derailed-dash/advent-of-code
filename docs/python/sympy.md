@@ -1,5 +1,6 @@
 ---
 title: Maths with SymPy
+description: Symbolic mathematics in Python using SymPy for algebra, calculus, and solving linear systems in Advent of Code.
 main_img:
   name: SymPy
   link: /assets/images/sympylogo.png
@@ -12,9 +13,8 @@ mathjax: true
 ---
 ## Page Contents
 
-Work in progress...
-
 - [What is SymPy?](#what-is-sympy)
+- [Installing SymPy](#installing-sympy)
 - [Basic Examples](#basic-examples)
   - [Simplifying and Expanding](#simplifying-and-expanding)
   - [Assigning Variables and Evaluating](#assigning-variables-and-evaluating)
@@ -23,10 +23,13 @@ Work in progress...
   - [Including Only Real Solutions](#including-only-real-solutions)
   - [Evaluating to Obtain Numeric Values](#evaluating-to-obtain-numeric-values)
 - [AoC Examples](#aoc-examples)
+  - [Boat Racing Quadratic](#boat-racing-quadratic)
+  - [Trajectory Intersection](#trajectory-intersection)
+  - [Claw Machine Linear Systems](#claw-machine-linear-systems)
 
 ## What is SymPy?
 
-SymPy is so cool!  I came across when I was trying to solve some equations as part of 2023 AoC puzzles. It is computer alegebra systems (CAS): a library that allows us to perform algebra and mathematical computations. 
+SymPy is so cool!  I came across it when I was trying to solve some equations as part of 2023 AoC puzzles. It is a computer algebra system (CAS): a library that allows us to perform algebra and mathematical computations. 
 
 You can use it for things like:
 
@@ -36,13 +39,19 @@ You can use it for things like:
 - Plotting graphs.
 - Generating LaTeX output.
 
+## Installing SymPy
+
+```bash
+uv add sympy
+```
+
 ## Basic Examples
 
 ### Simplifying and Expanding
 
 We need to define variables before we can use them in SymPy. We do this by creating `symbols`.
 
-One interesting observation here is that when you evaluate a SymPy expression a Jupyter notebook, it is rendered in _pretty-printed_ (mathematical) format. But when we print using `print()`, it is printed in conventional Python style.
+One interesting observation here is that when you evaluate a SymPy expression in a Jupyter notebook, it is rendered in _pretty-printed_ (mathematical) format. But when we print using `print()`, it is printed in conventional Python style.
 
 If you want to explicitly pretty-print from a Python notebook, you can use `IPython.display`.
 
@@ -117,7 +126,7 @@ print(integral)
 
 ### Solving Quadratics
 
-Here, I use `solve()` to determine the values of $x$. I've specified `dict=True` such that $x$ can be retrieved by passing its symbol as a dictionary key to the returned `solutions` dictionary.
+Here, I use `solve()` to determine the values of \( x \). I've specified `dict=True` such that \( x \) can be retrieved by passing its symbol as a dictionary key to the returned `solutions` dictionary.
 
 ```python
 expr = x**2 + 3*x - 10
@@ -161,7 +170,7 @@ We can evaluate to obtain the float value of a symbol, and display to an arbitra
 ```python
 expr = sympy.sqrt(8)
 display(expr)
-display(expr.evalf(4)) # to 4 digits of precisions
+display(expr.evalf(4)) # to 4 digits of precision
 ```
 
 ![SymPy Numeric Evaluation](/assets/images/sympy_numeric_eval.png){:style="width:480px"}
@@ -236,3 +245,37 @@ def solve_part2(data: list[str]):
     logger.info("No solutions found.")
     return None
 ```
+
+### Claw Machine Linear Systems
+
+In [2024 Day 13 - Claw Contraption](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb){:target="_blank"}, each claw machine is configured with two button offsets (\( A \) and \( B \)) and a target prize location:
+
+$$
+\begin{align}
+a \cdot X_A + b \cdot X_B &= X_{\text{prize}} \\
+a \cdot Y_A + b \cdot Y_B &= Y_{\text{prize}}
+\end{align}
+$$
+
+Finding the exact button presses \( a \) and \( b \) to reach the prize is a system of two linear equations with two unknowns. SymPy's `solve()` solves this effortlessly and allows us to verify that both \( a \) and \( b \) resolve to concrete non-negative integers:
+
+```python
+import sympy
+
+
+def solve_claw_machine(ax: int, ay: int, bx: int, by: int, px: int, py: int) -> int:
+    a, b = sympy.symbols("a b", integer=True)
+    eq1 = sympy.Eq(a * ax + b * bx, px)
+    eq2 = sympy.Eq(a * ay + b * by, py)
+
+    solutions = sympy.solve((eq1, eq2), (a, b), dict=True)
+    if solutions:
+        sol = solutions[0]
+        if a in sol and b in sol:
+            a_val, b_val = sol[a], sol[b]
+            if a_val.is_integer and b_val.is_integer and a_val >= 0 and b_val >= 0:
+                return int(3 * a_val + b_val)
+    return 0
+```
+
+Combined with [2023 Day 24](#trajectory-intersection) (where 3D hailstone ray intersections form a larger system of equations), SymPy turns what would otherwise be complex algebra into declarative, readable Python.

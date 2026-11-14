@@ -78,8 +78,10 @@ pages:
     link: /python/colours
   - name: Reusable Code
     link: /python/reusable_code
-  - name: My AoC Template, Version 2
-    link: /python/my-aoc-template2
+  - name: My AoC Template, Version 3
+    link: /python/my-aoc-template3
+  - name: Parsing with Parsimonious
+    link: /python/parsimonious
   - name: Jupyter Notebooks
     link: /python/jupyter-notebooks
   - name: Encrypting Your Input

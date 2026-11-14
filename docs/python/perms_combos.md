@@ -1,6 +1,6 @@
 ---
 title: Permutations, Combinations, Products and More
-
+description: "Concise guide to Python itertools: permutations, combinations, Cartesian product, chain, cycle, pairwise, and batched."
 main_img:
   name: perms-and-combos
   link: /assets/images/permutations-combinations-definition.png
@@ -25,6 +25,8 @@ mathjax: true
 - [Rolling Dice Examples](#rolling-dice-examples)
 - [Chain](#chain)
 - [Cycle](#cycle)
+- [Pairwise (Python 3.10+)](#pairwise-python-310)
+- [Batched (Python 3.12+)](#batched-python-312)
 - [AoC Examples](#aoc-examples)
 
 ## Overview of Permutations and Combinations
@@ -54,18 +56,18 @@ The number of permutations will be greater than the number of combinations.
 
 ## Product
 
-We use `itertools.product()` to obtain the catesian product, i.e. the product of every item from each iterable supplied. If we pass two iterables of length `x` and `y` respectively, then the resulting iterable will have length `x*y`.
+We use `itertools.product()` to obtain the Cartesian product, i.e. the product of every item from each iterable supplied. If we pass two iterables of length `x` and `y` respectively, then the resulting iterable will have length `x*y`.
 
 Also, we can use `product()` with the `repeat` attribute, to obtain the cartesian product of the iterable with itself.  E.g. with an iterable of length `x` repeated `n` times, the resulting iterable will have length `x**n`.
 
-This can be a convenient way of way of iterating through multiple dimensions without writing nested loops.
+This can be a convenient way of iterating through multiple dimensions without writing nested loops.
 
 ## Demonstrating With Code
 
-The `itertools` package provides both the `permutations()` and `combinations()` functions.
+The `itertools` package provides `permutations()`, `combinations()`, and `product()` functions.
 
 ```python
-from itertools import permutations, combinations
+from itertools import combinations, permutations, product
 
 def convert_to_num(num_seq) -> str:
     """ Take a sequence of digits, and convert to a single str """
@@ -200,14 +202,16 @@ Count of combos=21
 
 ## Chain
 
-We can use `itertools.chain(*iterables)` to combine multiple iterables into a single iterator, effectively chaining them together into a continuous sequence. It iterates over each iterable in order, one element at a time. We use itertools.chain() when you want to iterate over multiple iterables as if they were a single sequence.
+We can use `itertools.chain(*iterables)` to combine multiple iterables into a single iterator, effectively chaining them together into a continuous sequence. It iterates over each iterable in order, one element at a time. We use `itertools.chain()` when you want to iterate over multiple iterables as if they were a single sequence.
 
 ```python
-colors = ['red', 'blue']
-sizes  = ['small', 'large']
+import itertools
+
+colours = ['red', 'blue']
+sizes   = ['small', 'large']
 
 # Chain the two iterables
-chained_iterables = itertools.chain(colors, sizes)
+chained_iterables = itertools.chain(colours, sizes)
 
 # Iterate over the chained iterables and print the elements
 for item in chained_iterables:
@@ -225,19 +229,21 @@ large
 
 ## Cycle
 
-We use `itertools.cycle(iterable)` to infinitely iterate through the elements of an iterable. Once we reach the end of the iterale, we start back at the beginning. It returns an infinite generator.
+We use `itertools.cycle(iterable)` to infinitely iterate through the elements of an iterable. Once we reach the end of the iterable, we start back at the beginning. It returns an infinite generator.
 
 E.g.
 
 ```python
-colors = ['red', 'green', 'blue']
+import itertools
+
+colours = ['red', 'green', 'blue']
 
 # Create a cycle iterator from the list
-color_cycle = itertools.cycle(colors)
+colour_cycle = itertools.cycle(colours)
 
 # Iterate over the cycle and print the elements
 for _ in range(6):
-    print(next(color_cycle))
+    print(next(colour_cycle))
 ```
 
 Output:
@@ -249,6 +255,62 @@ blue
 red
 green
 blue
+```
+
+## Pairwise (Python 3.10+)
+
+The `itertools.pairwise(iterable)` function produces successive overlapping pairs from an input iterable as a sliding window of size 2. It is especially useful in Advent of Code for comparing consecutive elements (such as measuring depth increases or line segments) without manual indexing:
+
+```python
+import itertools
+
+depths: list[int] = [199, 200, 208, 210, 200, 207, 240, 269, 260, 263]
+
+# Count how many times depth increases
+increases: int = sum(b > a for a, b in itertools.pairwise(depths))
+print(f"Depth increases: {increases}")
+
+# Inspect each pair directly
+for a, b in itertools.pairwise(depths[:4]):
+    print(f"{a} -> {b} (diff: {b - a})")
+```
+
+Output:
+
+```text
+Depth increases: 7
+199 -> 200 (diff: 1)
+200 -> 208 (diff: 8)
+208 -> 210 (diff: 2)
+```
+
+## Batched (Python 3.12+)
+
+Added in Python 3.12, `itertools.batched(iterable, n)` breaks an iterable into non-overlapping tuples of length `n`. If the length of the input is not divisible by `n`, the final batch will simply be shorter. This avoids cumbersome chunking helpers when input lines or tokens are grouped in fixed clusters:
+
+```python
+import itertools
+
+rucksacks: list[str] = [
+    "vJrwpWtwJgWrhcsFMMfFFhFp",
+    "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
+    "PmmdzqPrVvPwwTWBwg",
+    "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
+    "ttgJtRGJQctTZtZT",
+    "CrZsJsPPZsGzwwsLwLmpwMDw",
+]
+
+# Group rucksacks into teams of 3
+elf_groups: list[tuple[str, ...]] = list(itertools.batched(rucksacks, 3))
+for group_num, group in enumerate(elf_groups, start=1):
+    print(f"Group {group_num}: {len(group)} elves")
+```
+
+Output:
+
+```text
+Group 1: 3 elves
+Group 2: 3 elves
 ```
 
 ## AoC Examples

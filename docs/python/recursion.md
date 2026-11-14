@@ -1,5 +1,6 @@
 ---
 title: Recursion
+description: A guide to recursion in Python, covering base cases, call winding, depth-first traversal, RecursionTracer, and functools.cache memoisation.
 main_img:
   name: Argand Plot
   link: /assets/images/recursion.gif
@@ -8,7 +9,6 @@ tags:
     link: https://en.wikipedia.org/wiki/Recursion_(computer_science)
   - name: Recursion Introduction (@ RealPython)
     link: https://realpython.com/python-recursion/
-mathjax: true
 ---
 ## Page Contents
 
@@ -34,11 +34,11 @@ I have to admit, I used to struggle with recursion.  A lot of people do.  It can
 
 In short: **a recursive function is a function that calls itself.**  Thus, the code that defines the function will include a call to the same function.
 
-As an anology, take a look at examples of recursive acronyms.  See how the acronym definition includes the acronym itself!
+As an analogy, take a look at examples of recursive acronyms.  See how the acronym definition includes the acronym itself!
 
 |Acronym|Definition|
 |-------|----------|
-|GNU| = GNU's not Linux|
+|GNU| = GNU's Not Unix|
 |LAME| = LAME Ain't an MP3 Encoder|
 |YAML|  YAML Ain't Markup Language|
 
@@ -109,7 +109,7 @@ Let's try it.  I've added the above code to a file called scratch.py, in my snip
 
 Recall the definition of factorial:
 
-\\(k! = k * (k-1)\\)
+`k! = k * (k - 1)!`
 
 This is slightly tricker than the previous example, since we're not just printing a value with each iteration.  Instead, we're always multiplying the current iteration by the result of the previous iteration.
 
@@ -162,7 +162,7 @@ class RecursionTracer():
 
     The `RecursionTracer` class wraps a recursive function and prints its calls
     and returns with indentation that reflects the depth of recursion. This makes it
-    easier to understand the behavior of the recursive function, including the
+    easier to understand the behaviour of the recursive function, including the
     "winding" (function calls) and "unwinding" (return values).
 
     Args:
@@ -170,8 +170,8 @@ class RecursionTracer():
     """
     FILL = '|   '
     
-    def __init__(self, func: Callable):
-        """ Initializes the `RecursionTracer` for a recursive function.
+    def __init__(self, func: Callable[..., object]) -> None:
+        """ Initialises the `RecursionTracer` for a recursive function.
         Args:
             func (Callable): The recursive function to wrap and trace.
         """        
@@ -194,7 +194,7 @@ class RecursionTracer():
         self._recursion_depth -= 1
         
         # Print return value
-        print(f'{RecursionTracer.FILL * self._recursion_depth}└--> {res}')
+        print(f'{RecursionTracer.FILL * self._recursion_depth}\\--> {res}')
             
         return res
 
@@ -237,11 +237,11 @@ factorial(5)
 |   |-- factorial(3)
 |   |   |-- factorial(2)
 |   |   |   |-- factorial(1)
-|   |   |   |   └--> 1
-|   |   |   └--> 2
-|   |   └--> 6
-|   └--> 24
-└--> 120
+|   |   |   |   \--> 1
+|   |   |   \--> 2
+|   |   \--> 6
+|   \--> 24
+\--> 120
 120
 ```
 
@@ -255,7 +255,7 @@ The Fibonacci sequence is an infinite sequence that generates the next number by
 
 I.e. to determine the `nth` value in the sequence:
 
-\\(f(n) = f(n-2) + f(n-1)\\)
+`f(n) = f(n - 1) + f(n - 2)`
 
 The base case is where `n` is `1`, which returns a value of `1`.
 
@@ -367,9 +367,11 @@ i=30, res=832040, fib_tracker.calls=2692537
 
 So you can see the number of calls growing exponentially.
 
-But here's the cool thing: we can cache every unique `fib()` call. And in Python, this is so easy to implement: we just use the `@cache` decorator to our function!
+But here's the cool thing: we can cache every unique `fib()` call. And in Python, this is so easy to implement: we just import `cache` from `functools` and add the `@cache` decorator to our function! (In older Python versions you may see `@lru_cache(maxsize=None)`, but `@cache` is the modern, cleaner equivalent.)
 
 ```python
+from functools import cache
+
 class FibCallTracker:
     def __init__(self):
         self.calls = 0  # Local to the wrapper
@@ -467,7 +469,7 @@ We can extrapolate this to the Nth Degree. I.e. the number of times you have to 
 So this is a good candidate for a recursive function:
 
 ```python
-def recurse_diffs(sequence: np.ndarray, forwards=True) -> int:
+def recurse_diffs(sequence: np.ndarray, forwards: bool = True) -> int:
     """
     Calculate the next value in a numeric sequence based on the pattern of differences.
 
@@ -516,7 +518,7 @@ Traversing trees can be done recursively because any subtree in a tree is itself
 
 We can do this with a **Depth-First Search (DFS)**. We can do:
 
-- **Pre-order traversal** - sequence is: root, left, right; start with root node. Use this when you need to inspect roots before leaves. E.g. for visualing an entire tree, or replicating a tree from the top down.
+- **Pre-order traversal** - sequence is: root, left, right; start with root node. Use this when you need to inspect roots before leaves. E.g. for visualising an entire tree, or replicating a tree from the top down.
 - **In-order traversal** - sequence is: left, root, right; start with first leaf. Use this when we need process nodes in a specific sequence, e.g. in binary search tree.
 - **Post-order traversal** - sequence is: left, right, root; start with first leaf. Use this when you need to inspect all leaves before corresponding nodes. E.g. where we need to delete items from the bottom up. (E.g. delete the item before deleting the container for the item.)
 
@@ -528,27 +530,27 @@ Let's simulate a tree:
 
 ```python
 class Node:
-    def __init__(self, payload):
+    def __init__(self, payload: str) -> None:
         self.payload = payload
-        self._left = None
-        self._right = None
+        self._left: Node | None = None
+        self._right: Node | None = None
 
     @property
-    def left(self) -> Node:
+    def left(self) -> Node | None:
         return self._left
-    
+
     @property
-    def right(self) -> Node:
+    def right(self) -> Node | None:
         return self._right
-    
-    def set_children(self, left: Node, right: Node):
+
+    def set_children(self, left: Node, right: Node) -> None:
         self.set_left(left)
         self.set_right(right)
-        
-    def set_left(self, left: Node):
+
+    def set_left(self, left: Node) -> None:
         self._left = left
-    
-    def set_right(self, right: Node):
+
+    def set_right(self, right: Node) -> None:
         self._right = right
 ```
 
@@ -661,7 +663,7 @@ Output:
 Check out **[Advent of Code 2025 Day 7](/2025/7)** for a cracking example of why recursion + memoisation is a superpower.
 
 **The Problem:** We had to simulate a beam splitting in two at every junction.
-**The Trap:** A naive Breadth-First Search (BFS) explodes exponentially. With a grid depth of 150, you're looking at potentially \\(2^{150}\\) paths. My computer would still be running when the sun expands and swallows the earth. <sigh>
+**The Trap:** A naive Breadth-First Search (BFS) explodes exponentially. With a grid depth of 150, you're looking at potentially 2<sup>150</sup> paths. My computer would still be running when the sun expands and swallows the earth. <sigh>
 
 **The Solution:** Recursive DFS.
 Instead of simulating billions of particles, we just ask a simple recursive question:
@@ -688,15 +690,15 @@ def count_timelines(point: Point) -> int:
         return count_timelines(point + down_vec)
 ```
 
-This transformed an unsolveable problem into one that ran in **0.008 seconds**. Groovy.
+This transformed an unsolvable problem into one that ran in **0.008 seconds**. Groovy.
 
 ## AoC Examples
 
 - [Recursively process json - 2015 day 12](/2015/12)
 - [Recursive string replacement - 2021 day 14](/2021/14)
-- [Various recursinos as methods of a class - 2021 day 16](/2021/16)
+- [Various recursions as methods of a class - 2021 day 16](/2021/16)
 - [Recursive snail mail - 2021 day 18](/2021/18)
-- [Recursive game states using dynamic programming and lru cache - 2021 day 21](/2021/21)
+- [Recursive game states using dynamic programming and functools.cache - 2021 day 21](/2021/21)
 - [Recursive directory listing by extending the list - 2022 day 7](/2022/7)
 - [Recursive `__lt__` compare - 2022 day 13](/2022/13)
 - [Recursive arithmetic progressions - 2023 day 9](https://colab.research.google.com/github/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}

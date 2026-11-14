@@ -1,5 +1,6 @@
 ---
 title: Classes and Objects
+description: "Object-oriented programming in Python for Advent of Code: classes, inheritance, magic methods, modern dataclasses with frozen and slots, and NamedTuples."
 tags: 
   - name: Python Classes
     link: https://docs.python.org/3/tutorial/classes.html
@@ -647,7 +648,7 @@ class ShapeType(Enum):
     I =           {(0, 0), (0, 1), (0, 2), (0, 3)}
     SQUARE =      {(0, 0), (1, 0), (0, 1), (1, 1)}    
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Point():
     """ Point with x,y coordinates and knows how to add a vector to create a new Point. """
     x: int
@@ -759,7 +760,8 @@ Cool things about a `dataclass`:
 
 - The `__init__()` method is created implicitly for us. All we need to do is define the variables that we want to be initialised when the object is created.
 - Defaults can be easily specified for our instance variables.
-- They can be _mutable_ or _immmutable_. We define a `dataclass` as _immutable_ by simply adding `frozen=True`. If we then try to change an instance variable, a `TypeError` will be thrown.
+- They can be _mutable_ or _immutable_. We define a `dataclass` as _immutable_ by simply adding `frozen=True`. If we then try to change an instance variable, a `TypeError` will be thrown.
+- Adding `slots=True` (Python 3.10+) eliminates the per-instance `__dict__`, reducing memory footprint significantly and speeding up attribute access. Pairing `@dataclass(frozen=True, slots=True)` is modern best practice for coordinates and puzzle state representations.
 - If we make `eq=True` (which is the _default_), then an implicit `__eq__()` method is created for us, which compares objects by generating a `tuple` from all its fields.  But we can even specify which fields to include in the comparison, and which to ignore!
 - If we make both `eq=True` and `frozen=True`, then an implicit `__hash__()` method is created for us.
 
@@ -799,12 +801,12 @@ if point_c in points:
 
 ### Immutable (Frozen) Objects
 
-Add frozen=True if you want the dataclass to be immutable. I.e.
+Add `frozen=True` if you want the dataclass to be immutable. Pairing `frozen=True` with `slots=True` provides optimal memory layout and hashing behaviour:
 
 ```python
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Point2D():
-    """ Our immutable point data class """
+    """ Our immutable, slotted point data class """
 ```
 
 Note that with a frozen dataclass, you can't modify any attributes after the `__init__()`.  However, there is a standard workaround to allow you to use `__post_init__()`:
@@ -861,7 +863,7 @@ class Robot:
     height: ClassVar[int] = 0
    
     def __post_init__(self):
-        """ Set initial_posn after initialization """
+        """ Set initial_posn after initialisation """
         self.initial_posn = self.posn
        
     def posn_at_t(self, t: int) -> Point:
@@ -917,13 +919,13 @@ print(p3.manhattan_distance) # 10
 | **Inheritance** | Can inherit from `NamedTuple` | Can inherit from other classes |
 | **Default Values** | Supported | Supported |
 
-**Summary:** Use `dataclass` for most general-purpose classes where you need flexibility, mutability, or complex initialization. Use `NamedTuple` when you need a lightweight, immutable data structure, especially if you are creating vast numbers of them.
+**Summary:** Use `dataclass` for most general-purpose classes where you need flexibility, mutability, or complex initialisation. Use `NamedTuple` when you need a lightweight, immutable data structure, especially if you are creating vast numbers of them.
 
 ## Examples
 
-- [Factory Pattern: 2015 Day 22 - Wizards and Spells](/2015/22)
-- [Factory Pattern: 2022 Day 17 - Tetris!](/2022/17)
-- [Inheritance and constructor chaining: 2015 Day 22 - Wizard class](/2015/22)
-- [Cache decorator: 2015 Day 22 - Wizards and Spells](/2015/22)
-- [Cache decorator: type_defs](/python/reusable_code)
-- [NamedTuple for Grid Coordinates: 2025 Day 4 - Printing Department](/2025/4)
+- [Factory Pattern: 2015 Day 22 — Wizards and Spells](/2015/22)
+- [Factory Pattern: 2022 Day 17 — Tetris!](/2022/17)
+- [Inheritance and constructor chaining: 2015 Day 22 — Wizard class](/2015/22)
+- [Cache decorator: 2015 Day 22 — Wizards and Spells](/2015/22)
+- [Cache decorator: aoc_common](/python/reusable_code)
+- [NamedTuple for Grid Coordinates: 2025 Day 4 — Printing Department](/2025/4)

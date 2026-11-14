@@ -1,5 +1,6 @@
 ---
 title: Enumerate and Enum
+description: "Loop counters with enumerate(), named constants with Enum and StrEnum, and 2D vector models for grid navigation in Advent of Code."
 tags: 
   - name: Enumerate
     link: https://realpython.com/python-enumerate/
@@ -11,6 +12,8 @@ tags:
     link: https://docs.python.org/3/library/enum.html
   - name: classes
     link: /python/classes
+  - name: Reusable Code
+    link: /python/reusable_code
 ---
 ## Page Contents
 
@@ -18,7 +21,9 @@ tags:
 - [Enum](#enum)
   - [The Enum Data Type](#the-enum-data-type)
   - [Enum vs Dict](#enum-vs-dict)
+  - [StrEnum (Python 3.11+)](#strenum-python-311)
   - [Example: Using Enum for Directions](#example-using-enum-for-directions)
+- [Examples](#examples)
 
 ## Enumerate
 
@@ -45,7 +50,7 @@ Here's the output:
 
 We can see that the `enumerate()` function has turned each line into a numbered `tuple`.
 
-A more common way to use `enumerate()` is in a loop.  For example:
+A more common way to use `enumerate()` is in a loop. For example:
 
 ```python
 print("Iterating over names...")
@@ -91,15 +96,15 @@ Output:
 
 ### The Enum Data Type
 
-We can also create an _Enum_ data type in Python.  This is quite different to using `enumerate()`.  Instead, an _Enum_ data type allows us to create a set of related, named constants.
+We can also create an _Enum_ data type in Python. This is quite different to using `enumerate()`. Instead, an _Enum_ data type allows us to create a set of related, named constants.
 
-Here's an example of we might use an _Enum_:
+Here's an example of how we might use an _Enum_:
 
 ```python
 from enum import Enum
 
 class Vector(Enum):
-    """ Enumeration of 8 directions, and a rotating list of direction choices. """
+    """ Enumeration of 4 orthogonal directions. """
     N = (0, -1)
     E = (1, 0)
     S = (0, 1)
@@ -182,6 +187,25 @@ By specific item...
 
 The main disadvantage of using a `dict` is that it's easy to create a typo when specifying the key.
 
+### StrEnum (Python 3.11+)
+
+In modern Python (>=3.11), `enum.StrEnum` is an especially convenient variant where members are also subclasses of `str`. In Advent of Code, puzzle inputs frequently give single-letter directions (like `"U"`, `"D"`, `"L"`, `"R"`) or token strings:
+
+```python
+from enum import StrEnum
+
+class Direction(StrEnum):
+    UP = "U"
+    DOWN = "D"
+    LEFT = "L"
+    RIGHT = "R"
+
+# Direct comparison with strings without .value:
+assert Direction.UP == "U"
+```
+
+This gives type safety, autocompletion in IDEs, and direct string comparison without needing `.value`.
+
 ### Example: Using Enum for Directions
 
 Here's a more interesting example:
@@ -191,29 +215,29 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-@dataclass(frozen=True)
-class Point():
+@dataclass(frozen=True, slots=True)
+class Point:
     """ Point x,y which knows how to add another point, 
-    and how to return all adjacent points, including diagonals. """
+    and how to return adjacent points. """
     x: int
     y: int
 
     def all_neighbours(self) -> set[Point]:
-        """ Return all adjacent orthogonal (not diagonal) Points """
+        """ Return all 8 adjacent points (orthogonal and diagonal). """
         return {(self + vector.value) for vector in list(Vector)}
     
     def get_neighbours(self, directions: list[Vector]) -> set[Point]:
         return {(self + vector.value) for vector in list(directions)}
         
     def __add__(self, other) -> Point:
-        """ Subtract other point from this point, returning new point vector """
+        """ Add other point/vector to this point, returning new point """
         return Point(self.x + other.x, self.y + other.y)
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"P({self.x},{self.y})"
 
 class Vector(Enum):
-    """ Enumeration of 8 directions, and a rotating list of direction choices. """
+    """ Enumeration of 8 directions, including diagonals. """
     N = Point(0, -1)
     NE = Point(1, -1)
     E = Point(1, 0)
@@ -233,8 +257,8 @@ print(start.get_neighbours([Vector.NW, Vector.N, Vector.NE]))
 
 ## Examples
 
-- [Enumerating ordinals - 2022 Day 3](/2022/3)
-- [Enumerating characters in input - 2022 Day 22](/2022/22)
-- [Enumerating rows and columns - 2022 Day 24](/2022/24)
-- [Tetris Shape Enum and Shape factory - 2022 Day 17](/2022/17)
-- [Enum of Vectors - type_defs](/python/reusable_code)
+- [Enumerating ordinals — 2022 Day 3](/2022/3)
+- [Enumerating characters in input — 2022 Day 22](/2022/22)
+- [Enumerating rows and columns — 2022 Day 24](/2022/24)
+- [Tetris Shape Enum and Shape factory — 2022 Day 17](/2022/17)
+- [Enum of Vectors — aoc_common](/python/reusable_code)

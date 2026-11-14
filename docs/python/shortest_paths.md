@@ -1,377 +1,226 @@
 ---
-title: Shortest Path Algorithms - BFS, Dijkstra, and A*
-main_img:
-  name: Graphs
-  link: /assets/images/shortest_path.png
-tags: 
-  - name: Graphs and Graph Theory
-    link: /python/graph
-  - name: NetworkX
-    link: /python/networkx
-  - name: A* Algorithm
-    link: https://www.redblobgames.com/pathfinding/a-star/introduction.html
-  - name: Heapq
-    link: /python/priority_queues
-  - name: Recursion
-    link: /python/recursion
+title: Shortest Paths (BFS, Dijkstra, and A*)
+description: Modern Python shortest-path patterns for Advent of Code — unweighted BFS with collections.deque, weighted Dijkstra with heapq and itertools.count tie-breakers, A* heuristics, and Grid integration.
 ---
-
-## Page Contents
-
-- [Overview](#overview)
-- [Algorithm Summary](#algorithm-summary)
-- [The Final Frontier!](#the-final-frontier)
-- [Breadth First Search (BFS)](#breadth-first-search-bfs)
-  - [How It Works](#how-it-works)
-  - [The Queue](#the-queue)
-  - [Implementing the BFS](#implementing-the-bfs)
-  - [Breadcrumb Trail](#breadcrumb-trail)
-  - [BFS Examples](#bfs-examples)
-- [Dijkstra's Algorithm](#dijkstras-algorithm)
-  - [How It Works](#how-it-works-1)
-  - [Dijkstra's Algorithm Examples](#dijkstras-algorithm-examples)
-- [A* Algorithm](#a-algorithm)
-  - [A* Examples](#a-examples)
-- [Credit Where It's Due](#credit-where-its-due)
-
 ## Overview
 
-These algorithms help you find optimum paths through a graph.
+Shortest-path puzzles are among the most common and rewarding problems in Advent of Code. Choosing the right traversal strategy depends on whether every move has equal cost and whether you have an informative heuristic towards the goal:
 
-Honestly, you won't get far in Advent-of-Code if you don't know them. Eric loves challenges like...
+| Algorithm | Edge Weights | Heuristic | Queue Structure | Best Use Case |
+| :--- | :--- | :--- | :--- | :--- |
+| **BFS** | Uniform (e.g. cost `1`) | None | `collections.deque` (`O(1)` popleft) | Simple mazes, flood-fill step counting, fewest moves |
+| **Dijkstra** | Non-negative (`cost >= 0`) | None | `heapq` min-heap (`O(log n)` push/pop) | Variable terrain costs, state spaces with turn penalties |
+| **A\*** | Non-negative (`cost >= 0`) | Admissible (`h(n) <= true_cost`) | `heapq` (`priority = g(n) + h(n)`) | Large grids with a single known destination (faster convergence) |
 
-- _Find the shortest path from a to b_ 
-- _Find the optimum way to arrange this thing_
+This guide builds cleanly on [LIFO & FIFO Queues](/python/lifo_fifo), [Graphs](/python/graph), and [Priority Queues (`heapq`)](/python/priority_queues). Credit to Amit Patel's classic [Red Blob Games: Introduction to the A* Algorithm](https://www.redblobgames.com/pathfinding/a-star/introduction.html) for the visual intuition behind cost-vs-heuristic search.
 
-Here are my three top reasons why you should learn this:
+---
 
-1. You'll get the right answer!
-1. It'll save you LOADS of time and effort.
-1. **These algorithms are cool!!**
+## Breadth-First Search (BFS)
 
-## Algorithm Summary
+![Breadth-First Search Tree](/assets/images/bfs_tree.png)
 
-First, let me provide a quick summary and comparison.  Then we'll get into the details after.
+When every step has identical cost (`1`), **Breadth-First Search (BFS)** visits states strictly in order of increasing distance from the start. Using [`collections.deque`](https://docs.python.org/3/library/collections.html#collections.deque) gives true `O(1)` appends and left pops — never use `list.pop(0)` or `heapq` when plain unweighted BFS suffices.
 
-<table class="dazbo-table" style="width: 800px">
-    <tr>
-      <th style="width:100px">Algorithm</th>
-      <th style="width:350px">Summary</th>
-      <th style="width:350px">When To Use It</th>
-    </tr>
-    <tr>
-      <td style="font-weight: bold">Breadth First Search (BFS)</td>
-      <td>Aka "flood fill". Explores equally in all directions. Uses a FIFO queue. 
-      A <code class="language-plaintext highlighter-rouge">list</code> will work, 
-      but a <code class="language-plaintext highlighter-rouge">deque</code> is best.</td>
-      <td>For finding the shortest path where the _cost_ is constant for any move. 
-      Or, for finding every point in a graph.  Or for finding ALL paths from a to b.</td>
-    </tr>
-    <tr>
-      <td style="font-weight: bold">Dijkstra’s Algorithm</td>
-      <td>Flood fill + a cost-based optimisation. I.e. prioritises paths to explore, favouring lower cost paths. Uses a _priority queue_, i.e. <code class="language-plaintext highlighter-rouge">heapq</code>.</td>
-      <td>When movement costs may vary.</td>
-    </tr>
-    <tr>
-      <td style="font-weight: bold">A*</td>
-      <td>Optimised for a single destination. I.e. prioritises paths that _seem_ to be approaching the goal. Still uses a <code class="language-plaintext highlighter-rouge">heapq</code>, but uses some sort of cost heuristic. Depending on the value of the distance heuristic, it may not add much value over Dijkstra, and may actually be slower.</td>
-      <td>When we have an idea of the direction we need to follow.</td>
-    </tr>
-</table>
+Key implementation rules:
 
-## The Final Frontier!
-
-All these algorithms utilise the concept of an expanding **frontier**.  This expanding frontier is sometimes called a _flood fill_. **It gives us a way to visit every allowed location on a map.**
-
-How the frontier works:
-
-1. Pick and remove a location from the frontier. Let's call it _current_.
-1. Expand the frontier by finding all of the valid next moves from _current_. Let's call them _neighbours_.  Add the _neighbours_ to the frontier.
-
-Here's some code that will perform a flood fill to explore every valid location in the graph:
+- Store `(state, distance)` tuples cleanly (note: `deque.append(...)` takes a single item, so pack `(state, dist)` as a tuple!).
+- Mark states visited **as soon as you enqueue them**, not when you pop them, otherwise the same neighbour can be queued multiple times before being visited.
 
 ```python
-frontier = Queue() # For BFS, we just use a FIFO queue.
-frontier.append(start)
-explored = set()  # To stop us exploring the same location more than once.
-explored.add(start)
+from collections import deque
+from aoc_common import Grid, Point
 
-# keep going until the frontier is empty; i.e. when we've explored all the valid nodes
-while frontier:   
-   current = frontier.popleft()  # pop the first item off the FIFO queue
-   for next in graph.neighbors(current):  # get all the valid neighbours
-      if next not in explored:
-         frontier.append(next) # add it to the frontier
-         explored.add(next)  # mark it as explored
+
+def bfs_shortest_distance(
+    grid: Grid[str],
+    start: Point,
+    goal: Point,
+    *,
+    wall: str = "#",
+) -> int | None:
+    """Return minimum orthogonal steps from start to goal, or None if unreachable."""
+    if start == goal:
+        return 0
+
+    frontier: deque[tuple[Point, int]] = deque([(start, 0)])
+    visited: set[Point] = {start}
+
+    while frontier:
+        current, steps = frontier.popleft()
+        for nxt in grid.neighbours_of(current, include_diagonals=False):
+            if nxt in visited or grid[nxt] == wall:
+                continue
+            if nxt == goal:
+                return steps + 1
+            visited.add(nxt)
+            frontier.append((nxt, steps + 1))
+
+    return None
 ```
 
-## Breadth First Search (BFS)
+Notice how `Grid.neighbours_of(..., include_diagonals=False)` already guarantees every yielded `Point` satisfies `nxt in grid`.
 
-BFS can be used to find a path from a to b. It can also be used to find paths from a to all locations in the graph.
+---
 
-It is **guaranteed to find a solution if one exists.**  The frontier expands at an equal rate in all directions, and uses a FIFO (first-in, first-out) queue to implement the frontier.
+## Weighted Search with Dijkstra's Algorithm
 
-### How It Works
+![Dijkstra Cost Expansion](/assets/images/dijkstra.png)
 
-- We want to explore a graph, made up of edges connected by vertices. E.g. if we're solving the path through a map, then each map location is a vertex. The graph has a _start_ location, which is the root node of our tree. So we add the root to the frontier.
-- It then explores all adjacent nodes. These will be `distance=1` from the root. We add those to the frontier.
-- Then we explore all the nodes that are adjacent to _those_ nodes. I.e. the nodes that are `distance=2` from the root.
-- The BFS algorithm ensures that the same vertex is not followed twice; i.e. we never revisit a node we've visited before. This is crucial because it means that once we've a path to a note, we must have found the _shortest_ route to that node.
+When moves carry different weights — such as energy penalties per tile, teleport costs, or rotation penalties — BFS is no longer sufficient because fewer steps can cost more than a longer low-weight route. **Dijkstra's algorithm** resolves this by expanding the lowest total cumulative cost (`g_score`) first using a binary min-heap (`heapq`).
 
-So the sequence of exploration looks like this:
+Three Python 3.13+ best practices keep Dijkstra implementations bug-free:
 
-![Tree](/assets/images/bfs_tree.png){:style="width: 320px"}
-
-The numbers represent the sequence of traversal. But note that it is possible for the same node to appear in the tree more than once.
-
-When we find a node that matches our goal, we stop. Thus, a **BFS is just a flood fill, with a goal.**
-
-### The Queue
-
-We can implement the queue in many ways:
-
-- Using a vanilla `list`.
-- Better: using a `deque` to implement a FIFO queue; it is much more efficient for appending and popping at each end.
-- If we use a `heapq`, then we end up popping based on a priority rather than FIFO. This is how we implement _Dijkstra's Algorithm_ or _A*_.
-- If we use a `stack`, then we end up with last-in, first-out (LIFO), which actually turns a BFS into a **depth first search (DFS)**!
-  - *(Aside: You can also implement DFS using **recursion**, where the "stack" is just the program's own call stack. This is often cleaner for tree-like problems!)*
-
-### Implementing the BFS
-
-Here's some pseudocode that shows how to implement the BFS:
+1. **Tie-breaker with `itertools.count()`**: If two items on the heap have the same cost, Python tries to compare the second tuple element (`state`). Arbitrary tuples or unorderable objects raise `TypeError`! Adding a monotonic sequence number `(cost, next(tie_breaker), state)` guarantees ties never touch `state`.
+2. **Lazy deletion (stale-entry skip)**: Checking `if cost > best_cost[current]: continue` upon popping avoids deleting or mutating entries already inside the heap.
+3. **Separate cost vs step tracking**: If your puzzle asks for the minimum **cost**, store `cost`; if it asks for the path itself, maintain a `came_from: dict[State, State | None]` map.
 
 ```python
-function BFS(graph, root):
-  queue = new Queue()
-  label root as explored  # we know about this node, but not its children
-  queue.enqueue(root)
-  while queue not empty:
-    current = queue.pop()
-    if current is goal:
-      return current
+from collections.abc import Callable, Iterable
+from heapq import heappop, heappush
+from itertools import count
 
-    for neighbour in graph.adjacent_nodes(current):
-      if neighbour is not explored:
-        label neighbour as explored
-        queue.enqueue(neighbour)
+
+def dijkstra[State](
+    start: State,
+    is_goal: Callable[[State], bool],
+    neighbours: Callable[[State], Iterable[tuple[State, int]]],
+) -> tuple[int, list[State]] | None:
+    """Find lowest-cost path using Dijkstra's algorithm, or return None."""
+    tie_breaker = count()
+    frontier: list[tuple[int, int, State]] = [(0, next(tie_breaker), start)]
+    best_cost: dict[State, int] = {start: 0}
+    came_from: dict[State, State | None] = {start: None}
+
+    while frontier:
+        cost, _, current = heappop(frontier)
+        if cost > best_cost[current]:
+            continue  # Skip stale heap entry superseded by a cheaper route
+        if is_goal(current):
+            return cost, reconstruct_path(came_from, current)
+
+        for nxt, step_cost in neighbours(current):
+            new_cost = cost + step_cost
+            if nxt not in best_cost or new_cost < best_cost[nxt]:
+                best_cost[nxt] = new_cost
+                came_from[nxt] = current
+                heappush(frontier, (new_cost, next(tie_breaker), nxt))
+
+    return None
+
+
+def reconstruct_path[State](
+    came_from: dict[State, State | None],
+    goal_state: State,
+) -> list[State]:
+    """Walk parent links back to start and return path in forward order."""
+    path: list[State] = []
+    cur: State | None = goal_state
+    while cur is not None:
+        path.append(cur)
+        cur = came_from[cur]
+    path.reverse()
+    return path
 ```
 
-There are a couple of convenient ways to label a node as explored:
+### Modelling Rich State Nodes
 
-1. We can store them in a `set`.
-1. We can add them to a `dictionary`
+In many AoC puzzles, the graph node is **not** just a `Point(x, y)` coordinate! For example, when movement rules impose turning costs or consecutive step limits, model the **state** as a compact hashable tuple or frozen dataclass:
 
-If we use a `set`:
+- `(point, heading)` — classic maze with turn penalties (2024 Day 16)
+- `(point, heading, straight_streak)` — constrained crucible movement (2023 Day 17)
+- `(point, frozenset_of_keys)` — lock-and-key dungeon exploration (2019 Day 18)
+
+Because `@dataclass(frozen=True, slots=True)` or plain `tuple[...]` states are immutable and hashable, the exact same generic `dijkstra` function solves all of them without changing a line of queue logic.
+
+---
+
+## Guided Search with A*
+
+**A\*** extends Dijkstra by prioritising nodes using:
+
+```text
+f(n) = g(n) + h(n)
+```
+
+- `g(n)`: exact cumulative cost from `start` to `n`
+- `h(n)`: heuristic estimate from `n` to the goal
+
+As long as `h(n)` never **overestimates** the true remaining cost (an **admissible** heuristic), A\* is guaranteed to find an optimal shortest path while typically exploring far fewer states than Dijkstra. On orthogonal 2D grids with unit or minimum step cost `1`, **Manhattan distance** (`point.manhattan_distance_from(goal)`) is both fast and admissible.
 
 ```python
-frontier = deque() # For BFS, we need a FIFO queue. A deque is perfect.
-frontier.append(start)
-explored = set()  # To stop us exploring the same location more than once.
-explored.add(start)
+from collections.abc import Callable, Iterable
+from heapq import heappop, heappush
+from itertools import count
+from aoc_common import Grid, Point
 
-# keep going until the frontier is empty; i.e. when we've explored all the valid nodes
-while frontier:   
-    current = frontier.popleft()  # pop the first item off the FIFO queue
 
-    if current == goal:
-        break
+def astar[State](
+    start: State,
+    is_goal: Callable[[State], bool],
+    neighbours: Callable[[State], Iterable[tuple[State, int]]],
+    heuristic: Callable[[State], int],
+) -> int | None:
+    """Return optimal path cost from start to any goal state using A*."""
+    tie_breaker = count()
+    # Heap items: (f_score, g_score, sequence, state)
+    frontier: list[tuple[int, int, int, State]] = [
+        (heuristic(start), 0, next(tie_breaker), start)
+    ]
+    best_g: dict[State, int] = {start: 0}
 
-    for next in graph.neighbors(current):  # get all the valid neighbours
-        if next not in explored:
-            frontier.append(next) # add it to the frontier
-            explored.add(next)  # mark it as explored
+    while frontier:
+        _, g_score, _, current = heappop(frontier)
+        if g_score > best_g[current]:
+            continue
+        if is_goal(current):
+            return g_score
 
-if current != goal:
-    # there was no solution!
+        for nxt, step_cost in neighbours(current):
+            tentative_g = g_score + step_cost
+            if nxt not in best_g or tentative_g < best_g[nxt]:
+                best_g[nxt] = tentative_g
+                f_score = tentative_g + heuristic(nxt)
+                heappush(frontier, (f_score, tentative_g, next(tie_breaker), nxt))
+
+    return None
+
+
+def grid_astar_cost(grid: Grid[str], start: Point, goal: Point) -> int | None:
+    """Find minimum cost through integer-weighted Grid cells using Manhattan A*."""
+    return astar(
+        start=start,
+        is_goal=lambda pt: pt == goal,
+        neighbours=lambda pt: (
+            (nxt, int(grid[nxt]))
+            for nxt in grid.neighbours_of(pt, include_diagonals=False)
+            if grid[nxt] != "#"
+        ),
+        heuristic=lambda pt: pt.manhattan_distance_from(goal),
+    )
 ```
 
-### Keeping Track of Distance
+Notice how setting `heuristic=lambda _: 0` turns `astar` directly back into Dijkstra!
 
-If we're only interested in the shortest distance to a point, but we don't need to create the actual path, a cool trick is to keep track of the distance in our queue.  E.g.
+---
 
-```python
-frontier = deque() # For BFS, we need a FIFO queue. A deque is perfect.
-frontier.append(start, 0) # Queue always includes (point, steps)
-explored = set()  # To stop us exploring the same location more than once.
-explored.add(start)
+## Choosing Between BFS, Dijkstra, and A*
 
-# keep going until the frontier is empty; i.e. when we've explored all the valid nodes
-while frontier:   
-    current, steps = frontier.popleft()  # pop the first item off the FIFO queue
+| Situation | Recommended Choice | Why |
+| :--- | :--- | :--- |
+| Unweighted maze or minimum number of moves | **BFS (`deque`)** | `O(V + E)` without heap overhead |
+| Find shortest distances to **all** nodes or multiple unknown goals | **BFS** (unweighted) or **Dijkstra** (weighted) | Heuristics require a specific target estimate |
+| Single target with variable tile costs or turn penalties | **Dijkstra** or **A\*** | Admissible heuristic trims wasted exploration away from the target |
+| Reconstruct **all tied** optimal paths (e.g. counting every tile on any best route) | **Modified Dijkstra** tracking `parents: dict[State, list[State]]` on `new_cost == best_cost[nxt]` | Standard single-parent maps only trace one winner |
 
-    if current == goal:
-        break
+---
 
-    for next in graph.neighbors(current):  # get all the valid neighbours
-        if next not in explored:
-            frontier.append(next, steps+1) # add it to the frontier
-            explored.add(next)  # mark it as explored
+## AoC Examples in This Repository
 
-if current != goal:
-    # there was no solution!
-
-# distance from start to goal = steps 
-```
-
-### Breadcrumb Trail
-
-If we use a `dictionary` instead of a `set`, we can create a _breadcrumb trail_ to each point we've explored.
-
-Let's explore every valid point in the graph:
-
-```python
-frontier = deque() # For BFS, we just use a FIFO queue. A deque is perfect.
-frontier.append(start)
-came_from = {}  #  To stop us exploring the same location more than once; and for breadcrumbs
-came_from[start] = None  # This marks the last breadcrumb
-
-# keep going until the frontier is empty; i.e. when we've explored all the valid nodes
-while frontier:   
-    current = frontier.popleft()  # pop the first item off the FIFO queue
-
-    for next in graph.neighbors(current):  # get all the valid neighbours
-        if next not in came_from:
-            frontier.append(next) # add it to the frontier
-            came_from[next] = current
-```
-
-We can then create the breadcrumb path, like this:
-
-```python
-current = goal  # start at the end
-path = []       # to store every point in a specific path
-while current != start: 
-   path.append(current)
-   current = came_from[current]  # get the next node in the trail
-path.append(start) # optional - depends if we want the first node to be included or not
-path.reverse() # optional - depends whether we want start->end or end->start
-```
-
-### BFS Examples
-
-- [Lava basins flood fill with BFS - 2021 Day 9](/2021/9)
-- [Cave navigating with BFS and allowing repeats - 2021 Day 12](/2021/12)
-- [Cave navigating with BFS and NetworkX - 2021 Day 12](/2021/12)
-- [Path through a map with elevation, plus breadcrumb trail - 2022 Day 12](/2022/12)
-- [BFS path to outside - 2022 Day 18](/2022/18)
-- [BFS with class generating next states - 2022 Day 24](/2022/24)
-- [Branching paths through a grid of mirrors - 2023 Day 16](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}
-- [BFS with backtracking, to find number of locations we can reach in n steps - 2023 Day 21](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}
-- [Standard BFS with explored set to handle merging beams - 2025 Day 7](/2025/7)
-- [BFS to find connected components (circuits) - 2025 Day 8](/2025/8)
-
-## Dijkstra's Algorithm
-
-This algorithm is like BFS. But instead of expanding the frontier in all directions with equal weight - called an _unweighted pathfinder algorithm_ - we instead **prioritise popping the node that has the lowest overall cost**. 
-
-Dijkstra's algorithm is perfect for:
-
-- Finding the best path through a graph, when the edges of the graph have different weights.
-- Finding the shortest path to every node for any given node. 
-
-### How It Works
-
-- The frontier is implemented using a [priority queue](/python/priority_queues), which we implement using a `heapq`. The `heapq` data structure allows us to efficiently pop the item with the lowest priority.
-- Our starting node will have a cumulative cost of 0.
-- For each valid adjacent node, we store this node along with the cumulative cost so far.  This is given by the previous cost, plus the cost of this particular edge. This differs from BFS, since in BFS the cost is always constant for every adjacent node.
-- In BFS, we check for duplicates when we insert.  But in Dijkstra's, if we arrive at a node we've arrived at before, then we can skip it if the current cumulative cost is higher than the previous cost to reach this node. I.e. for each node, always store the minimum cost to reach it.
-- In BFS, we typically end when we reach the goal. I.e. because if we've reached the goal, we must have taken the minimum number of steps to get to it. But in Dijkstra's algorithm, there may be different ways to reach the goal, and they may have different costs. So we only _end_ when we _pop_ the _goal_ off the priority queue.  Because once we pop the goal, then we know we've popped it with the minimum possible cumulative cost.
-
-Check out the illustration below, that shows how the algorithm finds our goal, H:
-
-![Dijkstra Walkthrough](/assets/images/dijkstra.png){:style="width: 640px"}
-
-### Dijkstra's Algorithm Examples
-
-- [Risk maze - with heapq and breadcrumbs - 2021 day 15](/2021/15)
-- [Lowest cost rearranging amphipods - with next state, heapq and breadcrumbs - 2021 day 23](/2021/23)
-- [Hill climbing with NetworkX - 2022 Day 12](/2022/12)
-- [Lowest cost path with turning constraints - 2023 Day 17](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}
-- [Dijkstra to find lowest cost path - 2023 Day 17](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}
-- [Finding shortest path through a maze where turns have different cost - 2024 Day 16](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb){:target="_blank"}
-
-## A* Algorithm
-
-The **A* Algorithm** is a lot like BFS.  But instead of expanding frontier in all directions equally - called an _unweighted pathfinder algorithm_ - we **prioritise popping from the frontier in the direction that we believe takes us closer to our goal**. Thus, a _weighted pathfinder algorithm_.
-
-To do this, we need two key changes, compared to the BFS:
-
-1. We need to use a `heapq`. Recall that a `heapq` allows us to pop elements based on a priority.
-1. We need to provide a _heuristic_ function, i.e. a function that computes some sort of _cost_. The _heuristic_ estimates the cost to get from any given node to the goal. This cost is used to determine the priority. Typically, the _heuristic_ will be a function that estimates distance, such as a Manhattan distance function.
-
-So, an A* implementation requires the combination of:
-
-- Cost of the path from the start point to the current point (e.g. steps so far)
-- A heuristic estimation of the cost for the current point to the end point (e.g. Manhattan distance)
-
-We need both, because if we only include the distance heuristic, then we end up with a _greedy BFS_ which tries to get closer to the goal without considering the path cost so far.
-
-### Turning a BFS into an A*
-
-Here's a BFS that creates a breadcrumb path. The priority of the pop is simply the number of steps taken from the starting point.
-
-```python
-def solve_with_bfs(start:Point, goal:Point) -> tuple[int, dict]:
-    queue = []
-    heapq.heappush(queue, (0, start)) # posn, steps
-    came_from = {} # use a dict so we can build a breadcrumb trail
-    came_from[start] = None
-
-    while queue:
-        step_count, curr_posn = heapq.heappop(queue)
-
-        # Check if the target is reached
-        if curr_posn == goal:
-            return step_count, came_from
-
-        # Explore adjacent hexagons
-        for dx, dy in Hex.hex_vectors.values():
-            adjacent = curr_posn + Point(dx, dy)
-            if adjacent not in came_from:
-                came_from[adjacent] = curr_posn
-                heapq.heappush(queue, (step_count + 1, adjacent))
-
-    assert False, "We should never get here."
-```
-
-Here I've changed the code to an A*. Now I'm popping from the `heapq`, using a priority that is sum of the number of steps taken, and the estimated distance to the goal.
-
-```python
-def solve_with_astar(start: Point, goal: Point) -> tuple[int, dict]:
-    """ Obtain the fastest path from origin to goal using A*.
-    Returns: tuple[int, dict]: steps required, breadcrumbs
-    """
-    queue = []
-    came_from = {} # use a dict so we can build a breadcrumb trail
-    came_from[start] = None
-    heapq.heappush(queue, (0, 0, start)) # distance heuristic, steps, posn
-
-    while queue:
-        _, step_count, curr_posn = heapq.heappop(queue)
-
-        # Check if the target is reached
-        if curr_posn == goal:
-            return step_count, came_from
-
-        # Explore adjacent hexagons
-        for dx, dy in Hex.hex_vectors.values():
-            adjacent = curr_posn + Point(dx, dy)
-            if adjacent not in came_from:
-                came_from[adjacent] = curr_posn
-                heuristic_cost = Hex.distance(adjacent, goal)
-                new_cost = step_count + 1 + heuristic_cost # heuristic is combination of distance to goal, and step count
-                heapq.heappush(queue, (new_cost, step_count + 1, adjacent))
-
-    assert False, "We should never get here."
-```
-
-I compared these two solutions when solving 2017 day 11. The BFS took 30 seconds, and the A* took just 20ms!!
-
-### A* Examples
-
-- [2017 Day 11 - Shortest Path Puzzle](https://colab.research.google.com/github/derailed-dash/Advent-of-Code/blob/master/src/AoC_2017/Dazbo's_Advent_of_Code_2017.ipynb#scrollTo=d4lL3rSAMw0y){:target="_blank"}
-- [2024 Day 18 - Shortest Path in a Maze](https://colab.research.google.com/github/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb#scrollTo=d4lL3rSAMw0y){:target="_blank"}
-
-## Credit Where It's Due
-
-When I first learned these algorithms, the best guide I came across was [this one](https://www.redblobgames.com/pathfinding/a-star/introduction.html){:target="_blank"}. I wrote a lot of notes when I first read it, and in writing this page today, I've been referring to my previous notes.  So, the content I've written here will likely have a lot in common with the amazing content from [https://www.redblobgames.com](https://www.redblobgames.com/){:target="_blank"}.
+- **[2016 Day 11](/2016/11)** — State-space BFS over floor-and-chip configurations with symmetry pruning
+- **[2018 Day 15](https://github.com/derailed-dash/Advent-of-Code/tree/master/src/AoC_2018)** — Grid BFS with deterministic reading-order tie-breaking
+- **[2021 Day 15](/2021/15)** — Weighted risk grid solved with Dijkstra (`heapq`)
+- **[2022 Day 12](/2022/12)** — Heightmap hill-climbing with `Grid` + BFS
+- **[2023 Day 17](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb)** — Crucible shortest path with `(point, direction, streak)` state nodes
+- **[2024 Day 16](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb)** — Reindeer Maze: weighted `(point, heading)` Dijkstra plus tracking all tied optimal paths
+- **[2024 Day 18](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb)** — BFS combined with `binary_search` over falling byte coordinates

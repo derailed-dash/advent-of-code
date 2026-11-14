@@ -1,139 +1,95 @@
 ---
-title: Logging
-tags: 
-  - name: Python Logging
-    link: https://docs.python.org/3/library/logging.html
+title: Logging in Python
+description: How Python's standard logging module works — severity levels, formatters, file handlers with Path, lazy formatting — and how modern AoC solutions configure RichHandler via aoc_common.setup_logging.
+---
+## Why `logging` Beats `print()`
+
+During early debugging it is tempting to scatter `print()` statements everywhere. Once a script grows — or when you need clean machine-readable CLI output (`--json`), selective verbosity (`--debug`), or persistent file output — `print()` quickly becomes painful to strip back out.
+
+Python's built-in [`logging`](https://docs.python.org/3/library/logging.html) module separates **emitting messages** from **deciding how and where they appear**.
+
 ---
 
-## Logging Module Overview
+## Standard Log Levels
 
-Rather than simply using `print()` statements, I tend to use the [logging](https://docs.python.org/3/library/logging.html){:target="_blank"} module for generating console output.
+Each log record carries a severity level so callers can filter out noise at runtime without touching code:
 
-It has a number of advantages over `print()` statements. The first is that we can specify a logging threshold `level`. 
-- There are various levels, such as DEBUG, INFO, WARN, ERROR.
-- When you write a logging statement, you decide the level of that statement.
-- Any logging statements that are above the threshold will be printed. But any that are below the threshold will not be printed.
-- Thus, if we want to see less logging, we can simply increase the threshold.  And if we want to see more logging, we decrease the threshold.
+| Level | Numeric Value | Typical Use in AoC |
+| :--- | :---: | :--- |
+| `DEBUG` | `10` | Detailed grid dumps, BFS frontier states, per-iteration trace (`-d` / `--debug`) |
+| `INFO` | `20` | High-level progress, sample verification results, final answers |
+| `WARNING` | `30` | Unexpected input quirks, locked `git-crypt` fallback hints, slow thresholds |
+| `ERROR` | `40` | Missing input file, invalid CLI arguments, non-fatal failure |
+| `CRITICAL` | `50` | Unrecoverable error terminating execution |
 
-For example:
+*(Note: legacy code occasionally uses `logging.WARN` as an alias for `logging.WARNING`, but `logging.WARNING` is the canonical name.)*
 
-```python
-import logging
+---
 
-# initialise the Root logger
-logging.basicConfig(format="%(asctime)s.%(msecs)03d:%(levelname)s:%(name)s:\t%(message)s", datefmt='%H:%M:%S')
-# now get a named instance of the logger for our application
-logger = logging.getLogger(__name__) 
+## Named Loggers & Formatters
 
-# Set the logging threshold of our logging instance to DEBUG
-logger.setLevel(logging.DEBUG) 
+Instead of mutating the root logger blindly from every module, create a module-scoped logger with `logging.getLogger(__name__)`. That externalises control to your script entrypoint or test runner, while still carrying the exact module hierarchy (`aoc_common.runner`, `__main__`, etc.) in every message.
 
-# print some stuff
-logger.debug("We'll see this.")
-logger.info("And this.")
+Two modern best practices make standard logging clean and fast:
 
-# now set threshold to INFO; everything below INFO is now suppressed
-logger.setLevel(logging.INFO) 
-
-# print some more stuff
-logger.debug("We will NOT see this.")
-logger.info("But we will see this.")
-```
-
-The output from the above looks like this:
-```text
-09:08:46.929:DEBUG:__main__:    We'll see this.
-09:08:46.929:INFO:__main__:     And this
-09:08:46.929:INFO:__main__:     But we will see this.
-```
-
-Note that we must first `import` the `logging` module.
-
-## Customising Output Messages
-
-Another advantage is that you can customise what appears in the console messages.  For example, this initial configuration tells the logger to print the time, the logging level, the name of the logger, and then the message.
-
-```python
-# It will print the time (including milliseconds), the logging level, and the logger name
-logging.basicConfig(format="%(asctime)s.%(msecs)03d:%(levelname)s:%(name)s:\t%(message)s", datefmt='%H:%M:%S')
-```
-
-## Logging to a File
-
-We can also configure our logger to print logging messages to a file, rather than to the console.  For example:
-
-```python
-logging.basicConfig(
-        filename='example.log', 
-        encoding='utf-8', 
-        level=logging.DEBUG, 
-        format='%(asctime)s:%(levelname)s:\t%(message)s')
-logging.debug('This message should go to the log file')
-```
-
-The logging configuration itself can also be placed externalised to a file, rather than coded into the program.
-
-## Passing Variables
-
-It's worth noting how we can pass variables into a logging statement. This is a typical example:
+1. **Lazy `%`-formatting**: Pass arguments separately (`logger.debug("Visited %d states", len(seen))`) rather than eager f-strings. If `DEBUG` is disabled, Python skips formatting its value entirely!
+2. **`pathlib.Path` with `encoding="utf-8"`**: Always specify `encoding="utf-8"` when writing log files so Unicode symbols or box characters never break across platforms.
 
 ```python
 import logging
+from pathlib import Path
 
-# setup
-logging.basicConfig(format="%(asctime)s.%(msecs)03d:%(levelname)s:%(name)s:\t%(message)s", 
-                    datefmt='%H:%M:%S')
-logger = logging.getLogger("FooBar-App")
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
 
-my_key = "foo"
-my_val = "bar"
-logger.info("My key is named %s, and it's value is %s", my_key, my_val)
+
+def configure_basic_logging(log_file: Path | None = None, *, verbose: bool = False) -> None:
+    """Configure standard console and optional file logging."""
+    level = logging.DEBUG if verbose else logging.INFO
+    formatter = logging.Formatter(
+        fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+        datefmt="%H:%M:%S",
+    )
+
+    handlers: list[logging.Handler] = []
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    handlers.append(console_handler)
+
+    if log_file is not None:
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        file_handler = logging.FileHandler(log_file, mode="w", encoding="utf-8")
+        file_handler.setFormatter(formatter)
+        handlers.append(file_handler)
+
+    logging.basicConfig(level=level, handlers=handlers, force=True)
 ```
 
-Here, each `%s` within the string message itself is a placeholder for a variable.  The variables are passed after the string message, as a comma-separated list.
+Notice `force=True` on `logging.basicConfig`: if a Jupyter notebook or another library already attached a handler, `force=True` cleanly replaces stale handlers instead of printing duplicate lines.
 
-The output looks like this:
+---
 
-```text
-08:41:25.172:INFO:FooBar-App:   My key is named foo, and it's value is bar
-```
+## Modern Logging in AoC with `Rich` and `aoc_common`
 
-## Writing to Multiple Targets with Handlers
-
-We can use handlers to write to more than one destination simultaneously. E.g. to write to the console and to a file at the same time:
+Rather than writing custom ANSI formatter subclasses (`ColouredFormatter`) by hand, modern scripts in this repository delegate terminal formatting to `Rich` via [`aoc_common`](/python/reusable_code):
 
 ```python
 import logging
+import aoc_common as ac
 
-# setup
-logger = logging.getLogger("FooBar-App")
-logger.setLevel(logging.DEBUG)
-
-# Write to console with threshold of INFO
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.INFO)
-stream_fmt = logging.Formatter(fmt='%(asctime)s.%(msecs)03d:%(name)s - %(levelname)s: %(message)s', 
-                               datefmt='%H:%M:%S')
-stream_handler.setFormatter(stream_fmt)
-logger.addHandler(stream_handler)
-
-file_handler = logging.FileHandler('my_file.log', mode='a')
-file_handler.setLevel(logging.DEBUG)
-file_fmt = logging.Formatter(fmt="%(asctime)s.%(msecs)03d:%(levelname)s:%(name)s:\t%(message)s", 
-                             datefmt='%H:%M:%S')
-file_handler.setFormatter(file_fmt)
-logger.addHandler(file_handler)
-
-my_key = "foo"
-my_val = "bar"
-logger.info("My key is named %s, and it's value is %s", my_key, my_val)
-logger.debug("Testing a debug line")
+ac.setup_logging(logging.DEBUG)  # Attaches RichHandler with colourised levels & tracebacks
+logger = logging.getLogger(__name__)
+logger.info("Sample checks passed")
+logger.debug("Grid dimensions: %dx%d", 140, 140)
 ```
 
-Note how we have set different thresholds, as well as different message formats, for the two handlers. So the _debug_ message only gets written to the log file, whereas the _info_ message gets written to both the log file, and the console.
+### Automatic CLI & `--json` Support
 
-## Summary
+When you run a puzzle through [Template v3](/python/my-aoc-template3) or `uv run aoc run`:
 
-To wrap up: the Python **logging** module is pretty sophisticated.  I've only touched the surface here. Check the documentation for more details.
+- Default runs call `ac.setup_logging(logging.INFO)`, keeping normal puzzle runs crisp and uncluttered.
+- Passing `-d` or `--debug` switches `setup_logging` to `logging.DEBUG` automatically so you can inspect internal state without editing source code.
+- Passing `--json` sets `stderr=True` (`ac.setup_logging(..., stderr=True)`), routing diagnostic logs to `stderr` so `stdout` emits pure, parseable JSON for automation and benchmarking scripts.
+- Passing `ac.setup_file_logging(logger, folder)` adds a UTF-8 log file alongside terminal output whenever you want to inspect huge trace logs in an editor.
 
+For full styling controls (`Console`, markup, `Table`), see [Terminal Colours & Rich](/python/colours).

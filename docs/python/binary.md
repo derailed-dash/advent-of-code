@@ -1,6 +1,6 @@
 ---
 title: Working with Binary and Other Bases
-
+description: "Converting between decimal, binary, hex, and arbitrary bases in Python, bitwise operations, formatting, and aoc_common helpers."
 main_img:
   name: binary
   link: /assets/images/binary.jpg
@@ -9,9 +9,11 @@ tags:
     link: https://www.mathsisfun.com/binary-decimal-hexadecimal.html
   - name: String format
     link: https://www.programiz.com/python-programming/methods/string/format
+  - name: Reusable Code
+    link: /python/reusable_code
 ---
 
-If you're not familiar with binary, hexadecimal, and bases in general, then I'd suggest you first checkout [this friendly page](https://www.mathsisfun.com/binary-decimal-hexadecimal.html){:target="_blank"}.
+If you're not familiar with binary, hexadecimal, and bases in general, then I'd suggest you first check out [this friendly page](https://www.mathsisfun.com/binary-decimal-hexadecimal.html){:target="_blank"}.
 
 ## Page Contents
 
@@ -19,23 +21,25 @@ If you're not familiar with binary, hexadecimal, and bases in general, then I'd 
 - [Converting Any Base to Decimal](#converting-any-base-to-decimal)
 - [Converting from Hex to Binary](#converting-from-hex-to-binary)
 - [Bit Operations](#bit-operations)
+- [Arbitrary Bases with `aoc_common`](#arbitrary-bases-with-aoc_common)
+- [Examples](#examples)
 
 ## Converting Decimal to Other Bases
 
 ```python
 a_num = 20
 
-bin_as_str = bin(20)
+bin_as_str = bin(a_num)
 print(f"bin_as_str: {bin_as_str}")
 print(f"bin component: {bin_as_str[2:]}")
 
-oct_as_str = oct(20)
-print(f"bin_as_str: {oct_as_str}")
-print(f"bin component: {oct_as_str[2:]}")
+oct_as_str = oct(a_num)
+print(f"oct_as_str: {oct_as_str}")
+print(f"oct component: {oct_as_str[2:]}")
 
-hex_as_str = hex(20)
-print(f"bin_as_str: {hex_as_str}")
-print(f"bin component: {hex_as_str[2:]}")
+hex_as_str = hex(a_num)
+print(f"hex_as_str: {hex_as_str}")
+print(f"hex component: {hex_as_str[2:]}")
 ```
 
 Output:
@@ -43,10 +47,10 @@ Output:
 ```text
 bin_as_str: 0b10100
 bin component: 10100
-bin_as_str: 0o24
-bin component: 24
-bin_as_str: 0x14
-bin component: 14
+oct_as_str: 0o24
+oct component: 24
+hex_as_str: 0x14
+hex component: 14
 ```
 
 ## Converting Any Base to Decimal
@@ -79,19 +83,19 @@ bin_val = bin(int(hex_str, 16))
 print(bin_val)
 
 # And now using the 'b' format specifier to go from dec to bin with leading zeroes
-bin_len = 4*len(hex_str)
-bin_val = "{0:0{width}b}".format(int(hex_str, 16), width=bin_len)
+bin_len = 4 * len(hex_str)
+bin_val = f"{int(hex_str, 16):0{bin_len}b}"
 print(bin_val)
 ```
 
-The first conversion is just using the int() and bin() functions that we've already seen.
+The first conversion is just using the `int()` and `bin()` functions that we've already seen.
 
 The second conversion:
 
 - First converts from hex to decimal, using `int(value, base)`, where `base=16`.
-- Then converts the decimal number to binary, by applying a `format spec`, where:
-  - The first `{0}` is the first parameter to the `format()` method, i.e. the decimal value;
-  - And `:0{width}b` tells `format()` to convert to `binary` type, and then pad with `0` in order to achieve the desired overall length.
+- Then converts the decimal number to binary using a modern nested f-string format specifier:
+  - `f"{int(hex_str, 16):0{bin_len}b}"`
+  - `:0{bin_len}b` tells Python to format as binary (`b`), padded with leading `0`s to a minimum width of `bin_len` (dynamically evaluated from `{bin_len}`).
 
 In general, when using a _format spec_, the format is:
 
@@ -110,12 +114,12 @@ Output:
 
 |Operation|Operator|Example|
 |---------|--------|-------|
-|Bit shift left y places|x << y|Each shift left results in a doubling of the value. E.g. 0b110 < 2 = 0b11000|
+|Bit shift left y places|x << y|Each shift left results in a doubling of the value. E.g. 0b110 << 2 = 0b11000|
 |Bit shift right y places|x >> y|E.g. shift right results in an integer division by 2. E.g. 0b11000 >> 3 = 0b11|
 |Bitwise AND|x & y|1 only if both are 1.|
 |Bitwise OR|x \| y|1 if either is 1|
-|Complement / NOT|~x|Switch each 0 for 1, and each 1 for 0.
-|Exclusive OR (XOR)|x ^ y|1 where one or other, but not both
+|Complement / NOT|~x|Switch each 0 for 1, and each 1 for 0.|
+|Exclusive OR (XOR)|x ^ y|1 where one or other, but not both|
 
 ### Demo
 
@@ -132,7 +136,7 @@ print(f"\nbin digits length: {bin_digit_len}")
 # The "#" means "include 0b prefix"
 # The 0 means include leading zeros
 # The 6 means total length of digits (including the 0b)
-format_specifier = "#0"+str(int(bin_digit_len)+2)+"b"
+format_specifier = f"#0{bin_digit_len + 2}b"
 print(f"Format specifier: {format_specifier}")
 
 bin_val_as_bin_str = bin(int(BIN_VAL_AS_STR, 2))
@@ -151,7 +155,7 @@ print(f"shift {bin(shift_left)} right by 3 as bin: {bin(shift_right)}; as dec: {
 complement = ~bin_val_as_dec
 print(f"complement of {BIN_VAL_AS_STR} as dec: {complement}")
 
-ones_mask = "0b"+"1"*bin_digit_len
+ones_mask = "0b" + "1" * bin_digit_len
 print(f"Ones mask using bin length: {ones_mask}")
 
 complement_positive = ~bin_val_as_dec & int(ones_mask, 2)
@@ -178,4 +182,14 @@ Positive complement of 0b0110 as bin: 0b1001
 Positive complement of 0b0110 as dec: 9
 ```
 
-The complement operation is worth noting.  When we take the complement of 6, we end up with -7.  This is because negative numbers - in Python - are represented by setting the most significant (leftmost) bit to 1. Thus, if we have a binary number that has a leading 0 and complement it, we will always end up with a negative number.  But often that's not what we want. A neat trick is to perform a bitwise `&` with the complement of a binary number, using a mask that is set to all 1s. If we do this, then we will successfully invert all the bits, but in the form of a positive number.
+The complement operation is worth noting. When we take the complement of 6, we end up with -7. This is because negative numbers — in Python — are represented by setting the most significant (leftmost) bit to 1. Thus, if we have a binary number that has a leading 0 and complement it, we will always end up with a negative number. But often that's not what we want. A neat trick is to perform a bitwise `&` with the complement of a binary number, using a mask that is set to all 1s. If we do this, then we will successfully invert all the bits, but in the form of a positive number.
+
+## Arbitrary Bases with `aoc_common`
+
+While Python provides built-in `bin()`, `oct()`, and `hex()` for bases 2, 8, and 16, Advent of Code puzzles occasionally require arbitrary bases (such as ternary or base-5). In [`aoc_common`](/python/reusable_code), the `ac.to_base_n(n, base)` helper converts any non-negative integer into its string representation in any base from 2 to 36.
+
+## Examples
+
+- [Bitwise operations in circuit emulation — 2015 Day 7](/2015/7)
+- [Hexadecimal packet decoding — 2021 Day 16](/2021/16)
+- [Arbitrary base conversion with `ac.to_base_n` — Reusable Code](/python/reusable_code)

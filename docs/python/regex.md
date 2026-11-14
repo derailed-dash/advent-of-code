@@ -1,5 +1,6 @@
 ---
 title: Regular Expressions
+description: Practical guide to Python regular expressions using the re module, covering pattern matching, named groups, finditer, sub, and parsing AoC input.
 main_img:
   name: regex
   link: /assets/images/regex.jpg
@@ -23,9 +24,11 @@ tags:
 
 - [Patterns](#patterns)
 - [Matching Patterns in Python](#matching-patterns-in-python)
+  - [Including Optional Matches](#including-optional-matches)
 - [Naming Groups](#naming-groups)
 - [Iterating through Matches](#iterating-through-matches)
 - [Replacing](#replacing)
+- [Extracting Integers from AoC Input](#extracting-integers-from-aoc-input)
 - [More Examples](#more-examples)
   - [Asserting the Match, and Mapping](#asserting-the-match-and-mapping)
   - [Using findall()](#using-findall)
@@ -215,6 +218,42 @@ and replaces it with: \
 line = re.sub(r"= (.*) \| (.*)$", r"= ((\1) / (\2))", line)
 ```
 
+## Extracting Integers from AoC Input
+
+Advent of Code puzzle inputs frequently contain structured or semi-structured lines where coordinates, dimensions, or instructions are peppered with words and punctuation. Writing brittle string splitting or bespoke regex groups for every line can quickly become tedious.
+
+A canonical Python helper that extracts all integers into a list in one shot is:
+
+```python
+import re
+
+def extract_ints(text: str, *, negative: bool = True) -> list[int]:
+    """Extract all integer values from a string of text.
+
+    Args:
+        text: Input string containing numbers interspersed with text or symbols.
+        negative: If True, matches negative integers (e.g. -42). Defaults to True.
+
+    Returns:
+        List of parsed integers in order of appearance.
+    """
+    pattern = r"-?\d+" if negative else r"\d+"
+    return [int(x) for x in re.findall(pattern, text)]
+```
+
+For example:
+
+```python
+line = "Sensor at x=2389, y=-12003: closest beacon is at x=-500, y=998"
+print(extract_ints(line))
+# Output: [2389, -12003, -500, 998]
+
+# Unpack directly into coordinate variables
+sx, sy, bx, by = extract_ints(line)
+```
+
+This compact idiom handles positive and negative coordinates effortlessly and solves the parsing step for dozens of AoC days in a single line.
+
 ## More Examples
 
 ### Asserting the Match, and Mapping
@@ -256,7 +295,7 @@ for line in data:
     print(f"tl_x: {tl_x}, tl_y: {tl_y}, br_x: {br_x}, br_y: {br_y}")
 ```
 
-The next two two blocks of code achieve the same outcome.  The first obtains a `match` and then the `groups`:
+The next two blocks of code achieve the same outcome.  The first obtains a `match` and then the `groups`:
 
 ```python
     boxes = []
@@ -290,5 +329,5 @@ And here we use `findall()`, which circumvents the need to first get the `match`
 - [Using "search" and "if"](/2022/5)
 - [Using "findall" and "int"](/2022/11)
 - [Using "findall" with "map" and tuple unpacking](/2022/15)
-- [Using "(?:" for non-matchin groups](/2022/19)
-- [Using "finditer" in AoC 2024 Day 3 - Mull It Over](https://colab.research.google.com/github/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb){:target="_blank"}
+- [Using "(?:" for non-matching groups](/2022/19)
+- [Using "finditer" in AoC 2024 Day 3 - Mull It Over](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb){:target="_blank"}

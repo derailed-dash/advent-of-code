@@ -1,5 +1,6 @@
 ---
 title: Functions
+description: "Defining reusable functions, modern Python 3.13+ type hinting, tuple unpacking, in-place swapping, and lambda expressions in Advent of Code."
 main_img:
   name: regex
   link: /assets/images/functions.png
@@ -31,27 +32,27 @@ A **function** is a way of taking some code and making it callable. This allows 
 The general syntax is:
 
 ```python
-def my_function(some_arg, some_other_arg):
-   """ Some docstring """
-   some_result = do_some_stuff(some_arg)
-   ret_value = do_some_other_stuff(some_other_arg, some_result)
-   return ret_value
+def my_function(some_arg: str, some_other_arg: int) -> str:
+    """ Some docstring """
+    some_result = do_some_stuff(some_arg)
+    ret_value = do_some_other_stuff(some_other_arg, some_result)
+    return ret_value
 ```
 
 - The `def` keyword binds a function body (i.e. the code) to a name, such that a function is simply an object. Thus, a function is a _callable object_.
 - After a function has been defined, we can call our function from another part of our code.
-- Function arguments are passed in the brackets.  Functions do not always require arguments.
+- Function arguments are passed in the brackets. Functions do not always require arguments.
 - It is _useful_ to include a _docstring_, i.e. brief documentation that explains what the function does, and how to use it.
-- A function does not always need to return a value.  But often, a function does something, and then returns a value as output.  If no return value is explicitly specified, the function will always return `None`.
-- Functions can return multiple values, as a `tuple`.  Whenever more than one value is returned by a function, it is automatically converted to a tuple. For example:
+- A function does not always need to return a value. But often, a function does something, and then returns a value as output. If no return value is explicitly specified, the function will always return `None`.
+- Functions can return multiple values, as a `tuple`. Whenever more than one value is returned by a function, it is automatically converted to a tuple. For example:
 
 ```python
-def min_and_max(items):
+def min_and_max(items: list[int]) -> tuple[int, int]:
     """ Takes a list of values, and returns the smallest and largest values from the list.
         Returns: a tuple, composed of the min and max values from the list """
     return min(items), max(items)
 
-print(min_and_max([50,5,20,30]))
+print(min_and_max([50, 5, 20, 30]))
 ```
 
 Output:
@@ -73,18 +74,18 @@ The Fibonacci sequence is an infinite sequence where each value is the sum of th
 Here I implement a function that generates the sequence with n iterations.
 
 ```python
-def fib(n):
+def fib(n: int) -> list[str]:
     """ Generate the Fibonacci Sequence for n iterations """
-    ret_val = []
-    if (n==0):
+    ret_val: list[str] = []
+    if n == 0:
         return ret_val
 
     a = 0
     b = 1
 
     for iteration in range(n):
-        ret_val.append(f"Iteration {iteration}: value={str(b)}")
-        a, b = b, a+b
+        ret_val.append(f"Iteration {iteration}: value={b}")
+        a, b = b, a + b
 
     return ret_val
 
@@ -113,17 +114,17 @@ b = a + temp
 We can write this:
 
 ```python
-a, b = b, a+b
+a, b = b, a + b
 ```
 
-- To handle bad input, I'm using exceptions.  Check out my page on this, [here](/python/exceptions).
+- To handle bad input, I'm using exceptions. Check out my page on this, [here](/python/exceptions).
 - I'm using `range(n)` in combination with a `for` loop so that we can iterate over the loop `n` times.
 
 ### Lambda Functions
 
-A lambda function is a small _anonymous_ function that contains only a single expression. When we say _"anonymous"_, we mean that the function is not explicitly defined using `def`.  Instead, it is simply defined as an expression, at the point it is required.
+A lambda function is a small _anonymous_ function that contains only a single expression. When we say _"anonymous"_, we mean that the function is not explicitly defined using `def`. Instead, it is simply defined as an expression, at the point it is required.
 
-A lambda function can have zero, one or many arguments.  But it can only perform a single statement, and this statement must be an expression that evaluates to a result.
+A lambda function can have zero, one or many arguments. But it can only perform a single statement, and this statement must be an expression that evaluates to a result.
 
 Clear as mud?
 
@@ -131,8 +132,8 @@ This will help:
 
 ```python
 # Here we define a function explicitly, using the def keyword
-def add(x,y):
-	return x + y
+def add(x: int, y: int) -> int:
+    return x + y
 
 # But this lambda function is equivalent.
 # The accepted arguments are always placed before the colon.
@@ -166,7 +167,7 @@ Our lambda function is simply this:
 lambda name: name.split()[-1]
 ```
 
-It expects a single parameter, called name. It splits this name, and then returns the last word from the split.  Hence, if `name` is `"firstname lastname"`, then the result of `name.split()[-1]` will be `"lastname"`.
+It expects a single parameter, called name. It splits this name, and then returns the last word from the split. Hence, if `name` is `"firstname lastname"`, then the result of `name.split()[-1]` will be `"lastname"`.
 
 We pass this lambda function into our `sorted()` function, which then applies the lambda function to every member of this list.
 
@@ -186,5 +187,5 @@ Consequently, lambda functions are extremely useful as parameters to any functio
 ### Examples
 
 See:
-- [Lambda: 2015 Day 21](/2015/21)
-- [Lambda: 2021 Day 7](/2021/7)
+- [Lambda — 2015 Day 21](/2015/21)
+- [Lambda — 2021 Day 7](/2021/7)

@@ -1,15 +1,17 @@
 ---
 title: Priority Queues and Heaps
+description: "Understanding priority queues, binary heaps, Python's heapq module, and tie-breaking patterns with itertools.count() for Advent of Code."
 main_img:
   name: Heapq
   link: /assets/images/heapq.png
-tags: 
+tags:
   - name: Graphs and Graph Theory
     link: /python/graph
   - name: heapq
     link: https://docs.python.org/3/library/heapq.html
   - name: Shortest Path Algorithms
     link: /python/shortest_paths
+mathjax: true
 ---
 
 ## Page Contents
@@ -20,91 +22,101 @@ tags:
 - [Heaps](#heaps)
 - [Heapq](#heapq)
   - [Heapq Methods](#heapq-methods)
-  - [Heapq Elements and Priority](#heapq-elements-and-priority)
+  - [Heapq Elements, Priority, and Tie-Breaking](#heapq-elements-priority-and-tie-breaking)
 - [Examples](#examples)
 
 ## Overview
 
-Whilst the Python `list` is great for storing an arbitrary number of elements, and for being able to retrieve elements quickly by position, the `list` does not perform well when working with huge volumes of ordered data. For example, imagine we had a list with millions of objects in a random order, and we need to continually retrieve the object that is largest.  In this situation, Python needs to continually scan the entire list to find the one that is largest.  This is not an efficient approach!
+Whilst a Python `list` is great for storing elements and accessing them quickly by index, it performs poorly when you repeatedly need to extract the smallest or largest item from thousands of changing candidates. Scanning an unsorted list each step costs \( O(n) \) per pop — \( O(n^2) \) overall.
 
-And that's where a **priority queue** comes in.  A _priority queue_ is an _abstract dta structure_ designed to allow fast retrieval of the largest or smallest value, regardless of the number of items being stored.
+A **priority queue** is an *abstract data structure* built to pop the minimum (or maximum) priority item in \( O(\log n) \) time, no matter how large the queue grows.
 
 ## When To Use a Priority Queue?
 
-- If you need to work with unordered data, and you need to frequently retrieve an element by index, use a `list`.
-- If you need to work with large volumes of data, and you want to be able to always retrieve the smallest or largest value - then use a _priority queue_.
+- If you need random index lookups over unordered data, use a `list`.
+- If you repeatedly push items with changing costs and always need the lowest-cost (or highest-priority) item next, use a **priority queue**.
 
-Typical use cases for a _priority queue_ are:
+Typical AoC use cases include:
 
-- Finding the shortest path, e.g. through a maze
-- Merging large sets of sequenced data
-- Scheduling based on priority
-- Solving _optimisation problems_, i.e. find the most efficient way to do x.
+- Finding the cheapest path through a weighted maze (Dijkstra and A\*).
+- Event-driven simulations ordered by timestamp.
+- Merging sorted sequences or greedy scheduling puzzles.
 
 ## Abstract Data Structure?
 
-What does _abstract data structure_ even mean? It means that however we implement this data structure, it needs to adhere to a few rules.  A implementation for a _priority queue_ should include these operations:
+Calling something an *abstract data structure* specifies *what* operations it supports rather than how it lays out bytes in memory:
 
-- Check if it is empty
-- The ability to _push_ (i.e. add) a new element
-- The ability to _pop_ (retrieve and remove) the element that is _highest priority_. Highest priority can mean whatever you want.  For example, it might be the largest value; it might mean closeness to a goal. If you've implemented a _priority queue_ that is returning the largest values, you can always make it return the smallest value by simply negating the value.
+- Check if it is empty (`bool(pq)`).
+- Push a new `(priority, item)` entry.
+- Pop and remove the entry with the **highest priority** (in Python's `heapq`, that means the **smallest** key — negate numeric priorities if you need a max-heap).
 
 ## Heaps
 
-Heaps are commonly used to implement priority queues in a manner where performance is guaranteed in relation to the size of the overall dta structure. This is possible because heaps **implement a priority queue in the form of a binary tree**.
+Heaps are the standard backing implementation for priority queues because they guarantee \( O(\log n) \) push and pop performance by arranging elements as a complete **binary tree**:
 
 ![Binary Tree](/assets/images/binary-tree.png){:style="width: 480px"}
 
-Recall from [graphs](/python/graph) that a tree is an _acyclic graph_ - i.e. one in which no loops are created - where vertices are connected by exactly one path.
+Recall from [graphs](/python/graph) that a tree is an *acyclic graph* where every non-root node has a single parent. A **min-heap** enforces two invariants:
 
-A **heap** has additional characteristics, called _heap property_:
-
-- A node will have no more than two children. (A requirement of a _binary tree_.)
-- All levels are full, with the exception of the deepest level, which may not yet be full.
-- To ensure that the heap is able to pop highest priority, the heap property ensures that the value of a node is always smaller than both of its children.
-- Popping will always return the smallest (highest priority) element.
-- Pushing/popping temporarily violates the heap property, and then the heap restructures to restore the heap property.   This will involve switching parents and children, as required.
-
-The performance of pushing/popping a heap is guaranteed to be proportional to the _base-2 log_ of the size of the queue.
+- **Shape property**: Every level of the tree is filled left-to-right before starting a new depth.
+- **Heap property**: Every parent is `<=` both of its children, guaranteeing the overall minimum sits at index `0`.
 
 ## Heapq
 
-In Python, we have a ready-made heap available in the form of the [heapq](https://docs.python.org/3/library/heapq.html).
-
-It is a complete **binary tree implemented _on top of a list**.  For this reason, it is easy to convert an existing list or iterable to a heapq.
-
-Recall that the heap property requires that a parent has a smaller value (higher priority) than both of its children.  This is implemented in the heapq as shown below. 
+Python's standard library provides the [heapq](https://docs.python.org/3/library/heapq.html){:target="_blank"} module: a binary min-heap implemented **directly on top of a regular `list`**.
 
 ![Heapq](/assets/images/heapq.png)
 
-The arrows indicate the children of any given parent, and shows where the children are always located, in the heapq implementation.
-
-The `heapq` _pops_ based on the smallest value having the highest priority.
-So, if we (say) store state objects in the queue, you could implement the `__lt__()` method of the state object such that `a < b` if `a` is closer to the goal.
+In the array layout above, a parent at index `i` always has children at indices `2 * i + 1` and `2 * i + 2`, so no pointer objects or extra wrappers are allocated.
 
 ### Heapq Methods
 
-- `heapq.heapify(some_iterable)`
-- `heapq.heappush(queue, element)`
-- `heapq.heappop(queue)`
-- `heapq.heappushpop(heap, element)` - more efficient if we need to both push and pop
-- `heapq.merge(iterable1, iterable2, …)` - merges sorted iterables and returns an iterator
+- `heapq.heapify(items)`: Reorder a list into a valid heap in-place in \( O(n) \) linear time.
+- `heapq.heappush(heap, element)`: Push an element while restoring the heap property in \( O(\log n) \).
+- `heapq.heappop(heap)`: Pop and return the smallest item in \( O(\log n) \).
+- `heapq.heappushpop(heap, element)`: Faster combined push followed by pop.
+- `heapq.nsmallest(k, iterable)` / `heapq.nlargest(k, iterable)`: Extract top-k items cleanly.
 
-### Heapq Elements and Priority
+### Heapq Elements, Priority, and Tie-Breaking
 
-Recall that the `heapq` always pops the item with the **smallest value**. Thus, _highest priority_ = _smallest value_.  Bear this in mind when adding objects to a `heapq`.
-
-An alternative way to add things to a queue with our desired priority is to add them as the second element of a `tuple`.  This is because if we add `tuples` to a `heapq`, **the first item in the tuple is used for the priority.**
-
-E.g.
+Because `heapq` compares tuples element-by-element from left to right, pushing `(cost, state)` automatically orders the heap by `cost`:
 
 ```python
-heapq.heappush(frontier, (priority, item))
+import heapq
+from itertools import count
+
+frontier: list[tuple[int, int, object]] = []
+tie_breaker = count()
+
+# Safe even if two states share the exact same cost and `state` itself is non-comparable!
+heapq.heappush(frontier, (0, next(tie_breaker), {"pos": (0, 0), "keys": frozenset()}))
 ```
 
-We'll look at some real `heapq` usage when we move on to look at [Shortest Path Algorithms](/python/shortest_paths).
+Notice why `next(tie_breaker)` matters:
+
+- If you push `(priority, state)` directly and two entries happen to share the same `priority`, Python compares `state_a < state_b` to break the tie.
+- If `state` is a `dict`, `frozenset`, `Enum`, or custom class without `__lt__`, Python raises `TypeError: '<' not supported between instances`.
+- Inserting a strictly increasing sequence number via `itertools.count()` as the middle tuple element (`(priority, next(tie_breaker), state)`) guarantees ties are always resolved cleanly in FIFO order without ever comparing `state`.
+
+Alternatively, if your state objects are immutable value types (like [`aoc_common.Point`](/python/reusable_code)), decorating with `@dataclass(frozen=True, order=True, slots=True)` with `cost: int` as the first field makes the object itself directly sortable in `heapq` without tuple unpacking:
+
+```python
+from dataclasses import dataclass, field
+
+
+@dataclass(frozen=True, order=True, slots=True)
+class SearchNode:
+    cost: int
+    pos: tuple[int, int]
+    heading: tuple[int, int] = field(compare=True)
+```
+
+Head over to [Shortest Path Algorithms](/python/shortest_paths) to see `heapq` powering Dijkstra and A\* in full AoC pathfinders.
 
 ## Examples
 
-- [Risk maze priority queue - 2021 day 15](/2021/15)
-- [Rearranging amphipods BFS - 2021 day 23](/2021/23)
+- [Risk maze weighted shortest path — 2021 Day 15](/2021/15)
+- [Rearranging amphipods state-space search (Dijkstra / A\*) — 2021 Day 23](/2021/23)
+- [Clumsy Crucible constrained turning pathfinder — 2023 Day 17](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2023/Dazbo's_Advent_of_Code_2023.ipynb){:target="_blank"}
+- [Reindeer Maze shortest paths with turn penalties — 2024 Day 16](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb){:target="_blank"}
+- [RAM Run falling-bytes pathfinder — 2024 Day 18](https://github.com/derailed-dash/Advent-of-Code/blob/master/src/AoC_2024/Dazbo's_Advent_of_Code_2024.ipynb){:target="_blank"}

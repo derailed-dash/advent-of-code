@@ -1,5 +1,6 @@
 ---
 title: Working with Images and Animations
+description: "Generating images, heatmaps, and animations in Python with Pillow, Matplotlib, and ImageIO to visualise Advent of Code puzzles."
 main_img:
   name: RGB Image
   link: /assets/images/rgb_image.gif
@@ -34,7 +35,7 @@ tags:
   - [Flashing Grid](#flashing-grid)
   - [Trench Map](#trench-map)
   - [Height Map](#height-map)
-  - [Roap Bridge](#roap-bridge)
+  - [Rope Bridge](#rope-bridge)
 
 ## Overview
 
@@ -53,6 +54,12 @@ There are a few ways to work with images in Python. These include:
   - Useful package for reading and writing images.
   - Particularly useful for animations, and for capturing images from various sources and streams.
 
+You can add these libraries to your project environment using `uv`:
+
+```bash
+uv add pillow imageio matplotlib numpy
+```
+
 ## Working with Different Imaging Libraries
 
 The code below demonstrates how to read and write images with a few Python libraries, and how to convert between them.
@@ -60,20 +67,19 @@ The code below demonstrates how to read and write images with a few Python libra
 First, some basic imports and prep...
 
 ```python
-from os import path, mkdir
 from io import BytesIO
+from pathlib import Path
 import imageio as iio
 from PIL import Image
 from matplotlib import pyplot as plt, image as plt_img
 import numpy as np
 
-SCRIPT_DIR = path.abspath(path.curdir)
+SCRIPT_DIR = Path.cwd()
 print(SCRIPT_DIR)
-OUTPUT_DIR = path.join(SCRIPT_DIR, "output")
-IMG_FILE = path.join(SCRIPT_DIR, "my_pic.jpg")
+OUTPUT_DIR = SCRIPT_DIR / "output"
+IMG_FILE = SCRIPT_DIR / "my_pic.jpg"
 
-if not path.exists(OUTPUT_DIR):
-    mkdir(OUTPUT_DIR)
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 ```
 
 ### Loading and Showing Image File with Pillow
@@ -163,7 +169,7 @@ print(f"Source type: {type(py_img)}")
 frame = BytesIO()
 plt.imshow(py_img)  # load the image into Plt
 plt.savefig(frame, format='png')  # save the image to (BytesIO) memory
-plt.savefig(Path(OUTPUT_DIR, "pyplot_img_file.png"))  # save to disk
+plt.savefig(OUTPUT_DIR / "pyplot_img_file.png")  # save to disk
 ```
 
 ### Converting from BytesIO to Pillow
@@ -178,10 +184,10 @@ pil_img.show()
 
 ```python
 print("\nOpening image in Pillow and then saving in various formats to")
-print(path.abspath(OUTPUT_DIR))
+print(OUTPUT_DIR.resolve())
 pil_img = Image.open(IMG_FILE)
-pil_img.save(Path(OUTPUT_DIR, "pil_img_file.jpg"))
-pil_img.save(Path(OUTPUT_DIR, "pil_img_file.png"))
+pil_img.save(OUTPUT_DIR / "pil_img_file.jpg")
+pil_img.save(OUTPUT_DIR / "pil_img_file.png")
 print("And saving directly to BytesIO...")
 frame = BytesIO()
 pil_img.save(frame, format="PNG") # We can save to a file, or to a file-like object, like BytesIO
@@ -220,11 +226,11 @@ iio_img = iio.imread(frame)
 ```python
 # And saving ImageIO to file
 print("From ImageIO to file...")
-iio.imsave(Path(OUTPUT_DIR, "iio_file.png"), iio_img)
+iio.imsave(OUTPUT_DIR / "iio_file.png", iio_img)
 
 # Let's read it back, to prove...
 print("And from file to Pillow to show...")
-pil_img = Image.open(Path(OUTPUT_DIR, "iio_file.png")) # Pillow open seeks for us
+pil_img = Image.open(OUTPUT_DIR / "iio_file.png") # Pillow open seeks for us
 pil_img.show()
 ```
 
@@ -232,14 +238,14 @@ pil_img.show()
 
 ### Heatmap
 
-From [2021 Day 9 - Lava Basins](/2021/9):
+From [2021 Day 9 — Lava Basins](/2021/9):
 
 ```python
     def render_image(self, target_width:int=600) -> Image.Image:
         """ Render grid as a heatmap image
 
         Args:
-            width (int, optional): Target width, in pxiels. Defaults to 600.
+            width (int, optional): Target width, in pixels. Defaults to 600.
         """
         scale = target_width // self._width  # our original image is only a few pixels across. We need to scale up.
         
@@ -350,14 +356,14 @@ Taken from [2021 Day 20 - Trench Map Enhancement](/2021/20):
 
 ### Height Map
 
-Taken from [2022 Day 8 - Tree House Grid](/2022/8):
+Taken from [2022 Day 8 — Tree House Grid](/2022/8):
 
 ```python
     def render_image(self, target_width:int=600) -> Image.Image:
         """ Render grid as a heatmap image
 
         Args:
-            width (int, optional): Target width, in pxiels. Defaults to 600.
+            width (int, optional): Target width, in pixels. Defaults to 600.
         """
         scale = target_width // self._width  # our original image is only a few pixels across. We need to scale up.
         
@@ -387,9 +393,9 @@ Taken from [2022 Day 8 - Tree House Grid](/2022/8):
 
 ![Hidden Trees]({{"/assets/images/hidden_trees.png" | relative_url }}){:style="width:400px"}
 
-### Roap Bridge
+### Rope Bridge
 
-Taken from [2022 Day 9 - Road Bridge](/2022/8).
+Taken from [2022 Day 9 — Rope Bridge](/2022/9).
 
 Here we use `matplotlib` and `imageio` to render an animation:
 
@@ -409,7 +415,7 @@ Here we use `matplotlib` and `imageio` to render an animation:
         fig, axes = self._plt_info
         axes.clear()
         
-        # The grid will grow as the rope heads moves around
+        # The grid will grow as the rope head moves around
         max_x = max(self._all_head_locations, key=lambda point: point.x).x
         min_x = min(self._all_head_locations, key=lambda point: point.x).x
         max_y = max(self._all_head_locations, key=lambda point: point.y).y

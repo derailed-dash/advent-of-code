@@ -1,6 +1,6 @@
 ---
 title: LIFO, FIFO, and deques
-
+description: "Using collections.deque for efficient LIFO stacks, FIFO queues, capped buffers, and ring rotations in Advent of Code."
 main_img:
   name: "LIFO and FIFO"
   link: /assets/images/lifo_fifo.png
@@ -18,9 +18,9 @@ tags:
 
 ## Overview
 
-**LIFO means "Last-In, First-Out".** We typically to a data structure that stores elements in this way as a **stack**. For example, imagine a stack of plates, where put clean plates on the top, and when you want to use a plate, you also retrieve it from the top.
+**LIFO means "Last-In, First-Out".** We typically refer to a data structure that stores elements in this way as a **stack**. For example, imagine a stack of plates, where you put clean plates on the top, and when you want to use a plate, you also retrieve it from the top.
 
-**FIFO means "First-In, First-Out".** We typically to a data structure that stores elements in this way as a **queue**.
+**FIFO means "First-In, First-Out".** We typically refer to a data structure that stores elements in this way as a **queue**.
 
 In Python, we can use a `list` for both. The Python `list` is very efficient where we want to retrieve an element by some arbitrary index. They're also good if we want to append or pop (retrieve and remove) data from the _right hand end_.  Thus, they can be used for stacks.
 
@@ -143,12 +143,12 @@ Left by 4:  deque([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
 ## Examples
 
-- [Deque with sliding window - 2021 day 3](/2021/3)
-- [Lantern fish timers and circular deque - 2021 day 6](/2021/6)
-- [Flood fill lava basins with deque - 2021 day 9](/2021/9)
-- [Stack popping using deque - 2021 day 10](/2021/10)
-- [DFS exploding of nested tree with deque - 2021 day 18](/2021/18)
-- [BFS best path with deque - 2022 day 12](/2022/12)
-- [BFS flood fill with deque - 2022 day 18](/2022/18)
-- [Circular numbers - 2022 day 20](/2022/20)
-- [A deque to rotate through vectors - 2022 Day 23](/2022/23)
+- [Deque with sliding window — 2021 Day 3](/2021/3)
+- [Lantern fish timers and circular deque — 2021 Day 6](/2021/6)
+- [Flood fill lava basins with deque — 2021 Day 9](/2021/9)
+- [Stack popping using deque — 2021 Day 10](/2021/10)
+- [DFS exploding of nested tree with deque — 2021 Day 18](/2021/18)
+- [BFS best path with deque — 2022 Day 12](/2022/12)
+- [BFS flood fill with deque — 2022 Day 18](/2022/18)
+- [Circular numbers — 2022 Day 20](/2022/20)
+- [A deque to rotate through vectors — 2022 Day 23](/2022/23)

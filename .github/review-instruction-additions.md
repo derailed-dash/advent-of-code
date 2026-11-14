@@ -8,7 +8,8 @@ Apply these repository-specific rules during pull request reviews:
 2. **Historical Walkthrough Pages (`docs/2015/` – `docs/2025/`)**:
    - When a PR modifies existing walkthrough pages under `docs/2015/` through `docs/2025/` (for example, fixing broken links or adding `mathjax: true` frontmatter), review **only** the changed lines in the diff. Do not flag untouched legacy prose, spelling, or embedded code snippets on those pages.
 
-3. **Active Code & Tooling (`src/aoc_common/`, `src/tests/`, `src/template_folder/`, `src/AoC_2026+`)**:
-   - Enforce Python 3.13+ conventions (`uv`, PEP 585/604 type annotations, offline unit tests in `src/tests/`) and UK English spelling.
+3. **Active Code, Tooling & Reference Docs (`src/aoc_common/`, `src/tests/`, `src/template_folder/`, `src/AoC_2026+`, `docs/python/`)**:
+   - Enforce Python 3.13+ conventions (`uv`, PEP 585/604 type annotations, offline unit tests in `src/tests/`) and UK English spelling across active code and `docs/python/` reference snippets.
+   - Enforce repository Markdown rules: relative links instead of `file:///` URIs, and never `mermaid` code blocks or ASCII/Unicode box-drawing diagrams.
    - Flag any unencrypted puzzle input files (`input*.txt`), real puzzle answers leaked in documentation, or plaintext secrets/tokens.
-   - Never suggest downgrading configured Gemini models (such as `gemini-3.8-flash`).
+   - Never suggest downgrading configured Gemini models (such as `gemini-4-hydrogen`).

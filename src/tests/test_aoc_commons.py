@@ -8,7 +8,7 @@ Purpose & Value:
 
 Mechanics & Isolation:
     Uses ``unittest.TestCase``, temporary directories, and ``unittest.mock`` patches over
-    ``urllib.request.urlopen`` and environment variables so every HTTP, ``.env``, and
+    ``requests.get`` and environment variables so every HTTP, ``.env``, and
     filesystem scenario executes cleanly offline with no ``AOC_SESSION_COOKIE`` required.
 """
 
@@ -17,9 +17,10 @@ import heapq
 import importlib
 import logging
 import os
+import tempfile
 import unittest
 from os import path
-from shutil import rmtree
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from rich.logging import RichHandler
@@ -36,9 +37,10 @@ class TestTypes(unittest.TestCase):
     """Unit tests for reusable helpers and geometric types in ``aoc_commons``."""
 
     def setUp(self):
-        """Read locations, clear the input folder, and set up some test data."""
-        self.locations = ac.get_locations(__file__)
-        self.clear_input_folder()
+        """Create an isolated temp workspace and set up sample points."""
+        self._tmp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp_dir.cleanup)
+        self.locations = ac.get_locations(Path(self._tmp_dir.name) / "test_script.py")
 
         self.points = set()
         self.a_point = ac.Point(5, 5)
@@ -55,15 +57,6 @@ class TestTypes(unittest.TestCase):
         self.points.add(self.e_point)
 
         self.a_point_neighbours = self.a_point.neighbours()
-
-    def tearDown(self) -> None:
-        self.clear_input_folder()
-        return super().tearDown()
-
-    def clear_input_folder(self):
-        if self.locations.input_dir.exists():
-            print(f"Deleting {self.locations.input_dir}")
-            rmtree(self.locations.input_dir)
 
     def test_write_puzzle_input_file(self):
         """Verify offline AoC input retrieval, User-Agent header, and file caching."""
@@ -311,6 +304,27 @@ class TestTypes(unittest.TestCase):
         self.assertEqual(len(p1.neighbours(include_diagonals=True, include_self=True)), 27)
         self.assertEqual(list(p1.yield_neighbours(include_diagonals=False)), orthog)
 
+    def test_point_slots_orthogonal_and_distances(self):
+        """Verify slots, orthogonal_neighbours, Chebyshev, and Euclidean distances for Point and Point3D."""
+        p2d = ac.Point(1, 2)
+        p3d = ac.Point3D(1, 2, 3)
+        self.assertFalse(hasattr(p2d, "__dict__"))
+        self.assertFalse(hasattr(p3d, "__dict__"))
+
+        self.assertEqual(
+            ac.Point(5, 5).orthogonal_neighbours(),
+            ac.Point(5, 5).neighbours(include_diagonals=False),
+        )
+        self.assertEqual(
+            ac.Point3D(1, 2, 3).orthogonal_neighbours(),
+            ac.Point3D(1, 2, 3).neighbours(include_diagonals=False),
+        )
+
+        self.assertEqual(ac.Point(1, 2).chebyshev_distance_from(ac.Point(4, -3)), 5)
+        self.assertAlmostEqual(ac.Point(0, 0).euclidean_distance_from(ac.Point(3, 4)), 5.0)
+        self.assertEqual(ac.Point3D(1, 2, 3).chebyshev_distance_from(ac.Point3D(4, -3, 1)), 5)
+        self.assertAlmostEqual(ac.Point3D(0, 0, 0).euclidean_distance_from(ac.Point3D(2, 3, 6)), 7.0)
+
     def test_bounding_box_and_render_points(self):
         """Verify bounding_box calculation and sparse point-cloud rendering."""
         pts = [ac.Point(2, -1), ac.Point(-3, 4), ac.Point(0, 0)]
@@ -447,6 +461,66 @@ class TestTypes(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             ac.Grid([[1, 2], [3]])
+
+    def test_grid_modern_container_protocol_and_flood_fill(self):
+        """Verify Grid.from_text, indexing/bounds guards, items, find_first/find_one, copy, and flood_fill."""
+        grid = ac.Grid.from_text("S.#\n..E\n")
+        self.assertEqual((grid.width, grid.height), (3, 2))
+        self.assertEqual(ac.Grid.from_text("").width, 0)
+        self.assertEqual(ac.Grid.from_text("").height, 0)
+
+        self.assertEqual(grid[ac.Point(0, 0)], "S")
+        self.assertTrue(ac.Point(0, 0) in grid)
+        self.assertFalse(ac.Point(-1, 0) in grid)
+        self.assertFalse(ac.Point(3, 0) in grid)
+        self.assertNotIn((0, 0), grid)
+
+        for bad_pt in (ac.Point(-1, 0), ac.Point(0, -1), ac.Point(99, 99)):
+            with self.assertRaises(IndexError):
+                _ = grid[bad_pt]
+            with self.assertRaises(IndexError):
+                grid[bad_pt] = "X"
+            with self.assertRaises(IndexError):
+                _ = grid.value_at_point(bad_pt)
+            with self.assertRaises(IndexError):
+                grid.set_value_at_point(bad_pt, "X")
+
+        cloned = grid.copy()
+        cloned[ac.Point(1, 0)] = "X"
+        self.assertEqual(cloned[ac.Point(1, 0)], "X")
+        self.assertEqual(grid[ac.Point(1, 0)], ".")
+
+        items = list(grid.items())
+        self.assertEqual(items, [(pt, grid[pt]) for pt in grid.all_points()])
+
+        self.assertEqual(grid.find_first("E"), ac.Point(2, 1))
+        self.assertIsNone(grid.find_first("Z"))
+        self.assertEqual(grid.find_one("S"), ac.Point(0, 0))
+        with self.assertRaises(ValueError):
+            grid.find_one("Z")
+        with self.assertRaises(ValueError):
+            grid.find_one(".")
+
+        region_grid = ac.Grid.from_text("AA.B\nAB..\n..CC\n")
+        orthog_region = region_grid.flood_fill(ac.Point(0, 0))
+        self.assertEqual(orthog_region, {ac.Point(0, 0), ac.Point(1, 0), ac.Point(0, 1)})
+
+        dot_grid = ac.Grid.from_text("..#\n.#.\n#..\n")
+        self.assertEqual(
+            dot_grid.flood_fill(ac.Point(0, 0), include_diagonals=False),
+            {ac.Point(0, 0), ac.Point(1, 0), ac.Point(0, 1)},
+        )
+        self.assertEqual(
+            dot_grid.flood_fill(ac.Point(2, 0), include_diagonals=True),
+            {ac.Point(2, 0), ac.Point(1, 1), ac.Point(0, 2)},
+        )
+        self.assertEqual(
+            dot_grid.flood_fill(ac.Point(0, 0), predicate=lambda ch: ch != "#"),
+            {ac.Point(0, 0), ac.Point(1, 0), ac.Point(0, 1)},
+        )
+        self.assertEqual(dot_grid.flood_fill(ac.Point(2, 0), predicate=lambda ch: ch == "."), set())
+        with self.assertRaises(IndexError):
+            dot_grid.flood_fill(ac.Point(-1, 0))
 
     def test_binary_search(self):
         """Test a binary search,

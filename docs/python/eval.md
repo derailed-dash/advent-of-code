@@ -1,6 +1,6 @@
 ---
 title: Eval and Literal Eval
-
+description: "Why eval() is unsafe for arbitrary inputs, and how ast.literal_eval safely parses nested data structures in Advent of Code."
 main_img:
   name: Danger, Will Robinson!
   link: /assets/images/dangerwillrobinson.jpg
@@ -46,7 +46,7 @@ The real power here comes from the fact that we can read in external data, and t
 
 But be careful...
 
-Imagine you read in line from an external file that contained this line:
+Imagine you read in a line from an external file that contained this line:
 
 ```text
 __import__('os').listdir()
@@ -56,10 +56,10 @@ __import__('os').listdir()
 print(eval(line))
 ```
 
-When I run this right now, I get this output:
+When I run this, I get this output:
 
 ```text
-['.AoC-env', '.env', '.git', '.gitattributes', '.github', '.gitignore', '.pylintrc', '.vscode', 'docs', 'LICENSE', 'README.md', 'requirements.txt', 'resources', 'src']
+['.agents', '.git', '.github', '.venv', 'AGENTS.md', 'docs', 'LICENSE', 'Makefile', 'pyproject.toml', 'README.md', 'scripts', 'src', 'TODO.md']
 ```
 
 So, you can see that I've managed to execute functions from the `os` package.
@@ -71,13 +71,13 @@ What if this was my input data?
 (I shamelessly stole that image from this [Reddit thread](https://www.reddit.com/r/adventofcode/comments/zkoc0o/2022_day_13_got_some_weird_input_today_hope_none/){:target="_blank"}.)
 Can you see how bad this would be?
 
-For this reason, `eval()` is considered **unsafe**.  Avoid it if you can, and only use it with input that you're sure of!  
+For this reason, `eval()` is considered **unsafe**. Avoid it if you can, and only use it with input that you're sure of!
 
 ## Literal_Eval
 
-The `ast.literal_eval()` function is much safer!!  It is able to parse a string as if it were a Python type, such as an `int`, `list`, `dict`, etc.
+The `ast.literal_eval()` function is much safer! It is able to parse a string as if it were a Python type, such as an `int`, `list`, `dict`, etc., but will **never** execute arbitrary code, call functions, or import modules.
 
-Imagine if you needed to read in some external data that looks like Python data types, and you Python to treat the data as if it truly is a Python data type.  For example, this input:
+Imagine if you needed to read in some external data that looks like Python data types, and you want Python to treat the data as if it truly is a Python data type. For example, this input:
 
 ```text
 [1,[2,[3,[4,[5,6,7]]]],8,9]
@@ -106,5 +106,5 @@ Neat, right?
 
 ## Examples
 
-- [Parsing strings with escape sequences - 2015 Day 8](/2015/8)
-- [Reading a nested list - 2022 Day 13](/2022/13)
+- [Parsing strings with escape sequences — 2015 Day 8](/2015/8)
+- [Reading a nested list — 2022 Day 13](/2022/13)
