@@ -2,7 +2,7 @@
 
 Purpose & Value:
     Provides a single repository entry point (also exposed via ``Makefile`` targets) across
-    all Advent of Code years, unifying Template v3 scripts, legacy 2015–2025 standalone
+    all Advent of Code years, unifying Template v3 scripts, legacy 2015-2025 standalone
     solutions, and Jupyter notebooks while never reading encrypted ``input*.txt`` contents.
 
 Subcommands & Mechanics:
@@ -14,7 +14,7 @@ Subcommands & Mechanics:
     - ``aoc list [year] [--json]``: inspects AST structure and ``.ipynb`` cells (ignoring
       stub ``Template v3`` scaffolds returning ``None``) to report ``Standalone (.py)``,
       ``Jupyter (.ipynb)``, or ``Both`` along with ``Completed/Total`` counts (25 days for
-      2015–2024, 12 days for 2025+) and input/sample file presence, and renders clickable
+      2015-2024, 12 days for 2025+) and input/sample file presence, and renders clickable
       OSC 8 terminal hyperlinks on ``Year`` and ``Day`` columns pointing to AoC pages.
     - ``aoc new-year <year> [--days 12] [--dry-run] [--force] [--json]``: scaffolds
       ``src/AoC_<year>/d01..d<days>`` from ``src/template_folder/template.py`` without
@@ -193,6 +193,66 @@ def _cell_source(cell: dict[str, Any]) -> str:
     return str(src)
 
 
+def _update_day_heading_cursor(text: str, current_day: int | None, day_code_cells: dict[int, list[str]]) -> int | None:
+    """Track which day section (``1..25``) a notebook markdown cell belongs to."""
+    match = _NOTEBOOK_DAY_HEADING_RE.search(text)
+    if match:
+        day_num = int(match.group(1))
+        if 1 <= day_num <= 25:
+            day_code_cells.setdefault(day_num, [])
+            return day_num
+        return None
+    if _NON_DAY_TOP_HEADING_RE.search(text):
+        return None
+    return current_day
+
+
+def _collect_notebook_day_cells(cells: list[Any]) -> dict[int, list[str]]:
+    """Group non-empty Python code cells by notebook ``## Day N`` section."""
+    current_day: int | None = None
+    day_code_cells: dict[int, list[str]] = {}
+    for cell in cells:
+        if not isinstance(cell, dict):
+            continue
+        cell_type = cell.get("cell_type")
+        text = _cell_source(cell)
+        if cell_type == "markdown":
+            current_day = _update_day_heading_cursor(text, current_day, day_code_cells)
+        elif cell_type == "code" and current_day is not None:
+            cleaned = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith(("%", "!")))
+            if cleaned.strip():
+                day_code_cells[current_day].append(cleaned)
+    return day_code_cells
+
+
+def _scan_code_block_ast(block: str, part_defs: list[ast.FunctionDef]) -> bool:
+    """Collect part definitions from one code block and report any custom classes/functions."""
+    try:
+        tree = ast.parse(block)
+    except SyntaxError:
+        return False
+
+    has_custom_def = False
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef):
+            has_custom_def = True
+        elif isinstance(node, ast.FunctionDef):
+            if node.name in _PART_FN_NAMES:
+                part_defs.append(node)
+            elif node.name != "parse_input":
+                has_custom_def = True
+    return has_custom_def
+
+
+def _is_notebook_day_solved(code_blocks: list[str]) -> bool:
+    """Return True when a notebook day section contains implemented solution code."""
+    part_defs: list[ast.FunctionDef] = []
+    has_custom_def = any(_scan_code_block_ast(block, part_defs) for block in code_blocks)
+    if part_defs:
+        return any(not _is_stub_part_fn(fn) for fn in part_defs) or has_custom_def
+    return has_custom_def or len(code_blocks) >= 3
+
+
 def _solved_days_in_notebook(nb_path: Path) -> set[int]:
     """Detect solved day numbers (``1..25``) inside a year Jupyter notebook via cell AST."""
     try:
@@ -204,54 +264,8 @@ def _solved_days_in_notebook(nb_path: Path) -> set[int]:
     if not isinstance(cells, list):
         return set()
 
-    current_day: int | None = None
-    day_code_cells: dict[int, list[str]] = {}
-    for cell in cells:
-        if not isinstance(cell, dict):
-            continue
-        cell_type = cell.get("cell_type")
-        text = _cell_source(cell)
-        if cell_type == "markdown":
-            match = _NOTEBOOK_DAY_HEADING_RE.search(text)
-            if match:
-                day_num = int(match.group(1))
-                if 1 <= day_num <= 25:
-                    current_day = day_num
-                    day_code_cells.setdefault(day_num, [])
-                else:
-                    current_day = None
-            elif _NON_DAY_TOP_HEADING_RE.search(text):
-                current_day = None
-        elif cell_type == "code" and current_day is not None:
-            cleaned = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith(("%", "!")))
-            if cleaned.strip():
-                day_code_cells[current_day].append(cleaned)
-
-    solved: set[int] = set()
-    for day_num, code_blocks in day_code_cells.items():
-        part_defs: list[ast.FunctionDef] = []
-        has_custom_def = False
-        for block in code_blocks:
-            try:
-                tree = ast.parse(block)
-            except SyntaxError:
-                continue
-            for node in tree.body:
-                if isinstance(node, ast.ClassDef):
-                    has_custom_def = True
-                elif isinstance(node, ast.FunctionDef):
-                    if node.name in _PART_FN_NAMES:
-                        part_defs.append(node)
-                    elif node.name != "parse_input":
-                        has_custom_def = True
-
-        if part_defs:
-            if any(not _is_stub_part_fn(fn) for fn in part_defs) or has_custom_def:
-                solved.add(day_num)
-        elif has_custom_def or len(code_blocks) >= 3:
-            solved.add(day_num)
-
-    return solved
+    day_code_cells = _collect_notebook_day_cells(cells)
+    return {day_num for day_num, blocks in day_code_cells.items() if _is_notebook_day_solved(blocks)}
 
 
 def _format_progress(completed: int, total: int) -> str:
@@ -262,6 +276,33 @@ def _format_progress(completed: int, total: int) -> str:
     if completed > 0:
         return f"[yellow]{label}[/yellow]"
     return f"[dim]{label}[/dim]"
+
+
+def _scan_day_dir_entries(day_dir: Path) -> tuple[bool, bool, set[int]]:
+    """Inspect files inside one day folder for ``.py`` scripts and ``.ipynb`` notebooks."""
+    has_py = False
+    has_ipynb = False
+    solved: set[int] = set()
+    for item in day_dir.iterdir():
+        if not item.is_file():
+            continue
+        if item.suffix == ".py" and item.name != "__init__.py":
+            has_py = True
+        elif item.suffix == ".ipynb":
+            has_ipynb = True
+            solved.update(_solved_days_in_notebook(item))
+    return has_py, has_ipynb, solved
+
+
+def _classify_year_format(*, has_py: bool, has_ipynb: bool) -> str:
+    """Classify a year's solution format from discovered script and notebook presence."""
+    if has_py and has_ipynb:
+        return "both"
+    if has_py:
+        return "standalone"
+    if has_ipynb:
+        return "jupyter"
+    return "none"
 
 
 def _inspect_year(year: int, year_dir: Path) -> tuple[list[tuple[int, Path]], list[str], str, set[int], int]:
@@ -289,28 +330,16 @@ def _inspect_year(year: int, year_dir: Path) -> tuple[list[tuple[int, Path]], li
         day_dirs.append((day_num, entry))
         if _is_day_py_solved(entry):
             solved_days.add(day_num)
-        for item in entry.iterdir():
-            if not item.is_file():
-                continue
-            if item.suffix == ".py" and item.name != "__init__.py":
-                has_py = True
-            elif item.suffix == ".ipynb":
-                has_ipynb = True
-                solved_days.update(_solved_days_in_notebook(item))
+        day_has_py, day_has_ipynb, nb_solved = _scan_day_dir_entries(entry)
+        has_py = has_py or day_has_py
+        has_ipynb = has_ipynb or day_has_ipynb
+        solved_days.update(nb_solved)
 
     day_dirs.sort(key=lambda item: (item[0], item[1].name))
     year_notebooks.sort()
     max_day = max((day_num for day_num, _ in day_dirs), default=0)
     total_days = _total_days_for_year(year, max(max_day, max(solved_days, default=0)))
-
-    if has_py and has_ipynb:
-        fmt = "both"
-    elif has_py:
-        fmt = "standalone"
-    elif has_ipynb:
-        fmt = "jupyter"
-    else:
-        fmt = "none"
+    fmt = _classify_year_format(has_py=has_py, has_ipynb=has_ipynb)
     return day_dirs, year_notebooks, fmt, solved_days, total_days
 
 
@@ -324,57 +353,58 @@ def _aoc_day_url(year: int, day: int) -> str:
     return f"https://adventofcode.com/{year}/day/{day}"
 
 
-def _cmd_list(root: Path, year: int | None, *, as_json: bool) -> int:
-    """List AoC years or days under ``root / 'src'``."""
-    src_dir = root / "src"
-    if not src_dir.is_dir():
-        Console(stderr=True).print(f"[red]Source directory not found: {src_dir}[/red]")
-        return 1
+def _collect_year_summary_rows(root: Path, src_dir: Path) -> list[dict[str, Any]]:
+    """Collect sorted summary dictionaries for each ``AoC_YYYY`` directory."""
+    years: list[dict[str, Any]] = []
+    for entry in sorted(src_dir.iterdir()):
+        if not entry.is_dir():
+            continue
+        match = _YEAR_DIR_RE.match(entry.name)
+        if not match:
+            continue
+        year_num = int(match.group(1))
+        day_dirs, year_notebooks, fmt, solved_days, total_days = _inspect_year(year_num, entry)
+        years.append(
+            {
+                "year": year_num,
+                "days": len(day_dirs),
+                "completed_days": len(solved_days),
+                "total_days": total_days,
+                "format": fmt,
+                "notebooks": year_notebooks,
+                "path": str(entry.relative_to(root)),
+            }
+        )
+    years.sort(key=lambda item: item["year"])
+    return years
 
-    if year is None:
-        years: list[dict[str, Any]] = []
-        for entry in sorted(src_dir.iterdir()):
-            if not entry.is_dir():
-                continue
-            match = _YEAR_DIR_RE.match(entry.name)
-            if not match:
-                continue
-            year_num = int(match.group(1))
-            day_dirs, year_notebooks, fmt, solved_days, total_days = _inspect_year(year_num, entry)
-            years.append(
-                {
-                    "year": year_num,
-                    "days": len(day_dirs),
-                    "completed_days": len(solved_days),
-                    "total_days": total_days,
-                    "format": fmt,
-                    "notebooks": year_notebooks,
-                    "path": str(entry.relative_to(root)),
-                }
-            )
-        years.sort(key=lambda item: item["year"])
 
-        if as_json:
-            print(json.dumps({"root": str(root), "years": years}, indent=2))
-            return 0
-
-        table = Table(title="Advent of Code Years")
-        table.add_column("Year", style="cyan")
-        table.add_column("Completed", justify="right")
-        table.add_column("Format")
-        table.add_column("Path")
-        for item in years:
-            year_link = f"[link={_aoc_year_url(item['year'])}]{item['year']}[/link]"
-            table.add_row(
-                year_link,
-                _format_progress(item["completed_days"], item["total_days"]),
-                _FORMAT_LABELS[item["format"]],
-                item["path"],
-            )
-        Console().print(table)
+def _list_all_years(root: Path, src_dir: Path, *, as_json: bool) -> int:
+    """Render an overview table or JSON summary across all AoC years."""
+    years = _collect_year_summary_rows(root, src_dir)
+    if as_json:
+        print(json.dumps({"root": str(root), "years": years}, indent=2))
         return 0
 
-    year_dir = src_dir / f"AoC_{year}"
+    table = Table(title="Advent of Code Years")
+    table.add_column("Year", style="cyan")
+    table.add_column("Completed", justify="right")
+    table.add_column("Format")
+    table.add_column("Path")
+    for item in years:
+        year_link = f"[link={_aoc_year_url(item['year'])}]{item['year']}[/link]"
+        table.add_row(
+            year_link,
+            _format_progress(item["completed_days"], item["total_days"]),
+            _FORMAT_LABELS[item["format"]],
+            item["path"],
+        )
+    Console().print(table)
+    return 0
+
+
+def _list_single_year(year: int, year_dir: Path, *, as_json: bool) -> int:
+    """Render per-day solution status and readiness for a single AoC year."""
     if not year_dir.is_dir():
         msg = f"Year directory not found: {year_dir}"
         if as_json:
@@ -437,6 +467,18 @@ def _cmd_list(root: Path, year: int | None, *, as_json: bool) -> int:
         )
     Console().print(table)
     return 0
+
+
+def _cmd_list(root: Path, year: int | None, *, as_json: bool) -> int:
+    """List AoC years or days under ``root / 'src'``."""
+    src_dir = root / "src"
+    if not src_dir.is_dir():
+        Console(stderr=True).print(f"[red]Source directory not found: {src_dir}[/red]")
+        return 1
+
+    if year is None:
+        return _list_all_years(root, src_dir, as_json=as_json)
+    return _list_single_year(year, src_dir / f"AoC_{year}", as_json=as_json)
 
 
 def _cmd_new_year(
@@ -503,23 +545,19 @@ def _cmd_new_year(
     return 0
 
 
-def _resolve_day_script(root: Path, year: int, day: int, explicit_script: str | None) -> tuple[Path | None, str | None, int]:
-    """Resolve the target Python script inside ``dNN`` or ``dNN_<slug>``."""
-    year_dir = root / "src" / f"AoC_{year}"
-    exact_folder = f"d{day:02d}"
-    day_dir = year_dir / exact_folder
+def _find_day_dir(year_dir: Path, day: int) -> Path:
+    """Return ``dNN`` or the first matching ``dNN_<slug>`` directory inside ``year_dir``."""
+    day_dir = year_dir / f"d{day:02d}"
     if not day_dir.is_dir() and year_dir.is_dir():
         matched = sorted(entry for entry in year_dir.iterdir() if entry.is_dir() and _match_day_dir(entry.name) == day)
         if matched:
-            day_dir = matched[0]
+            return matched[0]
+    return day_dir
 
-    if explicit_script is not None:
-        candidate = day_dir / explicit_script
-        if candidate.is_file():
-            return candidate, None, 0
-        return None, f"Puzzle script not found: {candidate}", 1
 
-    default_script = day_dir / f"{exact_folder}.py"
+def _discover_day_py_script(year: int, day: int, year_dir: Path, day_dir: Path) -> tuple[Path | None, str | None, int]:
+    """Locate a standalone Python solution script for ``day`` or report notebook-only status."""
+    default_script = day_dir / f"d{day:02d}.py"
     if default_script.is_file():
         return default_script, None, 0
 
@@ -545,6 +583,20 @@ def _resolve_day_script(root: Path, year: int, day: int, explicit_script: str | 
             )
 
     return None, f"Puzzle script not found: {default_script}", 1
+
+
+def _resolve_day_script(root: Path, year: int, day: int, explicit_script: str | None) -> tuple[Path | None, str | None, int]:
+    """Resolve the target Python script inside ``dNN`` or ``dNN_<slug>``."""
+    year_dir = root / "src" / f"AoC_{year}"
+    day_dir = _find_day_dir(year_dir, day)
+
+    if explicit_script is not None:
+        candidate = day_dir / explicit_script
+        if candidate.is_file():
+            return candidate, None, 0
+        return None, f"Puzzle script not found: {candidate}", 1
+
+    return _discover_day_py_script(year, day, year_dir, day_dir)
 
 
 def _resolve_default_year(root: Path) -> int:
@@ -586,53 +638,68 @@ def _resolve_run_target(root: Path, target: str, day_arg: str | None) -> tuple[i
     )
 
 
+def _emit_cli_error(payload: dict[str, Any], message: str, *, as_json: bool, code: int) -> int:
+    """Emit a CLI error either as JSON on stdout or red text on stderr."""
+    if as_json:
+        print(json.dumps({**payload, "status": "error", "error": message}, indent=2))
+    else:
+        Console(stderr=True).print(f"[red]{message}[/red]")
+    return code
+
+
+def _build_forwarded_argv(args: argparse.Namespace) -> list[str]:
+    """Translate ``aoc run`` options into Template v3 per-script CLI flags."""
+    forwarded: list[str] = []
+    if args.part is not None:
+        forwarded.extend(["-p", args.part])
+    for attr, flag in (
+        ("sample_only", "-s"),
+        ("no_samples", "--no-samples"),
+        ("debug", "-d"),
+        ("json", "--json"),
+    ):
+        if getattr(args, attr, False):
+            forwarded.append(flag)
+    return forwarded
+
+
+def _run_v3_in_process(script_path: Path, mod_name: str, forwarded: list[str]) -> int:
+    """Load and execute a Template v3 solution module's ``main(argv)`` entry point."""
+    spec = importlib.util.spec_from_file_location(mod_name, script_path)
+    if spec is None or spec.loader is None:
+        Console(stderr=True).print(f"[red]Unable to load Python module: {script_path}[/red]")
+        return 1
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[mod_name] = module
+    try:
+        spec.loader.exec_module(module)
+        result = module.main(forwarded)
+        return int(result) if isinstance(result, int) else 0
+    finally:
+        sys.modules.pop(mod_name, None)
+
+
 def _cmd_run(root: Path, args: argparse.Namespace) -> int:
     """Run a day's puzzle script (Template v3 in-process or legacy subprocess)."""
     try:
         year, day = _resolve_run_target(root, args.target, args.day)
     except argparse.ArgumentTypeError as exc:
-        if args.json:
-            print(json.dumps({"target": args.target, "status": "error", "error": str(exc)}, indent=2))
-        else:
-            Console(stderr=True).print(f"[red]{exc}[/red]")
-        return 2
+        return _emit_cli_error({"target": args.target}, str(exc), as_json=args.json, code=2)
 
     day_folder = f"d{day:02d}"
     script_path, err_msg, err_code = _resolve_day_script(root, year, day, args.script)
-
     if script_path is None:
-        if args.json:
-            print(json.dumps({"year": year, "day": day, "status": "error", "error": err_msg}, indent=2))
-        else:
-            Console(stderr=True).print(f"[red]{err_msg}[/red]")
-        return err_code
+        return _emit_cli_error(
+            {"year": year, "day": day},
+            err_msg or f"Puzzle script not found for {year} {day_folder}.",
+            as_json=args.json,
+            code=err_code,
+        )
 
-    forwarded: list[str] = []
-    if args.part is not None:
-        forwarded.extend(["-p", args.part])
-    if args.sample_only:
-        forwarded.append("-s")
-    if args.no_samples:
-        forwarded.append("--no-samples")
-    if args.debug:
-        forwarded.append("-d")
-    if args.json:
-        forwarded.append("--json")
-
+    forwarded = _build_forwarded_argv(args)
     if _accepts_v3_argv(script_path):
         mod_name = f"aoc_cli_target_{year}_{day_folder}_{script_path.stem}"
-        spec = importlib.util.spec_from_file_location(mod_name, script_path)
-        if spec is None or spec.loader is None:
-            Console(stderr=True).print(f"[red]Unable to load Python module: {script_path}[/red]")
-            return 1
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[mod_name] = module
-        try:
-            spec.loader.exec_module(module)
-            result = module.main(forwarded)
-            return int(result) if isinstance(result, int) else 0
-        finally:
-            sys.modules.pop(mod_name, None)
+        return _run_v3_in_process(script_path, mod_name, forwarded)
 
     if forwarded:
         Console(stderr=True).print(

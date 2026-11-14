@@ -13,7 +13,7 @@ Mechanics & Coverage:
     - Notebook/Colab location resolution and input validation
     - ``format_duration``, ``check_samples``, and ``run_puzzle`` (``-p``, ``-s``,
       ``--no-samples``, ``-d``, and pure-stdout ``--json`` mode)
-    - ``aoc list`` AST/notebook completion counting (2015–2024 vs 2025+) and format detection
+    - ``aoc list`` AST/notebook completion counting (2015-2024 vs 2025+) and format detection
     - ``aoc run`` shorthands (``1``, ``01``, ``20251``, ``202501``), ``AOC_YEAR`` defaults,
       legacy subprocess fallback, and ``aoc new-year`` dry-run/skip/force behaviour
 """

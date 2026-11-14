@@ -218,6 +218,99 @@ def _emit_summary(summary: PuzzleRunSummary, *, as_json: bool) -> None:
     Console().print(table)
 
 
+def _emit_run_failure(
+    year: int,
+    day: int,
+    status: str,
+    err_msg: str,
+    *,
+    sample_only: bool = False,
+    parts: tuple[PartRunSummary, ...] = (),
+    as_json: bool = False,
+) -> int:
+    """Report a structured failure summary on stdout (JSON) or stderr (text)."""
+    summary = PuzzleRunSummary(
+        year=year,
+        day=day,
+        status=status,
+        sample_only=sample_only,
+        parts=parts,
+        error=err_msg,
+    )
+    if as_json:
+        _emit_summary(summary, as_json=True)
+    else:
+        Console(stderr=True).print(f"[red]{err_msg}[/red]")
+    return 1
+
+
+def _run_selected_samples(
+    selected_parts: list[int],
+    part_fns: dict[int, Callable[[Any], Any] | None],
+    part_samples: dict[int, Sequence[SampleInput]],
+    parse_input: Callable[[str], Any],
+    active_logger: logging.Logger,
+) -> tuple[dict[int, int], tuple[PartRunSummary, str] | None]:
+    """Run sample validation for selected parts, returning failure details on first error."""
+    samples_checked: dict[int, int] = {1: 0, 2: 0}
+    for part_num in selected_parts:
+        fn = part_fns[part_num]
+        samples = part_samples[part_num]
+        if fn is None or not samples:
+            continue
+        try:
+            samples_checked[part_num] = check_samples(
+                fn,
+                samples,
+                parse_fn=parse_input,
+                part_label=f"Part {part_num}",
+                logger=active_logger,
+            )
+        except (AssertionError, FileNotFoundError, ValueError) as exc:
+            failed_part = PartRunSummary(
+                part=part_num,
+                status="failed",
+                samples_checked=samples_checked[part_num],
+                error=str(exc),
+            )
+            return samples_checked, (failed_part, f"Part {part_num} sample check failed: {exc}")
+    return samples_checked, None
+
+
+def _execute_real_part(
+    part_num: int,
+    fn: Callable[[Any], Any] | None,
+    raw_real: str,
+    parse_input: Callable[[str], Any],
+    checked_count: int,
+    active_logger: logging.Logger,
+) -> PartRunSummary:
+    """Parse real input freshly and run one puzzle part with wall-clock timing."""
+    if fn is None:
+        return PartRunSummary(part=part_num, status="skipped", samples_checked=checked_count)
+
+    parsed_real = parse_input(raw_real)
+    started = time.perf_counter()
+    answer = fn(parsed_real)
+    elapsed = time.perf_counter() - started
+    if answer is None:
+        return PartRunSummary(
+            part=part_num,
+            status="skipped",
+            elapsed_seconds=elapsed,
+            samples_checked=checked_count,
+        )
+
+    active_logger.info("Part %d soln=%s (%s)", part_num, answer, format_duration(elapsed))
+    return PartRunSummary(
+        part=part_num,
+        status="ok",
+        answer=answer,
+        elapsed_seconds=elapsed,
+        samples_checked=checked_count,
+    )
+
+
 def run_puzzle(
     *,
     year: int,
@@ -248,40 +341,24 @@ def run_puzzle(
 
     # 1. Sample checks first (never touches real input on failure or --sample-only)
     if not args.no_samples:
-        for part_num in selected_parts:
-            fn = part_fns[part_num]
-            samples = part_samples[part_num]
-            if fn is None or not samples:
-                continue
-            try:
-                samples_checked[part_num] = check_samples(
-                    fn,
-                    samples,
-                    parse_fn=parse_input,
-                    part_label=f"Part {part_num}",
-                    logger=active_logger,
-                )
-            except (AssertionError, FileNotFoundError, ValueError) as exc:
-                err_msg = f"Part {part_num} sample check failed: {exc}"
-                failed_part = PartRunSummary(
-                    part=part_num,
-                    status="failed",
-                    samples_checked=samples_checked[part_num],
-                    error=str(exc),
-                )
-                summary = PuzzleRunSummary(
-                    year=year,
-                    day=day,
-                    status="failed",
-                    sample_only=bool(args.sample_only),
-                    parts=(failed_part,),
-                    error=err_msg,
-                )
-                if args.json:
-                    _emit_summary(summary, as_json=True)
-                else:
-                    Console(stderr=True).print(f"[red]{err_msg}[/red]")
-                return 1
+        samples_checked, failure = _run_selected_samples(
+            selected_parts,
+            part_fns,
+            part_samples,
+            parse_input,
+            active_logger,
+        )
+        if failure is not None:
+            failed_part, err_msg = failure
+            return _emit_run_failure(
+                year,
+                day,
+                "failed",
+                err_msg,
+                sample_only=bool(args.sample_only),
+                parts=(failed_part,),
+                as_json=args.json,
+            )
 
     if args.sample_only:
         sample_parts = tuple(
@@ -307,62 +384,16 @@ def run_puzzle(
             f"Could not read puzzle input ({resolved_locations.input_file}): {exc}. "
             "Check AOC_SESSION_COOKIE in your environment or .env file."
         )
-        summary = PuzzleRunSummary(
-            year=year,
-            day=day,
-            status="error",
-            sample_only=False,
-            parts=(),
-            error=err_msg,
-        )
-        if args.json:
-            _emit_summary(summary, as_json=True)
-        else:
-            Console(stderr=True).print(f"[red]{err_msg}[/red]")
-        return 1
+        return _emit_run_failure(year, day, "error", err_msg, as_json=args.json)
 
     # 3. Execute real parts cleanly with fresh parsed input per part
     active_logger.setLevel(run_level)
-    real_parts: list[PartRunSummary] = []
-    for part_num in selected_parts:
-        fn = part_fns[part_num]
-        if fn is None:
-            real_parts.append(PartRunSummary(part=part_num, status="skipped", samples_checked=samples_checked[part_num]))
-            continue
-
-        parsed_real = parse_input(raw_real)
-        started = time.perf_counter()
-        answer = fn(parsed_real)
-        elapsed = time.perf_counter() - started
-        if answer is None:
-            real_parts.append(
-                PartRunSummary(
-                    part=part_num,
-                    status="skipped",
-                    elapsed_seconds=elapsed,
-                    samples_checked=samples_checked[part_num],
-                )
-            )
-        else:
-            active_logger.info("Part %d soln=%s (%s)", part_num, answer, format_duration(elapsed))
-            real_parts.append(
-                PartRunSummary(
-                    part=part_num,
-                    status="ok",
-                    answer=answer,
-                    elapsed_seconds=elapsed,
-                    samples_checked=samples_checked[part_num],
-                )
-            )
-
+    real_parts = tuple(
+        _execute_real_part(part_num, part_fns[part_num], raw_real, parse_input, samples_checked[part_num], active_logger)
+        for part_num in selected_parts
+    )
     _emit_summary(
-        PuzzleRunSummary(
-            year=year,
-            day=day,
-            status="ok",
-            sample_only=False,
-            parts=tuple(real_parts),
-        ),
+        PuzzleRunSummary(year=year, day=day, status="ok", sample_only=False, parts=real_parts),
         as_json=args.json,
     )
     return 0

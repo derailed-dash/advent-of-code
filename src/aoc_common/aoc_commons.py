@@ -37,7 +37,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cache
 from pathlib import Path
-from typing import Any, ClassVar, TypeGuard, overload
+from typing import Any, ClassVar, Never, TypeGuard, overload
 
 import requests
 from dotenv import load_dotenv
@@ -210,6 +210,20 @@ def top_and_tail(
 ##################################################################
 
 
+def _raise_input_http_error(response: requests.Response) -> Never:
+    """Raise an informative ``ValueError`` when downloading AoC puzzle input fails."""
+    body = response.content.decode("utf-8", errors="replace").strip()
+    msg = f"Unable to retrieve input data.\nHTTP response: {response.status_code}\n{response.reason}: {body}"
+    if response.status_code in {400, 401, 403, 500} and "log in" in body.lower():
+        msg += (
+            "\nHint: Your AOC_SESSION_COOKIE may have expired (~30-day AoC lifetime). "
+            "Log in at https://adventofcode.com, copy the 'session' cookie from "
+            "DevTools -> Application -> Cookies, update .env, and run: "
+            "git-crypt-helper.sh sync-to-enc .env"
+        )
+    raise ValueError(msg)
+
+
 def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
     """Download the user's AoC puzzle input to ``locations.input_file`` if not cached.
 
@@ -223,10 +237,11 @@ def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
         logger.debug("%s already exists", input_path.name)
         return input_path.name
 
-    session_cookie = os.getenv("AOC_SESSION_COOKIE")
-    if not session_cookie:
+    raw_cookie = os.getenv("AOC_SESSION_COOKIE")
+    if not raw_cookie:
         load_dotenv()
-        session_cookie = os.getenv("AOC_SESSION_COOKIE")
+        raw_cookie = os.getenv("AOC_SESSION_COOKIE")
+    session_cookie = (raw_cookie or "").strip().strip("\"'")
     if not session_cookie:
         raise ValueError("Could not retrieve session cookie.")
 
@@ -246,11 +261,7 @@ def write_puzzle_input_file(year: int, day: int, locations: Locations) -> str:
             file.write(data)
         return data
 
-    raise ValueError(
-        "Unable to retrieve input data.\n"
-        f"HTTP response: {response.status_code}\n"
-        f"{response.reason}: {response.content.decode('utf-8').strip()}"
-    )
+    _raise_input_http_error(response)
 
 
 #################################################################
@@ -732,6 +743,21 @@ def upper_bound(low: int, high: int, predicate: Callable[[int], bool]) -> int | 
     return best
 
 
+def _normalise_interval(interval: Sequence[int] | range) -> list[int] | None:
+    """Convert one ``range`` or 2-item sequence to a closed ``[start, end]`` list."""
+    if isinstance(interval, range):
+        if interval.step != 1:
+            raise ValueError(f"range intervals must have step == 1, got {interval.step}")
+        return [interval.start, interval.stop - 1] if interval else None
+
+    if len(interval) != 2:
+        raise ValueError(f"Intervals must have length 2, got {len(interval)}")
+    start, end = int(interval[0]), int(interval[1])
+    if start > end:
+        raise ValueError(f"Invalid interval with start > end: [{start}, {end}]")
+    return [start, end]
+
+
 def merge_intervals(
     intervals: Iterable[Sequence[int] | range],
     *,
@@ -743,22 +769,7 @@ def merge_intervals(
     skipping empty ranges. Pass ``merge_adjacent=True`` to also coalesce adjacent
     integer intervals such as ``[1, 5]`` and ``[6, 8]``.
     """
-    normalised: list[list[int]] = []
-    for interval in intervals:
-        if isinstance(interval, range):
-            if interval.step != 1:
-                raise ValueError(f"range intervals must have step == 1, got {interval.step}")
-            if not interval:
-                continue
-            normalised.append([interval.start, interval.stop - 1])
-        else:
-            if len(interval) != 2:
-                raise ValueError(f"Intervals must have length 2, got {len(interval)}")
-            start, end = int(interval[0]), int(interval[1])
-            if start > end:
-                raise ValueError(f"Invalid interval with start > end: [{start}, {end}]")
-            normalised.append([start, end])
-
+    normalised = [item for interval in intervals if (item := _normalise_interval(interval)) is not None]
     if not normalised:
         return []
 

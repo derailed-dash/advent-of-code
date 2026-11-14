@@ -6,7 +6,9 @@ Guidance for local coding agents and automated CI reviewers working in **Dazbo's
 
 - **Author**: Darren "Dazbo" Lester (`derailed-dash`)
 - **Documentation Site**: [aoc.just2good.co.uk](https://aoc.just2good.co.uk/)
-- **Personal Website & Blog**: [darrenlester.net](https://darrenlester.net) · [Medium (`@dazbo`)](https://medium.com/@dazbo)
+- **Personal Website**: [darrenlester.net](https://darrenlester.net) 
+- **Blog on Medium**: [Medium (`@dazbo`)](https://medium.com/@dazbo)
+- **Blog on Dev.to**: [Dev.to ()]()
 - **Repository README**: [`README.md`](README.md)
 
 Advent of Code changed from a 25-day event (2015–2024) to a **12-day event from 2025 onwards**. Keep [`scripts/create_year.sh`](scripts/create_year.sh) defaulting to `12` days unless an explicit legacy count is passed.
@@ -30,7 +32,7 @@ Advent of Code changed from a 25-day event (2015–2024) to a **12-day event fro
 
 - Manage the virtual environment strictly with `uv` and [`pyproject.toml`](pyproject.toml) (`requires-python = ">=3.13"`):
   - Hydrate environment: `make install` (`uv sync --dev --extra jupyter --extra legacy` — includes `legacy` extras `dazbo-commons` and `colorama` so untouched `2015`–`2024` solutions remain runnable locally; CI runs without `legacy`)
-  - Run offline verification gate: `make check` (`codespell -s`, `ruff check --diff`, `pyright`, and `pytest src/tests`)
+  - Run offline verification gate: `make check` (`codespell -s`, `ruff check`, `pyright`, and `pytest src/tests`)
 - **Historical Solutions Policy**: Do **NOT** run bulk `ruff --fix`, `ruff format`, or `codespell -w` across `src/AoC_2015`–`src/AoC_2025` or prose inside `docs/2015`–`docs/2025` unless explicitly requested. Lint/type gates intentionally cover [`src/aoc_common`](src/aoc_common/aoc_commons.py), [`src/tests`](src/tests/test_aoc_commons.py), [`src/template_folder`](src/template_folder/template.py), and 2026+ code.
 
 ## Secrets, Puzzle Inputs & `git-crypt` Guardrails

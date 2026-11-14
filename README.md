@@ -167,7 +167,7 @@ uv run pytest src/tests
 
 - [`uv run aoc new-year <year>`](src/aoc_common/cli.py), `make new-year YEAR=<year>`, and standalone [`scripts/create_year.sh`](scripts/create_year.sh): Scaffold `src/AoC_<year>/d01..d<days>` from [`src/template_folder/template.py`](src/template_folder/template.py) (default `12` days for 2025+; pass `--days 25` / `DAYS=25` for legacy counts).
 - `make list [YEAR=<year>]` & `make run YEAR=<year> DAY=<day> [ARGS="..."]`: Convenience [`Makefile`](Makefile) wrappers around `uv run aoc list` and `uv run aoc run`.
-- `make check`: Runs `codespell -s`, `ruff check --diff`, `pyright`, and `pytest src/tests`.
+- `make check`: Runs `codespell -s`, `ruff check`, `pyright`, and `pytest src/tests`.
 
 ## Documentation Website
 

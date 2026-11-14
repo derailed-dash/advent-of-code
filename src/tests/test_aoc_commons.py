@@ -596,6 +596,33 @@ class TestTypes(unittest.TestCase):
             root_logger.handlers = original_handlers
             root_logger.setLevel(original_level)
 
+    def test_write_puzzle_input_strips_cookie_quotes_and_hints_on_400(self):
+        """Strip quotes/whitespace from AOC_SESSION_COOKIE and hint when AoC returns HTTP 400."""
+        if self.locations.input_file.exists():
+            self.locations.input_file.unlink()
+
+        ok_response = MagicMock(status_code=200, text="input\n")
+        with (
+            patch.dict(os.environ, {"AOC_SESSION_COOKIE": ' "quoted_cookie_123456"\n'}, clear=True),
+            patch("aoc_common.aoc_commons.requests.get", return_value=ok_response) as mock_get,
+        ):
+            ac.write_puzzle_input_file(2018, 7, self.locations)
+        self.assertEqual(mock_get.call_args.kwargs["cookies"], {"session": "quoted_cookie_123456"})
+
+        self.locations.input_file.unlink()
+        expired_response = MagicMock(
+            status_code=400,
+            reason="Bad Request",
+            content=b"Puzzle inputs differ by user.  Please log in to get your puzzle input.",
+        )
+        with (
+            patch.dict(os.environ, {"AOC_SESSION_COOKIE": "expired_cookie_123456"}, clear=True),
+            patch("aoc_common.aoc_commons.requests.get", return_value=expired_response),
+            self.assertRaises(ValueError) as ctx,
+        ):
+            ac.write_puzzle_input_file(2018, 7, self.locations)
+        self.assertIn("Hint: Your AOC_SESSION_COOKIE may have expired", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)  # if we want to include function names and docstring headers

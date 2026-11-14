@@ -26,7 +26,7 @@ install: ## Install Python, Jupyter, and legacy AoC dependencies with uv
 
 lint: ## Run read-only offline checks (codespell, ruff, pyright)
 	uv run codespell -s
-	uv run ruff check --diff
+	uv run ruff check
 	uv run pyright
 
 fix: ## Auto-fix spelling, lint, and formatting on active modules
