@@ -1,41 +1,44 @@
-# Dazbo's Advent of Code
+# Dazbo's Advent of Code — Python Solutions & Walkthroughs
 
-### See my walkthroughs at [aoc.just2good.co.uk](https://aoc.just2good.co.uk/).
+**Darren "Dazbo" Lester (`derailed-dash`)** · **[aoc.just2good.co.uk](https://aoc.just2good.co.uk/)** · **[darrenlester.net](https://darrenlester.net)** · **[Dev.to (`dazbo`)](https://dev.to/dazbo)** · **[Medium (`@dazbo`)](https://medium.com/@dazbo)**
 
-- **Author**: Darren "Dazbo" Lester (`derailed-dash`)
-- **Personal Website**: [darrenlester.net](https://darrenlester.net) 
-- **Blog on Medium**: [Medium (`@dazbo`)](https://medium.com/@dazbo)
-- **Blog on Dev.to**: [Dev.to (`dazbo`)](https://dev.to/dazbo)
+[![Dazbo's Advent of Code Walkthroughs](docs/assets/images/AoC_site_screenshot.jpg)](https://aoc.just2good.co.uk/)
 
-## Overview
+## Why This Repository Exists
 
-- My solutions to Advent of Code problems for multiple years, written in Python.
-- All solutions are thoroughly documented.
-- Some days have multiple solutions where I've experimented with different approaches or libraries.
+I've been using **[Advent of Code](https://adventofcode.com/)** for years to sharpen my **Python** skills — exploring modern standard-library features, benchmarking alternative algorithms, and turning thorny December puzzles into clean, documented code. Every walkthrough pairs runnable Python with plain-English explanations on **[aoc.just2good.co.uk](https://aoc.just2good.co.uk/)**, alongside a 39-chapter **[Python Journey](https://aoc.just2good.co.uk/python/)** curriculum covering reusable patterns, graphs, shortest paths, symbolic maths, and visualisations.
 
-[![Dazbo's AoC Walkthroughs](docs/assets/images/AoC_site_screenshot.jpg)](https://aoc.just2good.co.uk/)
+My hope is that this repository and companion site help you:
 
-## Purpose of this Repo
+- Become more fluent and idiomatic in modern Python (`>=3.13`).
+- Get unstuck on Advent of Code puzzles without staring at cryptic one-liners.
+- Compare practical approaches — standalone `uv`-managed CLI scripts, reusable grid/graph abstractions ([`src/aoc_common/`](src/aoc_common/aoc_commons.py)), and cloud-runnable Jupyter Notebooks.
 
-I've been using [Advent of Code](https://adventofcode.com/) as a way to improve my **Python** skills. Here I document my solutions across the various AoC years. My hope is that this guide will help others to:
+## Years & Formats at a Glance
 
-- Become more proficient with Python.
-- Solve AoC problems they might be stuck with.
-- Learn some new libraries and inventive ways of doing things.
+| Year | Progress | Format | Site Entry Point |
+| :--- | :--- | :--- | :--- |
+| **2026** | Upcoming (`12` days) | Python Scripts + Walkthroughs (Template v3) | [2026 Walkthroughs](https://aoc.just2good.co.uk/2026/) |
+| **2025** | `12 / 12` (`24 ★`) | Python Scripts + Walkthroughs | [2025 Walkthroughs](https://aoc.just2good.co.uk/2025/) |
+| **2024** | `25 / 25` (`50 ★`) | Jupyter Notebook + Google Colab | [2024 Notebook](https://aoc.just2good.co.uk/2024/) |
+| **2023** | `25 / 25` (`50 ★`) | Jupyter Notebook + Google Colab | [2023 Notebook](https://aoc.just2good.co.uk/2023/) |
+| **2022** | `25 / 25` (`50 ★`) | Python Scripts + Walkthroughs | [2022 Walkthroughs](https://aoc.just2good.co.uk/2022/) |
+| **2021** | `25 / 25` (`50 ★`) | Python Scripts + Walkthroughs | [2021 Walkthroughs](https://aoc.just2good.co.uk/2021/) |
+| **2020** | `25 / 25` (`50 ★`) | Python Scripts + Source Code Index | [2020 Code Index](https://aoc.just2good.co.uk/2020/) |
+| **2018** | `6 / 25` | Python Scripts + Walkthroughs | [2018 Walkthroughs](https://aoc.just2good.co.uk/2018/) |
+| **2017** | `12 / 25` | Jupyter Notebook + Google Colab | [2017 Notebook](https://aoc.just2good.co.uk/2017/) |
+| **2016** | `25 / 25` (`50 ★`) | Python Scripts + Walkthroughs | [2016 Walkthroughs](https://aoc.just2good.co.uk/2016/) |
+| **2015** | `25 / 25` (`50 ★`) | Python Scripts + Walkthroughs | [2015 Walkthroughs](https://aoc.just2good.co.uk/2015/) |
 
-## Use of my Code
+## Use of My Code
 
-This software is shared as open source. However, if you use it in your own solutions and/or incorporate it into your own repos, please consider giving acknowledgement to me, and linking back to this repo, my [walkthrough site](https://aoc.just2good.co.uk/), or [darrenlester.net](https://darrenlester.net). That would be really kind!
+This software is shared as open source under the [MIT Licence](LICENSE). If you use parts of it in your own solutions or fork it into your repository, I'd really appreciate an acknowledgement and a link back to this repo, **[aoc.just2good.co.uk](https://aoc.just2good.co.uk/)**, or **[darrenlester.net](https://darrenlester.net)**.
 
 ## What is Advent of Code?
 
-An awesome [coding challenge](https://adventofcode.com/about) created by Eric Wastl, released every December. A new problem is presented each day through the month. Typically the best way to solve any given problem is by writing a program. The program can be written in _any language and with any tools you like_. You don't need to be an expert coder to do AoC; in fact, AoC is a great way to learn a programming language.
+Created by Eric Wastl every December since 2015, **[Advent of Code](https://adventofcode.com/about)** releases a two-part programming puzzle each day. Part 1 sets up the challenge; Part 2 almost always scales up the problem until brute-force approaches break and better data structures, memoisation, or algorithms matter. Every past event stays online year-round, and you can solve them in any language you choose.
 
-Some problems are quite trivial and can be solved quickly; others can be a total PITA. Typically, the problems get harder as the event progresses.
-
-You don't have to wait until December to try your hand at AoC though. All previous events are available, and can be completed at _any_ time.
-
-Each day is split into a Part 1 and a Part 2. A star is awarded for each completed challenge. From 2015–2024, AoC ran for 25 days (50 stars to save Christmas!); from 2025 onwards, it runs as a 12-day event (24 stars).
+Traditionally (`2015`–`2024`) AoC ran for 25 days (`50 ★` to save Christmas); from `2025` onwards, the event runs for 12 days (`24 ★`).
 
 ## Prerequisites & Setup
 
@@ -191,7 +194,7 @@ For some years (e.g. 2023–2024), solutions use Jupyter Notebooks combining Pyt
 
 | Path | Purpose |
 | :--- | :--- |
-| [`docs/`](docs/index.md) | Jekyll source for [aoc.just2good.co.uk](https://aoc.just2good.co.uk/) (`docs/YYYY/` walkthroughs, `docs/python/` guides, `_config.yml`, `docker-compose.yml`) |
+| [`docs/`](docs/index.md) | Jekyll source for [aoc.just2good.co.uk](https://aoc.just2good.co.uk/) (`Midnight AoC` custom theme in [`docs/DESIGN.md`](docs/DESIGN.md), `docs/YYYY/` walkthroughs, `docs/python/` guides, `_config.yml`, `docker-compose.yml`) |
 | `src/AoC_YYYY/` | Solution folders (`d01/`..`d12/` from 2025+, `d01/`..`d25/` for 2015–2024), or `.ipynb` notebooks |
 | [`src/aoc_common/`](src/aoc_common/aoc_commons.py) | Shared utility package (`aoc_commons.py`, `runner.py`, `cli.py`: `Locations`, `get_aoc_locations`, `run_puzzle`, `Point`, `Point3D`, `Grid`, algorithms, Rich logging) |
 | [`src/template_folder/`](src/template_folder/template.py) | Starter Python script and Jupyter notebook templates (Template v3) |
@@ -232,11 +235,12 @@ uv run pytest src/tests
 
 ## Documentation Website
 
-This repository includes a companion static website with detailed walkthroughs and Python guides.
+This repository includes a companion static website featuring walkthroughs, the **Python Journey** curriculum, and a custom **Midnight AoC** dark-first theme with persisted Daylight Light toggle (specified in [`docs/DESIGN.md`](docs/DESIGN.md)).
 
 - **Website URL**: [https://aoc.just2good.co.uk/](https://aoc.just2good.co.uk/)
-- **Technology**: Static site built with [Jekyll](https://jekyllrb.com/)
-- **Source**: Markdown content, layouts, and styles in [`docs/`](docs/index.md)
+- **Technology**: Static site built with [Jekyll](https://jekyllrb.com/) using custom `_layouts/`, `_sass/` partials, and [`docs/assets/js/site.js`](docs/assets/js/site.js)
+- **Source & Authoring Guide**: [`docs/`](docs/index.md) and [`docs/readme.md`](docs/readme.md)
+- **CI Build Check**: [`.github/workflows/pr-checks.yml`](.github/workflows/pr-checks.yml) runs `bundle exec jekyll build --trace` on pull requests and pushes
 
 ### Working with the Documentation Locally
 
