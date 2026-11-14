@@ -1,4 +1,4 @@
-name: "🏷️ Gemini Issue Triage"
+name: "🏷️ Dazbo's Gemini Issue Triage"
 
 on:
   issues:
@@ -12,13 +12,14 @@ jobs:
       issues: write
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
       - name: Gemini Issue Triage
         uses: derailed-dash/gemini-review-action@v1
         with:
+          command: 'triage'
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          gemini_model: 'gemini-3.8-flash'
+          gemini_model: 'gemini-4-hydrogen'
           language: 'English (UK)'
-          command: 'triage'

@@ -44,9 +44,10 @@ jobs:
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          gemini_model: 'gemini-3.8-flash'
+          gemini_model: 'gemini-4-hydrogen'
           persona: 'dazbo'
           language: 'English (UK)'
           include_comment_history: 'true'
+          skip_inline_suggestions: 'true'
           context_exclude_patterns: 'src/AoC_201*/**,src/AoC_202[0-5]/**'
           custom_instructions: '.github/review-instruction-additions.md'

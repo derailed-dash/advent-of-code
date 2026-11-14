@@ -16,7 +16,7 @@ Advent of Code changed from a 25-day event (2015–2024) to a **12-day event fro
 | `src/AoC_2015/` – `src/AoC_2025/` | Historical AoC puzzle solutions | Excluded from `ruff`, `codespell`, and `pyright` sweeps |
 | [`scripts/create_year.sh`](scripts/create_year.sh) | Standalone Bash fallback to scaffold `src/AoC_<year>/d01..d<days>` | Defaults to `12` days; does not create empty `input.txt` placeholders |
 | [`docs/`](docs/index.md) | Jekyll GitHub Pages site (`https://aoc.just2good.co.uk/`) | Custom Midnight AoC theme ([`docs/DESIGN.md`](docs/DESIGN.md)), navigation defined in [`docs/_data/navigation.yaml`](docs/_data/navigation.yaml) |
-| [`.github/workflows/`](.github/workflows/pr-checks.yml) | CI checks (`pr-checks.yml`) and Gemini PR/issue workflows | Keep `gemini_model: 'gemini-3.8-flash'`; PR review guardrails in [`.github/review-instruction-additions.md`](.github/review-instruction-additions.md) |
+| [`.github/workflows/`](.github/workflows/pr-checks.yml) | CI checks (`pr-checks.yml`) and Gemini PR/issue workflows | Keep `gemini_model: 'gemini-4-hydrogen'`; PR review guardrails in [`.github/review-instruction-additions.md`](.github/review-instruction-additions.md) |
 | [`.agents/rules/`](.agents/rules/aoc-retrieval.md) | Model-triggered workspace rule for AoC retrieval | Governs `uv run aoc fetch`, `AOC_SESSION_COOKIE`, `User-Agent`, and zero-temp-file policy |
 | `.agents/skills/` | Workspace AoC skills (`aoc-problem-summary`, `aoc-solution-support`, `aoc-create-doc`, `aoc-megathread-post`; `SKILL.md.enc` encrypted in Git) | Plaintext `SKILL.md` files are gitignored via `git-crypt-helper.sh` |
 | [`TODO.md`](TODO.md) | Project roadmap and backlog | Tracks planned code, docs, and skill improvements |
