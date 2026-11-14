@@ -1,5 +1,6 @@
 ---
 title: Exceptions
+description: "Handling runtime errors in Python: try/except blocks, custom exception classes, EAFP vs LBYL patterns, and tracebacks in Advent of Code."
 tags: 
   - name: Exceptions - Python Docs
     link: https://docs.python.org/3/tutorial/errors.html
@@ -8,7 +9,7 @@ tags:
   - name: Exception hierarchy
     link: https://docs.python.org/3/library/exceptions.html#exception-hierarchy
   - name: Classes
-    link: /python/exceptions
+    link: /python/classes
   - name: EAFP
     link: https://realpython.com/python-lbyl-vs-eafp
   - name: Assertions
@@ -74,7 +75,7 @@ Here's the output of trying to divide by 0:
 
 ```text
 Traceback (most recent call last):
-  File "c:\Users\djl\localdev\Python\Advent-of-Code\src\snippets\snippet.py", line 4, in <module>
+  File "/path/to/advent-of-code/src/snippets/snippet.py", line 4, in <module>
     print(numerator / denominator)
 ZeroDivisionError: division by zero
 ```
@@ -97,7 +98,7 @@ And here's the output of trying to handle a string as if it were a number:
 
 ```text
 Traceback (most recent call last):
-  File "c:\Users\djl\localdev\Python\Advent-of-Code\src\snippets\snippet.py", line 4, in <module>     
+  File "/path/to/advent-of-code/src/snippets/snippet.py", line 4, in <module>     
     print(bad_number + good_number)
 TypeError: can only concatenate str (not "int") to str
 ```
@@ -350,14 +351,14 @@ Guess the number? Quit with Ctrl-C if you get bored: 30
 Guess the number? Quit with Ctrl-C if you get bored: 25
 Guess the number? Quit with Ctrl-C if you get bored: 10
 Guess the number? Quit with Ctrl-C if you get bored: Traceback (most recent call last):
-  File "f:\Users\Darren\localdev\Python\Basic-Scripts\src\Exceptions\empty_except.py", line 16, in <module>
+  File "/path/to/advent-of-code/src/snippets/empty_except.py", line 16, in <module>
     main()
-  File "f:\Users\Darren\localdev\Python\Basic-Scripts\src\Exceptions\empty_except.py", line 7, in main
+  File "/path/to/advent-of-code/src/snippets/empty_except.py", line 7, in main
     guess = int(input("Guess the number? Quit with Ctrl-C if you get bored: "))
 KeyboardInterrupt
 ```
 
-If we press Ctrl-C, this causes a `KeyboardInterrupt` to be raised.  Our code catches `Exception`, but **does not catch** `KeybaordInterrupt`.  Note from the exception hierarchy that `KeyboardInterrupt` does not descend from `Exception`. Instead, `KeyboardException` inherits directly from `BaseException`. And we're not catching `BaseException`.
+If we press Ctrl-C, this causes a `KeyboardInterrupt` to be raised.  Our code catches `Exception`, but **does not catch** `KeyboardInterrupt`.  Note from the exception hierarchy that `KeyboardInterrupt` does not descend from `Exception`. Instead, `KeyboardInterrupt` inherits directly from `BaseException`. And we're not catching `BaseException`.
 
 But what happens if we just catch **everything**?  We can do this by having an _empty_ `except` block, like this:
 
@@ -478,11 +479,11 @@ Using [1, 4, 5, 6, 9]...
 5
 Using []...
 Traceback (most recent call last):
-  File "c:\Users\djl\localdev\Python\Advent-of-Code\src\snippets\snippet.py", line 23, in <module>   
+  File "/path/to/advent-of-code/src/snippets/snippet.py", line 23, in <module>   
     test(numbers)
-  File "c:\Users\djl\localdev\Python\Advent-of-Code\src\snippets\snippet.py", line 17, in test       
+  File "/path/to/advent-of-code/src/snippets/snippet.py", line 17, in test       
     print(median(iterable))
-  File "c:\Users\djl\localdev\Python\Advent-of-Code\src\snippets\snippet.py", line 13, in median     
+  File "/path/to/advent-of-code/src/snippets/snippet.py", line 13, in median     
     return (items[median_index] + items[median_index+1]) / 2.0
 IndexError: list index out of range
 ```
@@ -530,11 +531,11 @@ Using [1, 4, 5, 6, 9]...
 5
 Using []...
 Traceback (most recent call last):
-  File "c:\Users\djl\localdev\Python\Advent-of-Code\src\snippets\snippet.py", line 25, in <module>   
+  File "/path/to/advent-of-code/src/snippets/snippet.py", line 25, in <module>   
     test(numbers)
-  File "c:\Users\djl\localdev\Python\Advent-of-Code\src\snippets\snippet.py", line 19, in test       
+  File "/path/to/advent-of-code/src/snippets/snippet.py", line 19, in test       
     print(median(iterable))
-  File "c:\Users\djl\localdev\Python\Advent-of-Code\src\snippets\snippet.py", line 7, in median      
+  File "/path/to/advent-of-code/src/snippets/snippet.py", line 7, in median      
     raise ValueError("median() arg was empty sequence")
 ValueError: median() arg was empty sequence
 ```
@@ -623,11 +624,11 @@ This is what happens when we run it:
 ```text
 Inclination: 59.0
 Traceback (most recent call last):
-  File "c:\Users\djl\localdev\Python\Advent-of-Code\src\snippets\snippet.py", line 14, in <module>    
+  File "/path/to/advent-of-code/src/snippets/snippet.py", line 14, in <module>    
     test()
-  File "c:\Users\djl\localdev\Python\Advent-of-Code\src\snippets\snippet.py", line 11, in test        
+  File "/path/to/advent-of-code/src/snippets/snippet.py", line 11, in test        
     print("Inclination: ", inclination(0, 5))
-  File "c:\Users\djl\localdev\Python\Advent-of-Code\src\snippets\snippet.py", line 7, in inclination  
+  File "/path/to/advent-of-code/src/snippets/snippet.py", line 7, in inclination  
     return round(math.degrees(math.atan(dy/dx)), 1)
 ZeroDivisionError: division by zero
 ```
@@ -795,23 +796,23 @@ And now the output looks like this:
 Inclination: 59.0
 InclinationError: Slope cannot be vertical. Args were: (0, 5)
 Error details: Traceback (most recent call last):
-  File "f:\Users\Darren\localdev\Python\Advent-of-Code\src\snippets\scratch.py", line 22, in inclination
+  File "/path/to/advent-of-code/src/snippets/scratch.py", line 22, in inclination
     return round(math.degrees(math.atan(dy/dx)), 1)
 ZeroDivisionError: division by zero
 
 The above exception was the direct cause of the following exception:
 
 Traceback (most recent call last):
-  File "f:\Users\Darren\localdev\Python\Advent-of-Code\src\snippets\scratch.py", line 30, in test
+  File "/path/to/advent-of-code/src/snippets/scratch.py", line 30, in test
     print("Inclination: ", inclination(0, 5))
-  File "f:\Users\Darren\localdev\Python\Advent-of-Code\src\snippets\scratch.py", line 25, in inclination
+  File "/path/to/advent-of-code/src/snippets/scratch.py", line 25, in inclination
     raise InclinationError("Slope cannot be vertical", dx, dy) from e
 InclinationError: InclinationError: Slope cannot be vertical. Args were: (0, 5)
 ```
 
 The `traceback` shows us that the original exception was a `ZeroDivisionError`, which was caught and then resulted in an `InclinationError`. 
 
-An interesting point to note is that the original exception was available as the _cause_ of the handled exception. This is possible because Python automatically links the _causing_ exception to the _caused_ exception, through a procss called _implicit chaining_.  You can always refer to the _cause_ Exception explicitly, by using the `__context__` attribute of the handled exception. So, for example, if we wanted to know the original exception, but we didn't want to print the full stack trace, we could change our final `try-except` block to look like this:
+An interesting point to note is that the original exception was available as the _cause_ of the handled exception. This is possible because Python automatically links the _causing_ exception to the _caused_ exception, through a process called _implicit chaining_.  You can always refer to the _cause_ Exception explicitly, by using the `__context__` attribute of the handled exception. So, for example, if we wanted to know the original exception, but we didn't want to print the full stack trace, we could change our final `try-except` block to look like this:
 
 ```python
 def test():
@@ -860,27 +861,29 @@ Here's some code that can be used to write an exception as JSON.
 ```python
 import traceback
 import json
-import os
- 
-SCRIPT_DIR = os.path.dirname(__file__)  # path where this file lives
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).parent  # path where this file lives
 MY_APP = "dump_errs"
 
-def report(ex):
-    """ Convert the exception to a dict """
-    data = {}
-    data['message'] = f"{ex}"
-    data['serviceContext'] = {'service': MY_APP}
-    
-    return data
 
-def dump_report(errors_report):
-    """ Export this dict as a json file """
-    file_name = os.path.join(SCRIPT_DIR, "exceptionsTest.json")
-    with open(file_name, "a") as f:
+def report(ex: object) -> dict[str, object]:
+    """Convert the exception or traceback to a dict."""
+    return {
+        "message": f"{ex}",
+        "serviceContext": {"service": MY_APP},
+    }
+
+
+def dump_report(errors_report: dict[int, dict[str, object]]) -> None:
+    """Export this dict as a JSON file."""
+    file_name = SCRIPT_DIR / "exceptionsTest.json"
+    with file_name.open("a", encoding="utf-8") as f:
         json.dump(errors_report, f)
-             
-def simulate_error():
-    errors_report = {}  # store all errors in a dict
+
+
+def simulate_error() -> None:
+    errors_report: dict[int, dict[str, object]] = {}  # store all errors in a dict
     error_counter = 0   # increment each time we catch an exception
    
     try:
@@ -928,25 +931,25 @@ The output file looks like this:
 ```json
 {
     "1": {
-        "message": "Traceback (most recent call last):\n  File \"c:\\Users\\djl\\localdev\\Python\\Advent-of-Code\\src\\snippets\\snippet.py\", line 27, in simulate_error\n    undefined_method()\nNameError: name 'undefined_method' is not defined\n",
+        "message": "Traceback (most recent call last):\n  File \"/path/to/advent-of-code/src/snippets/snippet.py\", line 27, in simulate_error\n    undefined_method()\nNameError: name 'undefined_method' is not defined\n",
         "serviceContext": {
             "service": "dump_errs"
         }
     },
     "2": {
-        "message": "Traceback (most recent call last):\n  File \"c:\\Users\\djl\\localdev\\Python\\Advent-of-Code\\src\\snippets\\snippet.py\", line 35, in simulate_error\n    x = a/2\nNameError: name 'a' is not defined\n",
+        "message": "Traceback (most recent call last):\n  File \"/path/to/advent-of-code/src/snippets/snippet.py\", line 35, in simulate_error\n    x = a/2\nNameError: name 'a' is not defined\n",
         "serviceContext": {
             "service": "dump_errs"
         }
     },
     "3": {
-        "message": "Traceback (most recent call last):\n  File \"c:\\Users\\djl\\localdev\\Python\\Advent-of-Code\\src\\snippets\\snippet.py\", line 43, in simulate_error\n    x = 2/0\nZeroDivisionError: division by zero\n",
+        "message": "Traceback (most recent call last):\n  File \"/path/to/advent-of-code/src/snippets/snippet.py\", line 43, in simulate_error\n    x = 2/0\nZeroDivisionError: division by zero\n",
         "serviceContext": {
             "service": "dump_errs"
         }
     },
     "4": {
-        "message": "Traceback (most recent call last):\n  File \"c:\\Users\\djl\\localdev\\Python\\Advent-of-Code\\src\\snippets\\snippet.py\", line 51, in simulate_error\n    import non_existent_library\nModuleNotFoundError: No module named 'non_existent_library'\n",
+        "message": "Traceback (most recent call last):\n  File \"/path/to/advent-of-code/src/snippets/snippet.py\", line 51, in simulate_error\n    import non_existent_library\nModuleNotFoundError: No module named 'non_existent_library'\n",
         "serviceContext": {
             "service": "dump_errs"
         }
@@ -962,4 +965,4 @@ For example, when opening a file: rather than checking if the file exists and is
 
 ### Examples
 
-- [Custom exception classes when parsing - 2021 day 10](/2021/10)
+- [Custom exception classes when parsing — 2021 Day 10](/2021/10)

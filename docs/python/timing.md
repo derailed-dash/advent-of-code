@@ -1,5 +1,6 @@
 ---
 title: Timing and Progress
+description: Benchmarking execution time in Python with time.perf_counter, the ac.timer context manager, automated Template v3 profiling, and tqdm progress bars.
 main_img:
   name: Argand Plot
   link: /assets/images/progress.jpg
@@ -15,24 +16,25 @@ tags:
 ---
 ## Page Contents
 
-- [Time Module](#time-module)
-- [Progress Bar with tqdm](#progress-bar-with-tqdm)
+- [Measuring Time with time.perf_counter](#measuring-time-with-timeperf_counter)
+- [The ac.timer() Context Manager](#the-actimer-context-manager)
+- [Automated Profiling in Template v3](#automated-profiling-in-template-v3)
+- [Progress Bars with tqdm](#progress-bars-with-tqdm)
 - [Examples](#examples)
 
-## Time Module
+## Measuring Time with time.perf_counter
 
-The [time](https://docs.python.org/3/library/time.html){:target="_blank"} module is a convenient and easy way to measure how long something takes to run. 
+The standard library [time](https://docs.python.org/3/library/time.html){:target="_blank"} module is the most straightforward way to measure elapsed code execution time in Python.
 
-Simply call `time.perf_counter()` before and after executing something. The difference between the two responses is the number of seconds taken.
-
-In the example below, I'm using the `sleep()` method to simulate a long running process. Here, I'm telling Python to sleep for 2 seconds.
+For benchmarking, always use `time.perf_counter()`. Unlike `time.time()`, `perf_counter()` is a **monotonic clock** with the highest available resolution on your platform, meaning it is not affected by system clock updates or daylight saving adjustments:
 
 ```python
 import time
 
 t1 = time.perf_counter()
-time.sleep(2) # sleep for 2 seconds
+time.sleep(2)  # Simulate a 2-second computation
 t2 = time.perf_counter()
+
 print(f"Execution time: {t2 - t1:0.4f} seconds")
 ```
 
@@ -42,51 +44,73 @@ Output:
 Execution time: 2.0037 seconds
 ```
 
-Note how I'm displaying the elapsed time with 4 decimal places of precision, using the `:0.4f` [format](https://www.w3schools.com/python/ref_string_format.asp){:target="_blank"} within an [f-string](https://www.freecodecamp.org/news/python-f-strings-tutorial-how-to-use-f-strings-for-string-formatting/){:target="_blank"}.
+We format the elapsed duration with 4 decimal places of precision using `:0.4f` inside a Python f-string.
 
-Here I'll change the program to simulate waiting for 10 milliseconds:
+Here is a shorter measurement:
 
 ```python
 import time
 
 t1 = time.perf_counter()
-time.sleep(0.01) # sleep for 0.01s (i.e. 10ms)
+time.sleep(0.01)  # Simulate waiting for 10ms
 t2 = time.perf_counter()
+
 print(f"Execution time: {t2 - t1:0.4f} seconds")
 ```
 
-The output:
+Output:
 
 ```text
 Execution time: 0.0109 seconds
 ```
 
-## Progress Bar with tqdm
+## The ac.timer() Context Manager
 
-The [tqdm](https://pypi.org/project/tqdm/){:target="_blank"} class is an awesome tool for creating a **dynamic progress bar**. This is really useful if you have a long-running process, and you want to see a real-time indicator on how much of the process is completed, and an estimate of how long is left.
-
-It's incredibly easy to use.  In its simplest form, you simply wrap tqdm around any _iterable_ in a loop.
-
-First, if you haven't yet installed `tqdm` into your environment, you'll need to install it with **pip**.
-
-```text
-py -m pip install tqdm
-```
-
-First, let's simulate a long running process:
+Writing manual `t1` and `t2` boilerplate around every function quickly clutters your solution. To keep things clean, our shared `aoc_common` library provides the `ac.timer()` context manager in `src/aoc_common/aoc_commons.py`:
 
 ```python
-from time import sleep
+import aoc_common.aoc_commons as ac
 
-steps = 10
-
-for step in range(steps):
-    sleep(0.5)
+with ac.timer("Solving Part 1"):
+    # Run intensive algorithm or search
+    result = solve_part1(data)
 ```
 
-This program iterates through 10 steps, and pauses for 0.5s on each step. So obviously, it will take about 5 seconds to run.  During that time, there is no visual indication of progress.
+When the `with` block finishes, `ac.timer()` calculates the elapsed time and logs it automatically through the configured logger:
 
-To use tqdm, all you have to do is wrap `tqdm` around the _iterable_, like this:
+```text
+INFO Solving Part 1: 0.145 seconds
+```
+
+## Automated Profiling in Template v3
+
+Even better: in modern [Template v3](/python/my-aoc-template3) solutions, you do not need to write any timing code at all!
+
+When you execute a puzzle with `uv run aoc run <target>`:
+
+```bash
+uv run aoc run 2025d01
+```
+
+The shared test runner (`src/aoc_common/runner.py`) uses `perf_counter` under the hood to profile:
+
+1. Input parsing duration (`parse_input`).
+2. Part 1 execution time (`part1`).
+3. Part 2 execution time (`part2`).
+
+It formats the elapsed duration dynamically with `ac.format_duration` (rendering microseconds, milliseconds, or seconds appropriately) and displays the results in a clean Rich summary table with colourised status markers.
+
+## Progress Bars with tqdm
+
+The [tqdm](https://pypi.org/project/tqdm/){:target="_blank"} package is a fantastic utility for displaying **dynamic terminal progress bars**. When working on a heavy algorithm (such as simulating millions of state transitions), `tqdm` provides real-time feedback on iteration speed, percent completed, and estimated time remaining.
+
+To install `tqdm` into your managed environment using `uv`:
+
+```bash
+uv add tqdm
+```
+
+Wrap `tqdm` around any iterable:
 
 ```python
 from time import sleep
@@ -97,9 +121,12 @@ steps = 10
 for step in tqdm(range(steps)):
     sleep(0.5)
 ```
+
 ![Progress Bar]({{ '/assets/images/progress_bar.gif' | relative_url }})
 
 ## Examples
 
-See:
-- [2022 Day 11](/2022/11)
+See how progress bars and timing can be applied in practice:
+
+- [2022 Day 11 Walkthrough](/2022/11)
+- [My Advent of Code Template v3](/python/my-aoc-template3)

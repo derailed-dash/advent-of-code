@@ -1,6 +1,6 @@
 ---
 title: Zip
-
+description: "Guide to Python's built-in zip function: pairing iterables, transposing 2D matrices, splat unpacking, and zip(strict=True)."
 main_img:
   name: Zip
   link: /assets/images/zip.jpg
@@ -18,6 +18,7 @@ tags:
 - [Unpacking An Arbitrary Number of Iterables](#unpacking-an-arbitrary-number-of-iterables)
 - [Turning (x,y) coordinates into a List of x and a List of y](#turning-xy-coordinates-into-a-list-of-x-and-a-list-of-y)
 - [Making a Mapping Dictionary](#making-a-mapping-dictionary)
+- [Strict Mode (Python 3.10+)](#strict-mode-python-310)
 - [Examples](#examples)
 
 
@@ -32,7 +33,7 @@ What does _THAT_ mean?
 It's easier with an example...
 
 ```python
-questions = ['Your name?', 'Your quest?', 'Your favourite color?']
+questions = ['Your name?', 'Your quest?', 'Your favourite colour?']
 answers = ['Lancelot', 'The Holy Grail', 'Blue. No... Red!']
 
 # print the tuple
@@ -45,7 +46,7 @@ The output:
 ```text
 ('Your name?', 'Lancelot')
 ('Your quest?', 'The Holy Grail')
-('Your favourite color?', 'Blue. No... Red!')
+('Your favourite colour?', 'Blue. No... Red!')
 ```
 
 So here, we started with 2 lists that both had 3 elements.  By zipping them together, we ended up with one list made up of tuples, with each tuple being made up of 2 elements.
@@ -55,7 +56,7 @@ So here, we started with 2 lists that both had 3 elements.  By zipping them toge
 We can even do this:
 
 ```python
-questions = ['name', 'quest', 'favourite color']
+questions = ['name', 'quest', 'favourite colour']
 answers = ['I am Arthur, King of the Britons', 'We seek the Holy Grail', 'Blue!']
 
 # unpack and format the tuple
@@ -68,7 +69,7 @@ Output:
 ```text
 What is your name?  I am Arthur, King of the Britons
 What is your quest?  We seek the Holy Grail
-What is your favourite color?  Blue!
+What is your favourite colour?  Blue!
 ```
 
 ## Transposing Rows and Columns
@@ -81,7 +82,7 @@ Imagine we have four different lists:
 We can think of this as four rows and seven columns.  Using `zip()`, we can turn this into seven rows of four columns:
 
 ```python
-# daily % changes for these coins, over 6 days
+# daily % changes for these coins, over 7 days
 day = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 btc = [3.4, 1.5, 5.2, -2, -3, 7.1, 8.0]
 eth = [0.4, 0.2, 7.0, 2.5, 1.5, 8.0, 10.0]
@@ -108,7 +109,7 @@ Output:
 We can use the splat operator to zip any arbitrary number of iterables. For example, we could re-write the example above like this:
 
 ```python
-# daily % changes for these coins, over 6 days
+# daily % changes for these coins, over 7 days
 day = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 btc = [3.4, 1.5, 5.2, -2, -3, 7.1, 8.0]
 eth = [0.4, 0.2, 7.0, 2.5, 1.5, 8.0, 10.0]
@@ -143,7 +144,7 @@ all_x, all_y = zip(*points)
 print(f"all_x: {all_x}")
 print(f"all_y: {all_y}")
 
-# Create out axes
+# Create our axes
 fig, axes = plt.subplots()
 
 # add lines at x=0, y=0 and labels
@@ -190,6 +191,28 @@ Output:
 ```text
 {'(': ')', '[': ']', '{': '}', '<': '>'}
 ```
+
+## Strict Mode (Python 3.10+)
+
+By default, `zip()` stops yielding elements as soon as the shortest input iterable is exhausted, silently discarding any remaining items in longer iterables:
+
+```python
+short_list = [1, 2, 3]
+long_list = ["a", "b", "c", "d", "e"]
+print(list(zip(short_list, long_list)))
+# [(1, 'a'), (2, 'b'), (3, 'c')]  <- 'd' and 'e' silently dropped!
+```
+
+In Python 3.10+, you can pass `strict=True` to require all iterables to be of identical length. If any iterable ends before the others, Python raises a `ValueError`:
+
+```python
+try:
+    pairs = list(zip(short_list, long_list, strict=True))
+except ValueError as err:
+    print(f"Mismatched lengths: {err}")
+```
+
+In Advent of Code, `strict=True` is an invaluable sanity check when pairing up coordinate arrays, keys and values, or headers and rows where dropped items indicate corrupt parsing or subtle off-by-one bugs.
 
 ## Examples
 

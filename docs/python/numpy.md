@@ -1,5 +1,6 @@
 ---
 title: NumPy
+description: Working with multi-dimensional arrays, slicing, vectorised operations, and matrix transformations in Python using NumPy.
 main_img:
   name: NumPy
   link: /assets/images/numpy_logo.png
@@ -10,7 +11,7 @@ tags:
     link: https://numpy.org/devdocs/user/absolute_beginners.html
   - name: NumPy Reference
     link: https://numpy.org/doc/stable/reference/index.html#reference
-  - name: pip
+  - name: uv / Packages
     link: /python/packages
 ---
 ## Page Contents
@@ -79,10 +80,10 @@ NumPy might save you a lot of coding, and be faster, for the following scenarios
 
 ## Installing and Importing
 
-If you're using a data science distribution like Anaconda, you'll already have NumPy installed.  If not, installing is trivial:
+If you're using a modern `uv` project, install NumPy directly into your virtual environment:
 
-```
-py -m pip install numpy
+```bash
+uv add numpy
 ```
 
 When importing, it's standard convention to import as `np`:
@@ -1226,5 +1227,5 @@ See [2022 Day 12: Hill Climbing](/2022/12).
 - [Game of life - 2015 Day 18](/2015/18)
 - [Counting when values increase - 2021 Day 1](/2021/1)
 - [Counting how many times something is true in the grid - 2021 Day 5](/2021/5)
-- [Unique, counts, and rolling - 2021 Day 6](/2015/6)
+- [Unique, counts, and rolling - 2021 Day 6](/2021/6)
 - [Reading CSV - 2021 Day 7](/2021/7)

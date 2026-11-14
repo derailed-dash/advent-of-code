@@ -6,7 +6,7 @@
 
 ## Why This Repository Exists
 
-I've been using **[Advent of Code](https://adventofcode.com/)** for years to sharpen my **Python** skills — exploring modern standard-library features, benchmarking alternative algorithms, and turning thorny December puzzles into clean, documented code. Every walkthrough pairs runnable Python with plain-English explanations on **[aoc.just2good.co.uk](https://aoc.just2good.co.uk/)**, alongside a 39-chapter **[Python Journey](https://aoc.just2good.co.uk/python/)** curriculum covering reusable patterns, graphs, shortest paths, symbolic maths, and visualisations.
+I've been using **[Advent of Code](https://adventofcode.com/)** for years to sharpen my **Python** skills — exploring modern standard-library features, benchmarking alternative algorithms, and turning thorny December puzzles into clean, documented code. Every walkthrough pairs runnable Python with plain-English explanations on **[aoc.just2good.co.uk](https://aoc.just2good.co.uk/)**, alongside a 40-chapter **[Python Journey](https://aoc.just2good.co.uk/python/)** curriculum covering reusable patterns, graphs, shortest paths, symbolic maths, PEGs, and visualisations.
 
 My hope is that this repository and companion site help you:
 
@@ -216,7 +216,7 @@ Shared utilities live in [`src/aoc_common/aoc_commons.py`](src/aoc_common/aoc_co
 - **Logging & Output**: `setup_logging` (configured with `RichHandler`, `force=True`, and `stderr=True` support for `--json` mode), `setup_file_logging`, and `top_and_tail`.
 - **Paths & Input Retrieval**: `Locations`, `get_aoc_locations` (safe in both scripts via `__file__` and Jupyter/Colab notebooks without `__file__`), `get_locations`, `get_aoc_session_cookie`, `is_git_crypt_locked`, `write_puzzle_input_file` (with AoC `User-Agent` header enforcement and automatic replacement of locked `git-crypt` blobs), and in-memory HTML/sample parsers `fetch_puzzle_page` and `parse_puzzle_html`.
 - **Runner, Testing & Timing**: `run_puzzle` (`Rich` + `argparse` Template v3 CLI orchestration), `check_samples` (raises `AssertionError` cleanly without `sys.exit`), `validate`, `format_duration`, and the `timer` context manager.
-- **2D/3D Geometry & Algorithms**: `Point`, `Point3D`, `Vectors`, `VectorDicts`, and `Grid` classes, sparse point-cloud helpers (`bounding_box`, `render_points`), plus `binary_search`, `lower_bound`, `upper_bound`, `merge_intervals`, `get_factors`, and `to_base_n`.
+- **2D/3D Geometry & Algorithms**: `Point`, `Point3D` (`slots=True`, orthogonal/all neighbours, Manhattan/Chebyshev/Euclidean distances), `Vectors`, `VectorDicts`, and `Grid` (`from_text`, `grid[pt]`, `pt in grid`, `find_first`, `find_one`, `flood_fill`, `copy`, `items`), sparse point-cloud helpers (`bounding_box`, `render_points`), plus `binary_search`, `lower_bound`, `upper_bound`, `merge_intervals`, `get_factors`, and `to_base_n`.
 
 #### History: From `dazbo-commons` (`dc`) to `aoc_common` (`ac`)
 

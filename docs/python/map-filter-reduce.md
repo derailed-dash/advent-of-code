@@ -1,6 +1,6 @@
 ---
 title: Map, Filter, and Reduce
-
+description: Functional programming patterns in Python using map, filter, and functools.reduce for sequence transformations in Advent of Code.
 main_img:
   name: perms-and-combos
   link: /assets/images/map_filter_reduce.jpg
@@ -9,6 +9,8 @@ tags:
     link: /python/functions#lambda-functions  
 ---
 
+## Page Contents
+
 - [map](#map)
   - [Example: Converting from Str to Int](#example-converting-from-str-to-int)
   - [Example: Getting Word Lengths](#example-getting-word-lengths)
@@ -16,6 +18,7 @@ tags:
   - [Example: Filtering Based on Word Length](#example-filtering-based-on-word-length)
 - [reduce](#reduce)
   - [Example: Using Reduce() to Implement a Factorial Function](#example-using-reduce-to-implement-a-factorial-function)
+  - [Modern Alternatives: math.prod and Comprehensions](#modern-alternatives-mathprod-and-comprehensions)
 - [Examples](#examples)
 
 ## map
@@ -30,7 +33,9 @@ The `map()` function **applies a function against every member in a sequence**. 
 Here we apply the `int()` function to each member of a list.  The original list contains str values.
 
 ```python
-def print_seq(seq):
+from collections.abc import Iterable
+
+def print_seq(seq: Iterable) -> None:
     for item in seq:
         print(f"{item}, type: {type(item)}")
 
@@ -133,7 +138,7 @@ As with the `map()` and `filter()` functions, `reduce()` takes two parameters:
 ```python
 from functools import reduce
 
-def mul(a, b):
+def mul(a: int, b: int) -> int:
     prod = a * b
     print(f"{a} * {b} = {prod}") # so we can see the interim values
     return prod
@@ -158,6 +163,23 @@ Result = 3628800
 ```
 
 Note that to use `reduce()`, it has to be imported from `functools`.
+
+### Modern Alternatives: math.prod and Comprehensions
+
+While `map()`, `filter()`, and `reduce()` are functional staples:
+
+- For calculating the product of numbers, modern Python provides `math.prod()` directly:
+  ```python
+  import math
+
+  total_product = math.prod(range(1, 11))
+  ```
+- For mapping and filtering, Pythonic **list comprehensions** or generator expressions are often clearer:
+  ```python
+  # Instead of map + filter
+  lengths = [len(w) for w in words if len(w) >= 5]
+  ```
+- However, `map(int, ...)` remains the canonical, fastest idiom in Advent of Code for converting sequences of digit strings into integers.
 
 ## Examples
 

@@ -1,6 +1,6 @@
 ---
 title: Sets
-
+description: Working with unique collections, set algebra, membership tests, and hashable dataclass points in Python.
 main_img:
   name: binary
   link: /assets/images/sets.png
@@ -15,7 +15,7 @@ tags:
 Python sets have these attributes:
 
 - They cannot contain duplicate items.  Adding a duplicate item simply does nothing.
-- The items in the set must be _immutable_. I.e. objects that can't be modified and which are _hashable_. For this reason, it can be extremely convenient to use the [dataclass](/python/classes#dataclass) when defining your own objects for use in sets, with the `frozen=True` attribute set.
+- The items in the set must be _immutable_. I.e. objects that can't be modified and which are _hashable_. For this reason, it can be extremely convenient to use the [dataclass](/python/classes#dataclass) when defining your own objects for use in sets, with `frozen=True` and `slots=True`.
 - Items in the set are _unordered_. Thus, items are not _indexable_.  (Though, if you want an ordered set, you can create your own implementation.)
 
 You should consider using sets whenever you need to:
@@ -30,18 +30,18 @@ You should consider using sets whenever you need to:
 ```python
 from dataclasses import dataclass
 
-@dataclass(frozen=True)
-class Point():
-    """ Point class, which stores x and y """
+@dataclass(frozen=True, slots=True)
+class Point:
+    """Point class, which stores x and y."""
     x: int
     y: int
     
-point_a = (5, 10)
-point_b = (6, 5)
-point_c = (5, 10)   # this is a duplicate (non-unique) point
-point_d = (20, 30)
+point_a = Point(5, 10)
+point_b = Point(6, 5)
+point_c = Point(5, 10)   # this is a duplicate (non-unique) point
+point_d = Point(20, 30)
 
-points = set()
+points: set[Point] = set()
 points.add(point_a)
 points.add(point_b)
 points.add(point_c)
@@ -70,9 +70,9 @@ Points contains 2 points.
 Point c is in points? True
 Point d is in points? False
 Points_list contains 4 points.
-Points_list: [(5, 10), (6, 5), (5, 10), (20, 30)]
+Points_list: [Point(x=5, y=10), Point(x=6, y=5), Point(x=5, y=10), Point(x=20, y=30)]
 Points_set contains 3 points.
-Points_set: {(5, 10), (20, 30), (6, 5)}
+Points_set: {Point(x=5, y=10), Point(x=20, y=30), Point(x=6, y=5)}
 ```
 
 ## Set Algebra
@@ -85,9 +85,16 @@ Mathematical _set algebra_ is easily achieved using Python sets. For example, we
       <th>Looks like</th>
     </tr>
     <tr><td>Union (|)</td><td><img src="{{'/assets/images/set_union.png' | relative_url }}" alt="Set union" style="width:100px;"/></td></tr>
-    <tr><td>Intersection (&)</td><td><img src="{{'/assets/images/set_intersection.png' | relative_url }}" alt="Set intersection" style="width:100px;"/></td></tr>
+    <tr><td>Intersection (&amp;)</td><td><img src="{{'/assets/images/set_intersection.png' | relative_url }}" alt="Set intersection" style="width:100px;"/></td></tr>
     <tr><td>Difference (-)</td><td><img src="{{'/assets/images/set_difference.png' | relative_url }}" alt="Set difference" style="width:100px;"/></td></tr>
-    <tr><td>Symmetric Difference</td><td><img src="{{'/assets/images/symmetric_diff.png' | relative_url }}" alt="Set difference" style="width:100px;"/></td></tr>
-    <tr><td>Superset/Contains (>)</td><td><img src="{{'/assets/images/set_superset.png' | relative_url }}" alt="Set difference" style="width:100px;"/></td></tr> 
-    <tr><td>Subset (<)</td><td></td></tr>    
+    <tr><td>Symmetric Difference (^)</td><td><img src="{{'/assets/images/symmetric_diff.png' | relative_url }}" alt="Symmetric difference" style="width:100px;"/></td></tr>
+    <tr><td>Superset/Contains (&gt;)</td><td><img src="{{'/assets/images/set_superset.png' | relative_url }}" alt="Set superset" style="width:100px;"/></td></tr> 
+    <tr><td>Subset (&lt;)</td><td>Proper subset of another set: <code>A &lt; B</code> (or <code>A &lt;= B</code>)</td></tr>    
 </table>
+
+## Examples
+
+- [Unique points visited - 2015 Day 3](/2015/3)
+- [Passports and valid field sets - 2020 Day 4](https://github.com/derailed-dash/Advent-of-Code/tree/master/src/AoC_2020){:target="_blank"}
+- [Intersecting beacon coordinates - 2021 Day 19](/2021/19)
+- [Common items in rucksacks - 2022 Day 3](/2022/3)

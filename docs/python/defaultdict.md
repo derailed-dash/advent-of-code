@@ -1,5 +1,6 @@
 ---
 title: Defaultdict
+description: "Using collections.defaultdict in Python with int, set, dict, and custom factories to simplify graph adjacency lists and frequency counting in Advent of Code."
 tags: 
   - name: Dict
     link: https://realpython.com/python-dicts/
@@ -20,7 +21,7 @@ tags:
 
 ### Overview
 
-I'll assume you already know what a Python dictionary is.  If not, [review this first](https://realpython.com/python-dicts/){:target="_blank"}.
+I'll assume you already know what a Python dictionary is. If not, [review this first](https://realpython.com/python-dicts/){:target="_blank"}.
 
 If you try to reference a key that doesn't exist in a Python dictionary, you'll be met with a `KeyError`. E.g.
 
@@ -37,7 +38,7 @@ Output:
 ```text
 200
 Traceback (most recent call last):
-  File "c:\Users\djl\localdev\Python\Advent-of-Code\src\snippets\snippet.py", line 5, in <module>
+  File "/path/to/advent-of-code/src/snippets/snippet.py", line 5, in <module>
     print(my_dict["some_other_key"])
           ~~~~~~~^^^^^^^^^^^^^^^^^^
 KeyError: 'some_other_key'
@@ -67,7 +68,7 @@ For example:
 ```python
 from collections import defaultdict
 
-d = defaultdict(int) 
+d: defaultdict[int, int] = defaultdict(int) 
    
 L = [1, 2, 3, 4, 2, 4, 1, 2] 
    
@@ -93,20 +94,20 @@ This code:
 - Every time we see a number, we increment the count for how many times we've seen that number.
 - Finally, we print the counts for each number.
 
-If we were not using a `defaultdict`, but rather a normal `dict`, then we would have to start each loop iteration by checking whether there is already a key for this value.  And if there isn't a key, we would explicitly add it.  Then we can increment it.
+If we were not using a `defaultdict`, but rather a normal `dict`, then we would have to start each loop iteration by checking whether there is already a key for this value. And if there isn't a key, we would explicitly add it. Then we can increment it.
 
-This is very cumbersome.  You can see why the `defaultdict(int)` is so awesome!
+This is very cumbersome. You can see why the `defaultdict(int)` is so awesome!
 
 #### set
 
-We can supply a _default factory_ of `set`, when we want a new set to be created implicit for each key. That way, we can simply call `add()` to add items to the set with each iteration.  We don't need to check whether the set already exists, and we don't need to explicitly create the empty sets.
+We can supply a _default factory_ of `set`, when we want a new set to be created implicitly for each key. That way, we can simply call `add()` to add items to the set with each iteration. We don't need to check whether the set already exists, and we don't need to explicitly create the empty sets.
 
 A good example is when we build an [adjacency dictionary for an undirected, unweighted graph](/python/graph).
 
 ```python
 from collections import defaultdict
 
-edges = set() # store edge edge as a tuple of (node_a, node_b)
+edges: set[tuple[int, int]] = set()  # store each edge as a tuple of (node_a, node_b)
 
 # Imagine we're only provided with the edges.
 edges.add((1, 2))
@@ -124,10 +125,10 @@ edges.add((5, 4))
 edges.add((6, 4))
 
 # Now we build the adjacency map
-node_map = defaultdict(set) # Use a set in order to filter out duplicate connections
+node_map: defaultdict[int, set[int]] = defaultdict(set)  # Use a set to filter out duplicate connections
 for x, y in edges:
-    node_map[x].add(y)  # a list of vertices that link to x
-    node_map[y].add(x)  # a list of vertices that link to y
+    node_map[x].add(y)  # vertices that link to x
+    node_map[y].add(x)  # vertices that link to y
 
 for vertex, connections in node_map.items():
     print(f"{vertex}: {connections}")
@@ -146,14 +147,14 @@ Output:
 
 #### dict
 
-This is useful if we want to create a dictionary of dictionaries.  Each outer `dict` value is itself a `dict` created implicitly and initially empty.
+This is useful if we want to create a dictionary of dictionaries. Each outer `dict` value is itself a `dict` created implicitly and initially empty.
 
-A handy use case is where we want to build an adjacency dictionary for nodes edges that are weighted.  E.g.
+A handy use case is where we want to build an adjacency dictionary for graph edges that are weighted. E.g.
 
 ```python
 from collections import defaultdict
 
-edges = dict() # store edge edge as a tuple of (node_a, node_b)
+edges: dict[tuple[str, str], int] = {}  # store each edge as a tuple of (node_a, node_b)
 
 # Imagine we're only provided with edges and their weights
 edges[('a', 'b')] = 10   # a is connected to b, with weight of 10
@@ -164,9 +165,9 @@ edges[('b', 'a')] = 50
 edges[('c', 'a')] = 60
 
 # Now we build the adjacency map
-node_map = defaultdict(dict) 
+node_map: defaultdict[str, dict[str, int]] = defaultdict(dict) 
 for (x, y), weight in edges.items():
-    node_map[x][y] = weight  # a list of vertices that link to x
+    node_map[x][y] = weight  # vertices that link to x
 
 for k, v in node_map.items():
     vals = "; ".join("to " + k + " with weight " + str(v) for k, v in v.items()) 
@@ -183,7 +184,7 @@ From node c: to a with weight 60
 
 This is great!
 
-But what if we had just used a regular dict. I.e. instead of this:
+But what if we had just used a regular dict? I.e. instead of this:
 
 ```python
 # Now we build the adjacency map
@@ -205,19 +206,19 @@ Well, if we do that, then the output of our program is this:
 KeyError: 'a'
 ```
 
-Why? Because the first time we reference `node_map[a]` is when we're trying to do this:
+Why? Because the first time we reference `node_map['a']` is when we're trying to do this:
 
 ```python
 node_map['a']['b'] = 10
 ```
 
-But this throws a `KeyError`, because we've never assigned a value to `node_map['a']`. Python does not know that we `node_map['a']` needs to be initialised to an empty dictionary, so that we can add a K:V pair to it. 
+But this throws a `KeyError`, because we've never assigned a value to `node_map['a']`. Python does not know that `node_map['a']` needs to be initialised to an empty dictionary, so that we can add a K:V pair to it. 
 
 When we use a `defaultdict(dict)`, this is all taken care of!
 
 #### A Custom Factory
 
-We can actually initialise our `defaultdict` to any type and any initial value we like.  For example:
+We can actually initialise our `defaultdict` to any type and any initial value we like. For example:
 
 ```python
 from collections import defaultdict
@@ -225,11 +226,11 @@ from collections import defaultdict
 def def_value():
     return "Not defined"
 
-dd = defaultdict(def_value)
+dd: defaultdict[str, str] = defaultdict(def_value)
 dd["some_key"] = "Some value"
 
 print(dd["some_key"])
-print(dd["some_other_key"]) # Not explicitly set; so default is used
+print(dd["some_other_key"])  # Not explicitly set; so default is used
 ```
 
 The output:
@@ -242,7 +243,7 @@ Not defined
 
 ### Examples
 
-- [defaultdict(dict) in seating - 2015 day 13](/2015/13)
-- [defaultdict(int) in reindeer racing - 2015 day 14](/2015/14)
-- [defaultdict(set) in beacons - 2021 day 19](/2021/19)
-- [defaultdict(list) in 2022 day 3](/2022/3)
+- [defaultdict(dict) in seating — 2015 Day 13](/2015/13)
+- [defaultdict(int) in reindeer racing — 2015 Day 14](/2015/14)
+- [defaultdict(set) in beacons — 2021 Day 19](/2021/19)
+- [defaultdict(list) in rucksacks — 2022 Day 3](/2022/3)

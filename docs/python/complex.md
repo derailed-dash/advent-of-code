@@ -1,5 +1,6 @@
 ---
 title: Complex Numbers
+description: Using Python complex numbers for 2D coordinate geometry, vector rotations, Argand diagrams, and grid navigation in Advent of Code.
 main_img:
   name: Argand Plot
   link: /assets/images/argand_points.png
@@ -157,7 +158,7 @@ for cw_angle in (90, 180, 270):
     rotated_point = cw_rotate(POINT, cw_angle)
     points.append(rotated_point)
 
-fig, axes = plt.subplots()  # Create out axes
+fig, axes = plt.subplots()  # Create our axes
 axes.set_aspect('equal') # set x and y to equal aspect
 axes.grid(True) # add grid lines
 

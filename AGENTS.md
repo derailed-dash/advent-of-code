@@ -48,3 +48,4 @@ This is a **public** GitHub repository containing private files encrypted via `g
 - **Navigation**: Menus and prev/next breadcrumbs read [`docs/_data/navigation.yaml`](docs/_data/navigation.yaml).
 - **MathJax v3**: Enable LaTeX rendering by adding `mathjax: true` to page frontmatter (loaded cleanly from `cdn.jsdelivr.net` in [`head-custom.html`](docs/_includes/head-custom.html)). Never use single-`$` inline math delimiters or inline `cdn.mathjax.org` `<script>` tags.
 - **Diagrams**: Never use `mermaid` code blocks or ASCII/Unicode box-drawing trees in Markdown; use Markdown tables or image assets in [`docs/assets/images/`](docs/assets/images/).
+- **Python Journey Pattern Code (`docs/python/`)**: Whenever creating or updating reference pages that capture solution patterns, align all documented code snippets with modern Python `>=3.13` best practices and clean idioms, even when doing so improves slightly upon older historical puzzle implementations.
