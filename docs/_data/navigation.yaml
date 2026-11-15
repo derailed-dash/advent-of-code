@@ -54,6 +54,8 @@ pages:
     link: /python/defaultdict
   - name: Recursion
     link: /python/recursion
+  - name: Caching and Dynamic Programming
+    link: /python/dynamic_programming
   - name: Exceptions
     link: /python/exceptions
   - name: Permutations, Combinations, Products and More
@@ -72,6 +74,16 @@ pages:
     link: /python/lifo_fifo
   - name: Useful Algorithms
     link: /python/useful_algorithms
+  - name: Interval and Range Algebra
+    link: /python/intervals
+  - name: Cycle Detection and Modular Arithmetic
+    link: /python/cycles_modular
+  - name: Grid Geometry — Shoelace Formula and Pick's Theorem
+    link: /python/grid_geometry
+  - name: Cellular Automata and Sparse Grids
+    link: /python/cellular_automata
+  - name: Virtual Machines and Bytecode Decompilation
+    link: /python/virtual_machines
   - name: Project Structure
     link: /python/project_structure
   - name: Using Colours
@@ -80,6 +92,8 @@ pages:
     link: /python/reusable_code
   - name: My AoC Template, Version 3
     link: /python/my-aoc-template3
+  - name: Modern Python Ergonomics for AoC
+    link: /python/modern_python
   - name: Parsing with Parsimonious
     link: /python/parsimonious
   - name: Jupyter Notebooks
@@ -88,6 +102,8 @@ pages:
     link: /python/encrypting
   - name: Maths with SymPy
     link: /python/sympy
+  - name: Constraint Solving and Integer Optimisation
+    link: /python/linear_optimisation
 - name: "2015"
   link: /2015/
   mainnav: True

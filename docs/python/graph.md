@@ -13,6 +13,10 @@ tags:
     link: /python/shortest_paths
   - name: Defaultdict
     link: /python/defaultdict
+  - name: Caching and Dynamic Programming
+    link: /python/dynamic_programming
+  - name: Modern Python Ergonomics
+    link: /python/modern_python
 ---
 
 ## Page Contents
@@ -114,7 +118,7 @@ for u, v, cost in weighted_edges:
     graph[v][u] = cost  # Omit for a directed graph
 ```
 
-Once your graph is in an adjacency structure, you can traverse it directly using [BFS, Dijkstra, or A\*](/python/shortest_paths), hand it to [NetworkX](/python/networkx) for cliques/min-cuts/TSP, or merge connected clusters with [Disjoint Set (`Union-Find`)](/python/useful_algorithms#disjoint-set--union-find-disjointset).
+Once your graph is in an adjacency structure, you can traverse it directly using [BFS, Dijkstra, or A\*](/python/shortest_paths), hand it to [NetworkX](/python/networkx) for cliques/min-cuts/TSP, order prerequisites with [`graphlib.TopologicalSorter`](/python/modern_python#graphlibtopologicalsorter-for-dependency-dags), count DAG paths with [`@cache`](/python/dynamic_programming#dags-vs-exponential-call-trees), or merge connected clusters with [Disjoint Set (`Union-Find`)](/python/useful_algorithms#disjoint-set--union-find-disjointset).
 
 ## Examples
 

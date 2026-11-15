@@ -9,6 +9,8 @@ tags:
     link: https://en.wikipedia.org/wiki/Recursion_(computer_science)
   - name: Recursion Introduction (@ RealPython)
     link: https://realpython.com/python-recursion/
+  - name: Caching and Dynamic Programming
+    link: /python/dynamic_programming
 ---
 ## Page Contents
 
@@ -444,6 +446,8 @@ So let's compare the number of calls with caching compared to without:
 | 40 | 331160281 | 41 |
 
 So whereas it took a minute or so to compute the 40th term without caching, we can now compute the 1000th term instantly, with caching. Nice!
+
+Once `@cache` clicks for Fibonacci, the next leap in Advent of Code is applying it to full state-space recursion — designing hashable state tuples, counting ways over strings and DAGs, compressing small sets into bitmasks, and adding branch-and-bound pruning. Those patterns are covered in [Caching and Dynamic Programming](/python/dynamic_programming).
 
 ### Calculating the Next Term in an Nth-Degree Arithmetic Progression
 

@@ -172,9 +172,29 @@ Whenever a puzzle relies on a technique worth keeping in your toolkit — Dijkst
     <span class="feature-card__title">Encrypting Inputs (<code>git-crypt</code>)</span>
     <p class="feature-card__desc">Respect AoC's input-sharing rules in a public repository using transparent <code>git-crypt</code> encryption.</p>
   </a>
+
+  <a class="feature-card" href="{{ '/python/dynamic_programming' | relative_url }}">
+    <span class="feature-card__title">Caching &amp; Dynamic Programming</span>
+    <p class="feature-card__desc">Collapse exponential search trees into millisecond lookup tables with <code>@cache</code>, bitmask states, and branch-and-bound pruning.</p>
+  </a>
+
+  <a class="feature-card" href="{{ '/python/intervals' | relative_url }}">
+    <span class="feature-card__title">Intervals, Cycles &amp; Grid Geometry</span>
+    <p class="feature-card__desc">Push massive <code>[lo, hi)</code> ranges through pipelines, fast-forward 10<sup>12</sup>-step loops, and measure polygons with Shoelace and Pick's Theorem.</p>
+  </a>
+
+  <a class="feature-card" href="{{ '/python/linear_optimisation' | relative_url }}">
+    <span class="feature-card__title">Constraint Solving &amp; Integer MILP</span>
+    <p class="feature-card__desc">Solve exact 2&times;2 linear systems via Cramer's rule and under-determined integer puzzles with <code>scipy.optimize.milp</code>.</p>
+  </a>
+
+  <a class="feature-card" href="{{ '/python/virtual_machines' | relative_url }}">
+    <span class="feature-card__title">Virtual Machines &amp; Sparse Automata</span>
+    <p class="feature-card__desc">Decompile assembly loops, diagnose ripple-carry adders, and evolve N-dimensional sparse grids with <code>Counter</code> convolutions.</p>
+  </a>
 </div>
 
-Browse all **39 reference guides** on the **[Python Journey index](/python/)**.
+Browse all **48 reference guides** on the **[Python Journey index](/python/)**.
 
 ## What is Advent of Code?
 
