@@ -9,6 +9,8 @@ tags:
     link: https://www.sympy.org/en/index.html
   - name: SymPy Tutorial
     link: https://www.tutorialspoint.com/sympy/index.htm
+  - name: Constraint Solving and Integer Optimisation
+    link: /python/linear_optimisation
 mathjax: true
 ---
 ## Page Contents
@@ -279,3 +281,5 @@ def solve_claw_machine(ax: int, ay: int, bx: int, by: int, px: int, py: int) -> 
 ```
 
 Combined with [2023 Day 24](#trajectory-intersection) (where 3D hailstone ray intersections form a larger system of equations), SymPy turns what would otherwise be complex algebra into declarative, readable Python.
+
+For closed-form \( 2 \times 2 \) Cramer's rule (which solves hundreds of claw machines in sub-millisecond pure Python), Mixed-Integer Linear Programming (`scipy.optimize.milp`) on under-determined button and joltage systems, polynomial extrapolation, and constraint-propagation search, see the companion chapter on [Constraint Solving and Integer Optimisation](/python/linear_optimisation).

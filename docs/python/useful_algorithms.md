@@ -13,6 +13,8 @@ tags:
     link: https://realpython.com/binary-search-python/
   - name: Shortest Path Algorithms
     link: /python/shortest_paths
+  - name: Interval and Range Algebra
+    link: /python/intervals
 mathjax: true
 ---
 
@@ -64,6 +66,8 @@ def merge_intervals(
 assert merge_intervals([[6, 8], [1, 9], [2, 4], [4, 7]]) == [[1, 9]]
 assert merge_intervals([[1, 5], [6, 8]], merge_adjacent=True) == [[1, 8]]
 ```
+
+When a puzzle goes beyond coalescing overlapping pairs — e.g. splitting half-open `[lo, hi)` ranges across piecewise rules, chaining transformation pipelines, subtracting 3D cuboids, or compressing sparse coordinates — see [Interval and Range Algebra](/python/intervals).
 
 ## Binary Search, `lower_bound`, and `upper_bound`
 
@@ -191,7 +195,7 @@ class DisjointSet[T]:
 
 ## Get Factors
 
-To enumerate all positive divisors of `num` in \( O(\sqrt{n}) \), iterate up to `math.isqrt(num)` and add each divisor pair `(i, num // i)`. Wrapping with [`@functools.cache`](/python/recursion#memoisation) avoids recomputing divisors in repeated inner loops:
+To enumerate all positive divisors of `num` in \( O(\sqrt{n}) \), iterate up to `math.isqrt(num)` and add each divisor pair `(i, num // i)`. Wrapping with [`@functools.cache`](/python/recursion#optimising-memoisation) avoids recomputing divisors in repeated inner loops:
 
 ```python
 import math

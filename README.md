@@ -6,7 +6,7 @@
 
 ## Why This Repository Exists
 
-I've been using **[Advent of Code](https://adventofcode.com/)** for years to sharpen my **Python** skills — exploring modern standard-library features, benchmarking alternative algorithms, and turning thorny December puzzles into clean, documented code. Every walkthrough pairs runnable Python with plain-English explanations on **[aoc.just2good.co.uk](https://aoc.just2good.co.uk/)**, alongside a 40-chapter **[Python Journey](https://aoc.just2good.co.uk/python/)** curriculum covering reusable patterns, graphs, shortest paths, symbolic maths, PEGs, and visualisations.
+I've been using **[Advent of Code](https://adventofcode.com/)** for years to sharpen my **Python** skills — exploring modern standard-library features, benchmarking alternative algorithms, and turning thorny December puzzles into clean, documented code. Every walkthrough pairs runnable Python with plain-English explanations on **[aoc.just2good.co.uk](https://aoc.just2good.co.uk/)**, alongside a 48-chapter **[Python Journey](https://aoc.just2good.co.uk/python/)** curriculum covering reusable patterns, dynamic programming, range algebra, modular cycles, grid geometry, graphs, shortest paths, symbolic maths and integer optimisation, PEGs, and visualisations.
 
 My hope is that this repository and companion site help you:
 
