@@ -575,7 +575,7 @@ def find_swapped_adder_wires(gates: list[Gate], highest_z: str) -> list[str]:
     suspicious: set[str] = set()
     for g in gates:
         inputs = {g.left, g.right}
-        is_xy = all(w[0] in ("x", "y") for w in inputs)
+        is_xy = all(w[0] in ("x", "y") and w[1:].isdigit() for w in inputs)
         is_bit0 = "x00" in inputs and "y00" in inputs
 
         # Rule 1: z_n outputs must come from XOR, except final carry-out highest_z (from OR).
